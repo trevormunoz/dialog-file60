@@ -24,7 +24,12 @@ import { appDefine } from "../config/define";
 (globalThis as Record<string, unknown>).__REGISTRY_HASH__ = JSON.parse(appDefine.__REGISTRY_HASH__);
 
 const FILE = "RG164.CRIS.FY94.txt";
-const COMMANDS = ["b 60", "s cy=beltsville", "s s1 and in=hammerschlag  f a", "t s2/5/1"];
+const COMMANDS = ["b 60", "s cy=beltsville", "s s1 and in=hammerschlag  f a", "t s2/5/1", "logoff"];
+
+// A fixed clock, not the real one -- the recording is reproducible byte for byte across runs,
+// so its stamp and LOGOFF connect-time lines cannot drift with wall-clock time the way BEGIN's
+// stamp would with `new Date()`.
+const CAST_CLOCK = { now: () => new Date(Date.UTC(1994, 4, 3, 10, 0, 0)) };
 
 /** Loads offsets and phrase indexes the same way the app does (fetch, in main.ts) or the
  * loader CLI does (build, in src/loader/cli.ts): prefer the already-built public/corpus
@@ -81,7 +86,7 @@ function castStatement(offsets: Offsets): string {
  */
 export async function buildFirstSessionCast(): Promise<{ cast: string; offsets: Offsets }> {
   const { engine, offsets } = loadEngine();
-  const session = new DialogSession(engine, renderFor);
+  const session = new DialogSession(engine, renderFor, { clock: CAST_CLOCK });
   const prompt = (registry.get("proto.prompt").value as string) + (registry.get("proto.prompt.spacing").value as string);
 
   const sessionLines: OutputLine[] = [];

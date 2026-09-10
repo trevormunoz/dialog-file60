@@ -66,6 +66,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.expand.enumbers
 - proto.expand.page
 - proto.expand.window
+- proto.logoff.template
 - proto.prompt
 - proto.prompt.spacing
 - proto.select.boolean
@@ -76,6 +77,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.selectsteps.processing
 - proto.selectsteps.sets
 - proto.type.item_header
+- rates.file60_1998
 - render.format5.layout
 - render.setline.columns
 - render.type.header
@@ -89,6 +91,7 @@ rests on. This is the full registry, grouped by status, produced by
 - map.SX_TX.display_text
 - nara.conversion.control_bytes
 - nara.tape.fy1994_media
+- proto.accounting.combination
 - proto.begin.banner
 - proto.expand.display
 - proto.select.suffix
@@ -116,6 +119,8 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.error.unknown_set
 - proto.error.unknown_suffix
 - proto.expand.collation
+- proto.session.clock
+- proto.session.user_number
 - render.record.order
 - terminal.backgroundColor
 - terminal.display_mode

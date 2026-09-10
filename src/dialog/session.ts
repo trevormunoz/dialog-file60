@@ -5,10 +5,13 @@ import { line, type OutputLine } from "./stream";
 import { registry } from "../registry";
 import { UnknownSet, UnknownField, UnknownSuffix, UnknownRef, type RetrievalEngine, type SearchExpression } from "../retrieval/engine";
 import { expandWindow, expandPage, expandLines, BASIC_INDEX, PAGE_ROWS, MAX_REF, type ExpandState } from "./expand";
+import { stamp, hhmmss, logoffBlock, type Rates, type SessionClock } from "./accounting";
 
 const cols = registry.get("render.setline.columns").value as { setCol: number; itemsEnd: number; descCol: number };
 const header = registry.get("proto.begin.set_header").value as string[];
 const banner = registry.get("proto.begin.banner").value as { fileNumber: string; title: string };
+const DEFAULT_USER = registry.get("proto.session.user_number").value as string;
+registry.get("proto.session.clock"); registry.get("proto.accounting.combination");
 registry.get("proto.begin.set_reset"); registry.get("proto.select.setline"); registry.get("proto.type.item_header");
 // proto.begin.copyright_line: a database owner's copyright line may
 // follow the banner in DIALOG generally (fixtures/1994-curso-pais.txt, a different File's
@@ -98,7 +101,25 @@ export class DialogSession {
    * (main.ts) to show one modern line beneath the prompt; never printed into the character
    * stream. */
   lastNotice: { command: string } | null = null;
-  constructor(private engine: RetrievalEngine, private render: (rec: LogicalRecord, format: string) => OutputLine[]) {}
+  private clock: SessionClock;
+  private user: string;
+  private accounting: boolean;
+  /** The moment the session was constructed -- LOGOFF's connect-time line prices from here,
+   * not from the most recent BEGIN, matching a real DIALOG connection's own billed span. */
+  private start: Date;
+  /** TYPE calls actually made (a valid item ordinal reached, format-render errors included),
+   * counted per format string -- what LOGOFF's per-format cost lines price. */
+  private typeCounts: Record<string, number> = {};
+  constructor(
+    private engine: RetrievalEngine,
+    private render: (rec: LogicalRecord, format: string) => OutputLine[],
+    opts?: { clock?: SessionClock; user?: string; accounting?: boolean },
+  ) {
+    this.clock = opts?.clock ?? { now: () => new Date() };
+    this.user = opts?.user ?? DEFAULT_USER;
+    this.accounting = opts?.accounting ?? true;
+    this.start = this.clock.now();
+  }
 
   async submit(input: string): Promise<OutputLine[]> {
     const cmd = parse(input);
@@ -190,10 +211,16 @@ export class DialogSession {
       case "begin": {
         if (cmd.file !== 60) return [line(`? ${cmd.file}`, { registryKeys: ["proto.error.bad_file"] })];
         this.currentFile = 60; this.sets = []; this.expand = null;
+        // The same date/time/user line LOGOFF prints opens BEGIN (spec 7.2); the cost lines
+        // beneath it print only when a file was already open, which cannot happen in a
+        // single-file session, so BEGIN prints the stamp and nothing more.
+        const stampLine = this.accounting
+          ? [line(stamp(this.clock.now(), this.user), { registryKeys: ["proto.logoff.template", "proto.session.user_number", "proto.session.clock"] })]
+          : [];
         // dialog.file60.title (documented) carries the actual title text this line prints;
         // proto.begin.banner (inferred) carries only the banner's own structure -- both are
         // real provenance for this one line, cited together.
-        return [line(""), line(`File  ${banner.fileNumber}:${banner.title}`, { registryKeys: ["proto.begin.banner", "dialog.file60.title"] }), line(""), ...header.map(h => line(h, { registryKeys: ["proto.begin.set_header"] }))];
+        return [...stampLine, line(""), line(`File  ${banner.fileNumber}:${banner.title}`, { registryKeys: ["proto.begin.banner", "dialog.file60.title"] }), line(""), ...header.map(h => line(h, { registryKeys: ["proto.begin.set_header"] }))];
       }
       case "select": {
         // Never a bare "?" (see offendingToken above): print the first AND-level
@@ -225,6 +252,7 @@ export class DialogSession {
           const ordinal = set.ordinals[i - 1];
           if (ordinal === undefined) { out.push(line(`? ${i}`, { registryKeys: ["proto.error.type_range"] })); break; }
           const rec = await this.engine.record(ordinal);
+          this.typeCounts[cmd.format] = (this.typeCounts[cmd.format] ?? 0) + 1;
           out.push(line(""), line(`${set.id}/${cmd.format}/${i}`, { recordOrdinal: ordinal, registryKeys: ["proto.type.item_header"] }));
           for (const l of this.render(rec, cmd.format)) out.push({ ...l, provenance: { ...l.provenance, recordOrdinal: ordinal } });
         }
@@ -281,6 +309,19 @@ export class DialogSession {
           ...header.map(h => line(h, { registryKeys: ["proto.begin.set_header"] })),
           ...shown.map(s => line(setLine(s.id, s.ordinals.length, s.echo), { registryKeys: ["proto.displaysets.table"] })),
         ];
+      }
+      case "logoff": {
+        const end = this.clock.now();
+        const keys = ["proto.logoff.template", "rates.file60_1998", "proto.accounting.combination", "proto.session.user_number", "proto.session.clock"];
+        const out: OutputLine[] = this.accounting
+          ? logoffBlock({ start: this.start, end, user: this.user, types: this.typeCounts, rates: registry.get("rates.file60_1998").value as Rates })
+              .map(t => line(t, { registryKeys: keys }))
+          : [];
+        out.push(line(`LOGOFF ${hhmmss(end)}`, { registryKeys: ["proto.logoff.template"] }));
+        // A disconnection: no current file, no sets, no open EXPAND display -- a following
+        // SELECT prints the simulated error for a command issued before BEGIN.
+        this.currentFile = null; this.sets = []; this.expand = null;
+        return out;
       }
       case "unsupported": {
         // The terminal prints nothing for this. this.lastNotice (set in submit(), above) is

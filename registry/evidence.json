@@ -1711,5 +1711,63 @@
       }
     ],
     "note": "the same set-line layout as SELECT's, reusing the two header lines; the File column belongs to SET DETAIL ON, which is out of the slice, and both DS 1-3 and DS S1-S3 are accepted because both forms are documented."
+  },
+  "proto.logoff.template": {
+    "value": {
+      "stampIndent": 10,
+      "rowPrefix": "   $",
+      "rowGap": "   "
+    },
+    "status": "documented",
+    "claim": "LOGOFF prints a date/time/user line, then one costed line per charge, ending with the estimated total; BEGIN opens with the same date/time/user line.",
+    "decision": "the Descriptors and Prints lines the 1978 session shows belong to commands (EXPAND-adjacent descriptor display, PRINT) outside this slice and are not reconstructed; only the connect-time line, one line per TYPE format actually used, and the two total lines print.",
+    "sources": [
+      {
+        "source": "epa-session-1978",
+        "locator": "'? logoff' block: '          28feb78 14:17:38 User316', '  $2.60  0.065 Hrs File60  12 Descriptors', '  $3.50  35 Prints', '  $6.10  Estimated Total Cost', 'LOGOFF 14:17:45'",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 5, the LOGOFF cost block",
+        "sourceDate": "1988",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "rates.file60_1998": {
+    "value": {
+      "perMinute": 0.25,
+      "typeByFormat": { "1": 0, "5": 0.6, "6": 0, "8": 0 }
+    },
+    "status": "documented",
+    "claim": "Connect time costs $0.25 a minute; TYPE format prices are mostly $0.60, with formats 1, 6 and 8 free.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "Rates: Cost per minute; Format/Types/Prints table",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "no 1990-1994 rate card is held -- statement of absence, not found in dataset-cards/research/cris-dialog/sources/ by the acquisition and review of 2026-09-09. Only format 5 is implemented, so typeByFormat's other entries never price anything this reconstruction actually prints; they are carried because the 1998 sheet documents them for the file as a whole."
+  },
+  "proto.accounting.combination": {
+    "value": null,
+    "status": "inferred",
+    "claim": "This reconstruction prices a session using the 1978/1988 LOGOFF template with the 1998 rate card -- no single source gives both the template and rates for the same year.",
+    "note": "labeled inferred rather than documented for that reason; pricing never bills anything, and BEGIN's opts.accounting flag (spec 7.9) can switch it off entirely."
+  },
+  "proto.session.user_number": {
+    "value": "013140",
+    "status": "chosen",
+    "claim": "The user number in the session's first line is chosen; no source records one for this reconstruction's searcher."
+  },
+  "proto.session.clock": {
+    "value": null,
+    "status": "chosen",
+    "claim": "The printed date and time are the reader's own and make no historical claim.",
+    "note": "src/app/main.ts passes the system clock; the evidence-test harness and the recorded cast (scripts/cast.ts) pass a fixed clock instead, so their output stays reproducible."
   }
 }

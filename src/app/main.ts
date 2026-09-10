@@ -32,7 +32,10 @@ const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpus
 // Restart replaces this with a fresh DialogSession -- the DIALOG layer
 // gains no "restart" concept of its own; `new DialogSession` already starts with no current
 // file and no sets. `let`, not `const`, so the onSubmit closure below and restart() (further
-// down) see the same current session.
+// down) see the same current session. No opts: the constructor's own defaults already give
+// the real system clock, the registered simulated user number, and accounting on -- the
+// evidence-test harness and the recorded cast (scripts/cast.ts) are the callers that need a
+// fixed clock instead.
 let session = new DialogSession(engine, renderFor);
 registry.get("capability.notice"); // cited here; rendered below, outside the stream
 registry.get("terminal.restart"); // cited here; the button is wired below

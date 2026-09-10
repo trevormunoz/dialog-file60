@@ -17,8 +17,11 @@ export type DialogCommand =
    * bare (`DS 1-3`) or S-prefixed (`DS S1-S3`) form; a single set number leaves `to` equal to
    * `from`. */
   | { cmd: "displaysets"; from: number | null; to: number | null }
-  /** A command DIALOG documented for File 60 but outside this milestone's slice: LOGOFF,
-   * SORT, PRINT, KWIC, and TYPE by accession number. `command` names it
+  /** LOGOFF: ends the session and prints the accounting block (spec 7.9). Takes no
+   * argument -- unlike the capability-notice words below, it is implemented, not stubbed. */
+  | { cmd: "logoff" }
+  /** A command DIALOG documented for File 60 but outside this milestone's slice: SORT,
+   * PRINT, KWIC, and TYPE by accession number. `command` names it
    * canonically (e.g. "LOGOFF"); `rest` is whatever followed the recognized command
    * word, unparsed. */
   | { cmd: "unsupported"; command: string; rest: string }

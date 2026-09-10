@@ -151,7 +151,6 @@ function parseOperand(tok: string): SearchExpression | null {
  * not parse as EXPAND with rest "able" -- the capture is only ever a separate word or words.
  */
 const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [
-  { pattern: /^logoff(?:\s+(.*))?$/i, command: "LOGOFF" },
   { pattern: /^sort(?:\s+(.*))?$/i, command: "SORT" },
   { pattern: /^(?:print|pr)(?:\s+(.*))?$/i, command: "PRINT" },
   { pattern: /^kwic(?:\s+(.*))?$/i, command: "KWIC" },
@@ -191,6 +190,7 @@ export function parse(line: string): DialogCommand {
     const from = m[1] ? Number(m[1]) : null;
     return { cmd: "displaysets", from, to: m[2] ? Number(m[2]) : from };
   }
+  if (/^logoff$/i.test(t)) return { cmd: "logoff" };
   for (const { pattern, command } of CAPABILITY_WORDS) {
     if ((m = pattern.exec(t))) return { cmd: "unsupported", command, rest: (m[1] ?? "").toUpperCase() };
   }

@@ -8,16 +8,14 @@ implement, and what it prints when you try it.
 Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
 guard as a suffix, never tested against the SF field), SET DETAIL ON (the
-File column it adds to DISPLAY SETS' table is not printed), BEGIN's
-accounting block (the date/time/user line and the three `$`
-cost lines -- BEGIN prints only the blank line, banner, blank line, and set
-header), TYPE format 6 and user-defined formats from display codes (only
-format 5 is implemented; every other format number or code list prints the
-item header followed by `? /{format}`, and no record text), LOGOFF
-accounting, the 1984 and 1988 fixtures, variant indexes, a database-owner
-copyright line after the banner (`proto.begin.copyright_line`, status
-`chosen` -- a different File's in-period BEGIN transcript shows one; File
-60's is not held, so none is printed).
+File column it adds to DISPLAY SETS' table is not printed), TYPE format 6
+and user-defined formats from display codes (only format 5 is implemented;
+every other format number or code list prints the item header followed by
+`? /{format}`, and no record text), the 1984 and 1988 fixtures, variant
+indexes, a database-owner copyright line after the banner
+(`proto.begin.copyright_line`, status `chosen` -- a different File's
+in-period BEGIN transcript shows one; File 60's is not held, so none is
+printed).
 
 Word indexes and suffix search are implemented: `S PEACH/TI` and
 `S PEACH/TI,DE` search the word indexes described in
@@ -53,11 +51,11 @@ set-line layout SELECT and SELECT STEPS use. `DS` alone shows every set;
 before any SELECT shows the header alone, and BEGIN clears the list.
 
 A capability notice exists as a stub, not the full mechanism:
-LOGOFF, SORT, PRINT, KWIC, and TYPE by accession number
+SORT, PRINT, KWIC, and TYPE by accession number
 (`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
 recognized by the parser as documented commands outside version 1's slice.
 Recognizing one prints nothing into the character stream; one modern line
-beneath the prompt reads "DIALOG documented `LOGOFF` for File 60; this
+beneath the prompt reads "DIALOG documented `SORT` for File 60; this
 reconstruction does not implement it yet." (registry `capability.notice`),
 outside the stream entirely -- it never appears in scrollback or in a copied
 selection, and it does not change the session. Every other out-of-slice
@@ -66,6 +64,17 @@ inside SELECT, multi-word implicit-adjacency terms -- remains
 indistinguishable from a typo and gets the simulated error form, `?`
 followed by the offending token (an out-of-slice TYPE format prints the item
 header first, as described above).
+
+LOGOFF is implemented: it ends the session and prints the accounting block
+-- a date/time/user line, connect time at $0.25 a minute, one line per TYPE
+format actually used, and the estimated total, twice (per file and for the
+search, equal in this single-file slice). The same date/time/user line
+opens BEGIN. The 1978 File 60 session and 1988 figure 5 document the
+block's shape; the 1998 Blue Sheet's rate card prices it -- combining the
+two is inferred, since no single held source gives both for the same year.
+No rate card from 1990-1994 is held: a statement of absence, not found in
+`dataset-cards/research/cris-dialog/sources/` by the review of 2026-09-09.
+Pricing never bills anything and can be switched off.
 
 The 1998 Blue Sheet documents 30 Additional Index (phrase-indexed) prefixes
 for File 60. Version 1 builds a phrase index for every one of them except

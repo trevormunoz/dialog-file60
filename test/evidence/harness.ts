@@ -12,12 +12,20 @@ const indexes = { CY: { code: "CY", terms: { BELTSVILLE: [0] } }, IN: { code: "I
 // proto.error.bad_format), so session.ts's format-passing is asserted against an observable
 // response instead of only against parser.ts's AST.
 export let seenFormats: string[] = [];
-export const mk = () => {
+// A fixed clock (never advances) keeps every evidence test's stamp and connect-time line
+// reproducible; opts lets a test override it (test/evidence/logoff.test.ts's accounting:
+// false case does).
+const FIXED_CLOCK = { now: () => new Date(Date.UTC(1994, 4, 3, 10, 0, 0)) };
+export const mk = (opts?: { clock?: { now: () => Date }; user?: string; accounting?: boolean }) => {
   seenFormats = [];
-  return new DialogSession(new RetrievalEngine(offsets, indexes, reader, "fy1991plus"), (rec, format) => {
-    seenFormats.push(format);
-    return format === "5"
-      ? [{ text: `<record ${rec.an}>` }]
-      : [{ text: `? /${format}`, provenance: { registryKeys: ["proto.error.bad_format"] } }];
-  });
+  return new DialogSession(
+    new RetrievalEngine(offsets, indexes, reader, "fy1991plus"),
+    (rec, format) => {
+      seenFormats.push(format);
+      return format === "5"
+        ? [{ text: `<record ${rec.an}>` }]
+        : [{ text: `? /${format}`, provenance: { registryKeys: ["proto.error.bad_format"] } }];
+    },
+    { clock: FIXED_CLOCK, accounting: true, ...opts },
+  );
 };

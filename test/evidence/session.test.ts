@@ -16,10 +16,11 @@ test("set line columns follow the 1994 sheet", () => {
   expect(setLine(null, 70, "LAETRILE")).toBe("              70  LAETRILE");
 });
 
-test("BEGIN prints banner and dashed header, no cost block when no file was open", async () => {
+test("BEGIN prints the date/time/user stamp, banner and dashed header, no cost block when no file was open", async () => {
   const s = mk();
   const out = (await s.submit("b 60")).map(l => l.text);
   expect(out).toEqual([
+    "          03may94 10:00:00 User013140",
     "",
     "File  60:CRIS/USDA - Current Research",
     "",
@@ -133,18 +134,19 @@ test("a SELECT before any BEGIN also names an offending token, never a bare ?", 
 // separately (lastNotice), for the app to show outside the stream.
 describe("capability notices", () => {
   // EXPAND is implemented (test/evidence/expand.test.ts, test/regression/expand-window.test.ts)
-  // and no longer belongs on this list.
+  // and no longer belongs on this list; LOGOFF is implemented (test/evidence/logoff.test.ts)
+  // and no longer belongs on it either.
   test("a recognized-but-unimplemented command prints nothing into the stream", async () => {
     const s = mk(); await s.submit("b 60");
-    expect(await s.submit("logoff")).toEqual([]);
+    expect(await s.submit("sort")).toEqual([]);
     expect(await s.submit("t 09143165/5")).toEqual([]);
   });
 
   test("the session records the last capability notice, cleared by any other command", async () => {
     const s = mk(); await s.submit("b 60");
     expect(s.lastNotice).toBeNull();
-    await s.submit("logoff");
-    expect(s.lastNotice).toEqual({ command: "LOGOFF" });
+    await s.submit("sort");
+    expect(s.lastNotice).toEqual({ command: "SORT" });
     await s.submit("s cy=beltsville"); // an ordinary command clears the stale notice
     expect(s.lastNotice).toBeNull();
   });

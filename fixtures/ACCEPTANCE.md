@@ -15,6 +15,12 @@ Independent answer: fixtures/acceptance-fy94.json, produced by scripts/naive-spl
 on 2026-09-09. The set's AN list must equal the list there, not only its length.
 Note: the investigator phrase carries two spaces, as stored.
 
+Since the LOGOFF task, `? b 60` opens with the accounting stamp line
+(`stamp()`, src/dialog/accounting.ts) before the blank line, banner, and set
+header shown above; the acceptance session itself never issues `LOGOFF`, so
+the printed accounting block is exercised separately, by
+test/evidence/logoff.test.ts and test/regression/accounting.test.ts.
+
 Re-derive it with `pnpm verify:acceptance`, which re-runs scripts/naive-split.py against
 data/RG164.CRIS.FY94.txt and diffs its output against the committed fixture (outside
 Vitest; the suite pins the script's sha256 instead of executing it, per
