@@ -26,9 +26,14 @@ v1/index/<PREFIX>.json       one per phrase prefix, 29 in all (every documented
                              prefix but SP, which has no values in this corpus);
                              AN 602,533, CY 204,370, DS 197,223, IN 825,444,
                              SF 193,462, ST 194,715 bytes
-v1/word/<CODE>/terms.json           one per code, for the nine codes in indexes.md
-v1/word/<CODE>/<A-Z,0-9,_>.json     the shards; 342 word-index objects in all,
-                                    100,510,856 bytes, the same bytes as on disk
+v1/word/<CODE>/terms.json           one per code, for the eight codes in indexes.md
+                                    (/DF resolves to /DE at query time; its 38
+                                    objects were deleted from the bucket 2026-09-10)
+v1/word/<CODE>/<A-Z,0-9,_>.json     the shards; 304 word-index objects in all,
+                                    93,498,835 bytes, the same bytes as on disk
+v1/word/_merged/terms.json          4,280,332 bytes: the merged Basic Index term
+                                    list with union counts, built by the loader so
+                                    a bare EXPAND fetches one file, not the shards
 ```
 
 `public/corpus/report.json` (a derived QC artifact that no reader or the app
