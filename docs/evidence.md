@@ -127,6 +127,9 @@ rests on. This is the full registry, grouped by status, produced by
 - terminal.keyboard_inspect
 - terminal.line_editing
 - terminal.pacing
+- terminal.paper_delay
+- terminal.paper_input_weight
+- terminal.paper_sheet
 - terminal.restart
 - terminal.scrollback
 - terminal.textColor

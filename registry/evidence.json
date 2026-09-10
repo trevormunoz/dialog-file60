@@ -1046,10 +1046,44 @@
     "note": "80 columns is not directly counted -- in the 1984 Computer Chronicles recording the camera shows what appears to be the whole screen, with the right edge at or just beyond the frame edge, and the machine is an IBM PC, whose text mode is 80x25; this is the source terminal.width already draws its own 80-column figure from. The bottom row of that screen carries the communications program's function-key legend, which persists while DIALOG's output scrolls above it and leaves 24 rows for DIALOG's text; that is where 24 comes from. A 1970s National Agricultural Library memo on DIALOG describes a Hazeltine 2000 CRT at approximately 27 visible rows; that figure is mid-1970s, and the memo's claims are unverified -- the underlying ALIN issue has not been found. It is recorded here as an earlier, unadopted candidate value, not as a source for this entry."
   },
   "terminal.display_mode": {
-    "value": "printout (default, every line persists and the pane scrolls) or screen (only the last terminal.screen_rows lines are kept)",
+    "value": "printout (default, every line persists and the pane scrolls), screen (only the last terminal.screen_rows lines are kept), or paper (every line persists, restyled as a fixed-pitch sheet)",
     "status": "chosen",
-    "claim": "The reader can choose whether output persists or only the last 24 lines stay; in the period the terminal decided this.",
-    "note": "Printout mode corresponds to a printing terminal's paper; screen mode corresponds to an unbuffered CRT. Switching into screen mode discards everything above the last screenful; switching back does not restore it. Registered separately from terminal.screen_rows, which carries the row count itself."
+    "claim": "The reader can choose among three ways output is kept and shown; in the period the terminal decided this.",
+    "note": "Printout mode corresponds to a printing terminal's paper; screen mode corresponds to an unbuffered CRT. Switching into screen mode discards everything above the last screenful; switching back does not restore it. Paper mode restyles the retained scrollback as a sheet and hides everything outside the stream. Registered separately from terminal.screen_rows, which carries the row count itself."
+  },
+  "terminal.paper_sheet": {
+    "value": "paper mode shows the retained scrollback as one continuous fixed-pitch sheet at 80 columns, with a tractor-feed strip down the left edge",
+    "status": "chosen",
+    "claim": "Paper mode shows the session as one fixed-pitch sheet at the app's 80-column measure, with the tractor-feed strip 1993-94 printouts carry.",
+    "sources": [
+      {
+        "source": "curso-1994",
+        "locator": "PDF pp. 99, 100, 117, 126: photocopied continuous-form printouts, Files 16, 49, 108, 247, 470; all four carry the sprocket-hole strip down the left edge",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "The sheet refuses paper colour, striping, perforations and page marks because the surviving printouts are photocopies that destroy stock and ribbon colour; the strip is drawn because tractor feed is documented on every in-period page while the paper is not; no surviving line reaches 80 columns (longest measured 71), so the 80-column measure is the app's inferred width, not a count; the 1978 and 1981 ONTAP manuals are printing-terminal facsimiles at 40 columns and pre-anchor."
+  },
+  "terminal.paper_input_weight": {
+    "value": "on the paper sheet, typed command lines render bold; output does not",
+    "status": "chosen",
+    "claim": "On the paper sheet typed commands print heavier than output, as on 1993-94 printouts where the searcher's terminal double-struck its echo.",
+    "sources": [
+      {
+        "source": "curso-1994",
+        "locator": "PDF pp. 117 and 126: typed input visibly bolder than DIALOG's output",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "This is the local terminal's artefact, not DIALOG behaviour; shown on the sheet only; printout and screen modes do not show it."
+  },
+  "terminal.paper_delay": {
+    "value": "600 ms empty sheet on entering paper mode, skipped under reduced motion",
+    "status": "chosen",
+    "claim": "Entering paper mode shows an empty sheet for 600 ms before the printout appears; a chosen affectation, skipped under reduced motion.",
+    "note": "The pause marks the act of switching, not page load."
   },
   "proto.begin.set_reset": {
     "value": "A new BEGIN command erases all previous sets.",

@@ -98,7 +98,7 @@ test("terminal.screen_rows is 24, inferred, with the claim naming the 1984 PC sc
 test("terminal.display_mode is chosen: the reader picks what the period terminal decided", () => {
   const e = registry.get("terminal.display_mode");
   expect(e.status).toBe("chosen");
-  expect(e.claim).toBe("The reader can choose whether output persists or only the last 24 lines stay; in the period the terminal decided this.");
+  expect(e.claim).toBe("The reader can choose among three ways output is kept and shown; in the period the terminal decided this.");
 });
 
 // packages/cris-formatb stays free of a runtime dependency on the registry: the reader
