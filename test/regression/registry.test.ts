@@ -211,10 +211,11 @@ describe("error claims match what session.ts prints", () => {
     expect(e.claim).toMatch(/for a TYPE everything after the command word/);
     expect(e.claim).toMatch(/otherwise the first word/);
     const s = mk(); await s.submit("b 60");
-    // A failed OR select has no AND to split on, so the "first search term" the claim names is
-    // the whole unparsed expression here -- pinned so the claim's wording cannot drift from
-    // this printed shape.
-    expect((await s.submit("s cy=beltsville or cy=ames")).map(l => l.text)).toEqual(["? CY=BELTSVILLE OR CY=AMES"]);
+    // OR itself now parses (proto.select.boolean); this SELECT still fails to parse because
+    // its second operand carries a reserved character, and has no AND to split on, so the
+    // "first search term" the claim names is the whole unparsed expression here -- pinned so
+    // the claim's wording cannot drift from this printed shape.
+    expect((await s.submit("s cy=beltsville or in=smith?")).map(l => l.text)).toEqual(["? CY=BELTSVILLE OR IN=SMITH?"]);
     expect((await s.submit("t 5")).map(l => l.text)).toEqual(["? 5"]);
     expect((await s.submit("zx cy=beltsville")).map(l => l.text)).toEqual(["? ZX"]);
   });

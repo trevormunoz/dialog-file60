@@ -10,6 +10,7 @@ import type { RangeReader } from "./reader";
 
 registry.get("proto.select.per_term_postings");
 registry.get("render.record.order");
+registry.get("proto.select.boolean");
 // index.phrase.uppercase (the loader's uppercase-and-strip phrase rule, applied below by
 // phraseKey) is cited here, at the point where a SELECT term is looked up: this is the one
 // place in the retrieval layer that applies it.
@@ -19,6 +20,8 @@ export type SearchExpression =
   | { kind: "term"; field: string; term: string }
   | { kind: "set"; id: number }
   | { kind: "and"; left: SearchExpression; right: SearchExpression }
+  | { kind: "or"; left: SearchExpression; right: SearchExpression }
+  | { kind: "not"; left: SearchExpression; right: SearchExpression }
   | { kind: "word"; codes: string[]; term: string };
 export interface SearchResult { perTerm: { display: string; postings: number }[]; ordinals: number[]; }
 
@@ -48,6 +51,8 @@ export class UnknownSuffix extends Error {
 }
 
 const intersect = (a: number[], b: number[]): number[] => { const s = new Set(b); return a.filter(x => s.has(x)); };
+const union = (a: number[], b: number[]): number[] => [...new Set([...a, ...b])];
+const difference = (a: number[], b: number[]): number[] => { const s = new Set(b); return a.filter(x => !s.has(x)); };
 
 export class RetrievalEngine {
   /** Word-index shards already fetched, keyed `${code}:${shard}`. A word SELECT loads only
@@ -69,7 +74,8 @@ export class RetrievalEngine {
    * attempted for it. */
   async prepare(expr: SearchExpression): Promise<void> {
     switch (expr.kind) {
-      case "and": await this.prepare(expr.left); await this.prepare(expr.right); return;
+      case "and": case "or": case "not":
+        await this.prepare(expr.left); await this.prepare(expr.right); return;
       case "word": {
         const shard = shardOf(phraseKey(expr.term));
         for (const code of expr.codes) {
@@ -108,6 +114,8 @@ export class RetrievalEngine {
         }
         case "set": { const s = sets.get(e.id); if (!s) throw new UnknownSet(e.id); return s; }
         case "and": { const l = evalExpr(e.left); const r = evalExpr(e.right); return intersect(l, r); }
+        case "or": { const l = evalExpr(e.left); const r = evalExpr(e.right); return union(l, r); }
+        case "not": { const l = evalExpr(e.left); const r = evalExpr(e.right); return difference(l, r); }
         case "word": {
           // index.word.tokens and index.word.stopwords (the tag-to-token and stop-word
           // rules a word SELECT's result depends on) are cited at their point of use in

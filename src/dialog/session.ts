@@ -15,6 +15,12 @@ registry.get("proto.begin.set_reset"); registry.get("proto.select.setline"); reg
 // none -- this citation is the record of that gap, not a behavior it enacts.
 registry.get("proto.begin.copyright_line");
 registry.get("proto.error.unknown_command"); registry.get("proto.error.bad_file"); registry.get("proto.error.unknown_field"); registry.get("proto.error.unknown_suffix"); registry.get("proto.error.type_range");
+// proto.error.unmatched_parens is recorded, not printed: an unclosed bracket falls through
+// parseExpression to parse()'s ordinary { cmd: "unknown" } path and prints the same simulated
+// question-mark form as any other unparseable SELECT (proto.error.unknown_command), above --
+// this citation is the record of the documented reply this reconstruction chose not to adopt,
+// not a behavior enacted here.
+registry.get("proto.error.unmatched_parens");
 
 export interface SearchSet { id: number; echo: string; expr: SearchExpression; perTerm: { display: string; postings: number }[]; ordinals: number[]; }
 

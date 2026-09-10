@@ -889,7 +889,8 @@
         "sourceDate": "1994",
         "observedSystem": "DIALOG general"
       }
-    ]
+    ],
+    "conflicts": "the 2001 book's DISPLAY SETS example prints a per-term line for a set reference too ('?s si and s2' answered '11807 S1' and '29538 S2'). The 1984, 1988 and 1994 examples print per-term lines only for index terms, and this reconstruction follows them. Adopting the 2001 reading is an open decision."
   },
   "proto.select.echo_case": {
     "value": "uppercase",
@@ -1506,5 +1507,65 @@
     "claim": "A thin vertical line marks the 80-column edge of the printout; the terminals drew no such line. It is hidden when the window is narrower than the printout.",
     "sources": [],
     "note": "The documented terminals were width-limited (terminal.width, 80 columns) and a modern browser window is wider, so the printout's right edge is marked with the same neutral rule colour the panels use. index.html .printout{border-right} and the @container query on .terminal-pane enact it; no colour or CRT claim is made. Chosen: a modern convenience with no historical counterpart."
+  },
+  "proto.select.precedence": {
+    "value": [
+      "parentheses",
+      "proximity",
+      "NOT",
+      "AND",
+      "OR"
+    ],
+    "status": "documented",
+    "claim": "Without brackets, NOT is worked out first, then AND, then OR; brackets change the order, innermost first.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "SELECT, \"Logical and Proximity Operators\" / \"Order of Processing\"",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "no anchor-period source states the order of processing, so this reconstruction follows the 2001 book's stated order (parentheses, then proximity, then NOT, then AND, then OR) instead of refusing mixed operators.",
+    "note": "proximity operators are out of the slice, so only the NOT, AND, OR part of the order is exercised"
+  },
+  "proto.select.boolean": {
+    "value": [
+      "AND",
+      "OR",
+      "NOT"
+    ],
+    "status": "documented",
+    "claim": "Searches can be combined with AND, OR and NOT; NOT takes a set on each side and cannot start a statement.",
+    "sources": [
+      {
+        "source": "epa-session-1978",
+        "locator": "p. 185, \"? COMBINE (8 AND 12) NOT 15\" answered \"16 35 (8 AND 12) NOT 15\"",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "SELECT, \"Logical and Proximity Operators\"",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "NOT is binary (spec 7.12); a leading NOT does not parse. In 1978 these combinations were made with COMBINE and a set-number legend, not SELECT's own AND/OR/NOT words; COMBINE is out of this slice, and the SELECT form of 1984 onward is what this reconstruction implements."
+  },
+  "proto.error.unmatched_parens": {
+    "value": ">>>Unmatched parentheses",
+    "status": "documented",
+    "claim": "An unclosed bracket has a documented reply in a later manual; this reconstruction still prints its own short form.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "SELECT, the note after \"To use more than one level of parentheses\"",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "recorded, not printed. The OCR renders the leading characters ambiguously (»>) and the page image has not been checked; spec 7.10's simulated form (a question mark plus the offending token) is still what the session prints. Printing this text is an open decision.",
+    "note": "this is the only error text found in any source held; spec 7.10's statement that none had been read is superseded for this one case"
   }
 }

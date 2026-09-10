@@ -41,6 +41,7 @@ const SOURCE_NAMES: Record<string, string> = {
   "curso-1994": "Curso Introductorio DIALOG, 1994",
   "database-magazine-1988": "DATABASE magazine reprint, April 1988",
   "computer-chronicles-1984": "Computer Chronicles broadcast, 21 May 1984",
+  "epa-session-1978": "EPA CIRH File 60 session transcript, 28 February 1978",
 };
 
 // The reverse of "every key the registry cites has a name here" -- every key named here is
@@ -95,6 +96,8 @@ const SOURCE_GLOSSES: Record<string, string> = {
     "Figures from a searching-strategies article in DATABASE magazine, April 1988.",
   "computer-chronicles-1984":
     "A television demonstration of a DIALOG search on a PC, 21 May 1984.",
+  "epa-session-1978":
+    "A printed CIRH File 60 search session from 28 February 1978, the earliest File 60 session transcript held.",
 };
 
 /** A reader's one-sentence gloss for a source kind, keyed by the same key sourceName takes.

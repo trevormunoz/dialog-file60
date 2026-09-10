@@ -4,6 +4,7 @@ import { registry } from "../registry";
 
 registry.get("proto.select.echo_case"); // the echoed SELECT expression is uppercased
 registry.get("proto.select.suffix"); // the word/CODE[,CODE...] suffix grammar SUFFIXED below implements
+registry.get("proto.select.precedence"); // the parentheses-then-NOT-then-AND-then-OR order parseExpression below implements
 
 const unknown = (text: string): DialogCommand => ({ cmd: "unknown", text });
 
@@ -20,12 +21,15 @@ function parseItems(s: string): number[] | null {
 }
 
 // A term value outside this milestone's slice (right truncation `?`, a `/subfile` limit, a
-// suffix combined with a PREFIX=value, a standalone OR/NOT/AND token, or a
-// proximity/parenthesized group) must not be silently folded into the phrase: that would
-// search a plain-phrase read of syntax the retrieval engine never evaluated, and print a
-// fabricated zero-item set line for a query DIALOG File 60 users could type but this parser
-// does not yet support. A bare word followed by one suffix grammar (`peach/ti`) is handled
-// separately, below (SUFFIXED); everything else with a "/" in it -- a `/subfile` limit
+// suffix combined with a PREFIX=value, or a proximity/parenthesized group inside a value's
+// own text) must not be silently folded into the phrase: that would search a plain-phrase
+// read of syntax the retrieval engine never evaluated, and print a fabricated zero-item set
+// line for a query DIALOG File 60 users could type but this parser does not yet support. AND,
+// OR and NOT are no longer reserved here -- lex() below splits on them at the expression
+// level before an operand is ever handed to parseOperand, so a value that happens to contain
+// one of those words as a bare token breaks the surrounding expression rather than being
+// folded into a literal phrase. A bare word followed by one suffix grammar (`peach/ti`) is
+// handled separately (SUFFIXED); everything else with a "/" in it -- a `/subfile` limit
 // (/CRIS /HNRIMS /ICAR /CZARIS), a suffix on what looks like a PREFIX=value, or a second "/" in
 // what would otherwise be a suffixed word's word part -- is rejected here and falls through to
 // { cmd: "unknown" }. Measured cost of this guard over data/RG164.CRIS.FY94.txt on 2026-09-09
@@ -33,7 +37,7 @@ function parseItems(s: string): number[] | null {
 // contain a standalone AND/OR/NOT, 47 contain a parenthesis (e.g. CY "AMES/ANKEY", DS "OR", CY
 // "KANKE (RANCH)"). Those phrases are unreachable here; the rejection is not a statement that
 // the values are absent from the file.
-const RESERVED_IN_TERM_VALUE = /[?/()]|\b(?:and|or|not)\b/i;
+const RESERVED_IN_TERM_VALUE = /[?/()]/;
 
 // A bare word term with a trailing suffix, e.g. `peach/ti` or `peach/ti,de`: the word is
 // everything up to the last "/", and after it a comma-joined list of two-letter suffix codes.
@@ -47,34 +51,89 @@ const RESERVED_IN_TERM_VALUE = /[?/()]|\b(?:and|or|not)\b/i;
 const SUFFIXED = /^([^=/?()]+)\/([A-Za-z]{2}(?:,[A-Za-z]{2})*)$/;
 
 /**
- * Operand grammar for this milestone: term/suffix[,suffix...] | PREFIX=value | S<n> | ( expr );
- * joined by AND. Limit: the AND split is not nesting-aware, so a parenthesized group that
- * itself contains AND (e.g. `(cy=beltsville and in=smith)`) parses to unknown. Only a group
- * with no internal operator parses. Grouping is not implemented here. Right truncation (`?`)
- * and DIALOG's own phrase/subfile suffix limits beyond a plain word suffix are also not
- * implemented here.
+ * Split a SELECT expression on the operator words and parentheses only, keeping every other
+ * run of characters -- including the internal double space of `IN=HAMMERSCHLAG  F A` -- as one
+ * operand token (spec 6.4: the phrase index preserves internal spacing, so an operand may
+ * contain spaces).
  */
-function parseExpr(src: string): SearchExpression | null {
-  const parts = src.split(/\s+and\s+/i);
-  let acc: SearchExpression | null = null;
-  for (const raw of parts) {
-    const p = raw.trim();
-    let node: SearchExpression | null = null;
-    const set = /^s(\d+)$/i.exec(p);
-    const suffixed = SUFFIXED.exec(p);
-    const term = /^([A-Za-z]{2})=(.+)$/.exec(p);
-    if (set) node = { kind: "set", id: Number(set[1]) };
-    else if (suffixed) {
-      node = RESERVED_IN_TERM_VALUE.test(suffixed[1]!)
-        ? null
-        : { kind: "word", codes: suffixed[2]!.toUpperCase().split(",").map(c => `/${c}`), term: suffixed[1]! };
-    }
-    else if (term) node = RESERVED_IN_TERM_VALUE.test(term[2]!) ? null : { kind: "term", field: term[1]!.toUpperCase(), term: term[2]! };
-    else if (p.startsWith("(") && p.endsWith(")")) node = parseExpr(p.slice(1, -1));
-    if (!node) return null;
-    acc = acc ? { kind: "and", left: acc, right: node } : node;
+function lex(src: string): string[] {
+  const out: string[] = [];
+  const re = /\s*(\(|\)|\bAND\b|\bOR\b|\bNOT\b)\s*/gi;
+  let last = 0;
+  for (const m of src.matchAll(re)) {
+    const operand = src.slice(last, m.index).trim();
+    if (operand) out.push(operand);
+    out.push(m[1]!.toUpperCase());
+    last = m.index + m[0].length;
   }
-  return acc;
+  const tail = src.slice(last).trim();
+  if (tail) out.push(tail);
+  return out;
+}
+
+const OPERATORS = new Set(["AND", "OR", "NOT"]);
+
+/**
+ * Recursive descent over the documented order of processing (Successful Searching on Dialog,
+ * 2001, "Order of Processing": parentheses, then proximity, then NOT, then AND, then OR;
+ * innermost parentheses first). Proximity operators are out of this slice and never reach
+ * here -- parse() would answer them with a capability notice before calling this, but none of
+ * the CAPABILITY_WORDS below recognize a proximity operator yet, so a SELECT using one is
+ * unknown, the same as before this grammar existed. Returns null for any statement this
+ * grammar cannot read, including an unmatched parenthesis and a leading NOT (spec 7.12: NOT
+ * is binary).
+ */
+export function parseExpression(src: string): SearchExpression | null {
+  const t = lex(src);
+  let i = 0;
+  const peek = () => t[i];
+  const binary = (next: () => SearchExpression | null, kind: "and" | "or" | "not", word: string) => (): SearchExpression | null => {
+    let left = next();
+    if (!left) return null;
+    while (peek() === word) {
+      i++;
+      const right = next();
+      if (!right) return null;
+      left = { kind, left, right } as SearchExpression;
+    }
+    return left;
+  };
+  const primary = (): SearchExpression | null => {
+    const tok = t[i];
+    if (tok === undefined) return null;
+    if (tok === "(") {
+      i++;
+      const inner = or();
+      if (!inner || t[i] !== ")") return null; // unmatched parenthesis (proto.error.unmatched_parens)
+      i++;
+      return inner;
+    }
+    if (OPERATORS.has(tok)) return null; // a leading or doubled operator
+    i++;
+    return parseOperand(tok);
+  };
+  const not = binary(primary, "not", "NOT");
+  const and = binary(not, "and", "AND");
+  const or = binary(and, "or", "OR");
+  const expr = or();
+  return expr && i === t.length ? expr : null;
+}
+
+/** One operand: term/suffix[,suffix...] | PREFIX=value | S<n>. A value carrying a reserved
+ * character does not parse, as in Plan 1: this parser must never fold syntax it does not
+ * evaluate into a phrase and print a fabricated set line for it. */
+function parseOperand(tok: string): SearchExpression | null {
+  const set = /^s(\d+)$/i.exec(tok);
+  if (set) return { kind: "set", id: Number(set[1]) };
+  const suffixed = SUFFIXED.exec(tok);
+  if (suffixed) {
+    return RESERVED_IN_TERM_VALUE.test(suffixed[1]!)
+      ? null
+      : { kind: "word", codes: suffixed[2]!.toUpperCase().split(",").map(c => `/${c}`), term: suffixed[1]! };
+  }
+  const term = /^([A-Za-z]{2})=(.+)$/.exec(tok);
+  if (!term || RESERVED_IN_TERM_VALUE.test(term[2]!)) return null;
+  return { kind: "term", field: term[1]!.toUpperCase(), term: term[2]! };
 }
 
 /**
@@ -101,7 +160,7 @@ export function parse(line: string): DialogCommand {
   let m: RegExpExecArray | null;
   if ((m = /^(?:b|begin)\s*(\d+)$/i.exec(t))) return { cmd: "begin", file: Number(m[1]) };
   if ((m = /^(?:s|select)\s+(.+)$/i.exec(t))) {
-    const expr = parseExpr(m[1]!);
+    const expr = parseExpression(m[1]!);
     return expr ? { cmd: "select", expr, echo: m[1]!.replace(/\s+$/, "").toUpperCase() } : unknown(line);
   }
   if ((m = /^(?:t|type)\s+s(\d+)\/([A-Za-z0-9,]+)\/([\d,\-]+)$/i.exec(t))) {

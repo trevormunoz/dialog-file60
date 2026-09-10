@@ -5,7 +5,7 @@ implement, and what it prints when you try it.
 
 ## What is not implemented
 
-Out of scope for version 1: EXPAND and PAGE, OR/NOT, the subfile limits
+Out of scope for version 1: EXPAND and PAGE, the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
 guard as a suffix, never tested against the SF field), SELECT STEPS, DISPLAY
 SETS, BEGIN's accounting block (the date/time/user line and the three `$`
@@ -22,6 +22,14 @@ Word indexes and suffix search are implemented: `S PEACH/TI` and
 `S PEACH/TI,DE` search the word indexes described in
 [Word indexes](indexes.md).
 
+OR and NOT are implemented, following the order of processing a later DIALOG
+manual documents: without parentheses, NOT is worked out first, then AND,
+then OR; parentheses change the order, innermost group first. `S CY=AMES OR
+CY=BELTSVILLE AND ST=MARYLAND` and `S (CY=AMES OR CY=BELTSVILLE) AND
+ST=MARYLAND` parse to different expressions. Proximity operators
+((W), (N), and the rest) are not implemented; a SELECT using one is
+indistinguishable from a typo, the same as before OR and NOT existed here.
+
 A capability notice exists as a stub, not the full mechanism: EXPAND, PAGE,
 DISPLAY SETS, LOGOFF, SORT, PRINT, KWIC, and TYPE by accession number
 (`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
@@ -31,7 +39,7 @@ beneath the prompt reads "DIALOG documented `EXPAND` for File 60; this
 reconstruction does not implement it yet." (registry `capability.notice`),
 outside the stream entirely -- it never appears in scrollback or in a copied
 selection, and it does not change the session. Every other out-of-slice
-command or option -- OR/NOT, proximity, right truncation, subfile limits
+command or option -- proximity, right truncation, subfile limits
 inside SELECT, multi-word implicit-adjacency terms, SELECT STEPS -- remains
 indistinguishable from a typo and gets the simulated error form, `?`
 followed by the offending token (an out-of-slice TYPE format prints the item

@@ -59,10 +59,16 @@ belt = [r for r in recs if "BELTSVILLE" in values(r, b"CY")]
 both = [r for r in belt if "HAMMERSCHLAG  F A" in values(r, b"IN")]
 inham = [r for r in recs if "HAMMERSCHLAG  F A" in values(r, b"IN")]
 ti_peach = [r for r in recs if "PEACH" in tokenize_ti(" ".join(values(r, b"TI")))]
+greenbelt = [r for r in recs if "GREENBELT" in values(r, b"CY")]
+belt_or_green_ans = sorted(set(an(r) for r in belt) | set(an(r) for r in greenbelt))
+maryland_ans = set(an(r) for r in recs if "MARYLAND" in values(r, b"ST"))
+belt_not_maryland_ans = sorted(an(r) for r in belt if an(r) not in maryland_ans)
 print(json.dumps({
     "records": len(recs),
     "cy_beltsville": {"count": len(belt), "an": sorted(an(r) for r in belt)},
     "cy_beltsville_and_in_hammerschlag_f_a": {"count": len(both), "an": sorted(an(r) for r in both)},
     "in_hammerschlag_f_a": {"count": len(inham), "an": sorted(an(r) for r in inham)},
     "ti_peach": {"count": len(ti_peach), "an": sorted(an(r) for r in ti_peach)},
+    "cy_beltsville_or_greenbelt": {"count": len(belt_or_green_ans), "an": belt_or_green_ans},
+    "cy_beltsville_not_st_maryland": {"count": len(belt_not_maryland_ans), "an": belt_not_maryland_ans},
 }, indent=1))

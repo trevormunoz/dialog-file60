@@ -38,9 +38,21 @@ test("a reversed TYPE item range is unknown, not an empty item list", () => {
 test("out-of-slice SELECT syntax is unknown, not a fabricated phrase term", () => {
   expect(parse("s in=smith?")).toEqual({ cmd: "unknown", text: "s in=smith?" });
   expect(parse("s in=hammerschlag/ti")).toEqual({ cmd: "unknown", text: "s in=hammerschlag/ti" });
-  expect(parse("s cy=beltsville or cy=greenbelt")).toEqual({ cmd: "unknown", text: "s cy=beltsville or cy=greenbelt" });
-  expect(parse("s cy=beltsville not cy=greenbelt")).toEqual({ cmd: "unknown", text: "s cy=beltsville not cy=greenbelt" });
   expect(parse("s in=x and")).toEqual({ cmd: "unknown", text: "s in=x and" });
+});
+
+// OR and NOT are in this milestone's slice (proto.select.precedence, proto.select.boolean):
+// see test/regression/boolean.test.ts for the full precedence and evaluation coverage. This
+// pins only that parse() itself reaches parseExpression for them and echoes correctly.
+test("SELECT combines terms with OR and NOT", () => {
+  expect(parse("s cy=beltsville or cy=greenbelt")).toEqual({
+    cmd: "select", echo: "CY=BELTSVILLE OR CY=GREENBELT",
+    expr: { kind: "or", left: { kind: "term", field: "CY", term: "beltsville" }, right: { kind: "term", field: "CY", term: "greenbelt" } },
+  });
+  expect(parse("s cy=beltsville not cy=greenbelt")).toEqual({
+    cmd: "select", echo: "CY=BELTSVILLE NOT CY=GREENBELT",
+    expr: { kind: "not", left: { kind: "term", field: "CY", term: "beltsville" }, right: { kind: "term", field: "CY", term: "greenbelt" } },
+  });
 });
 
 // A word term followed by a suffix: everything up to the last "/" is the search word, the
@@ -87,8 +99,14 @@ test("digits after a slash are not suffix codes: unknown, not a fabricated word 
   expect(parse("s 9/10")).toEqual({ cmd: "unknown", text: "s 9/10" });
 });
 
-test("a parenthesized group containing AND is outside this milestone: unknown, not a fabricated term", () => {
-  expect(parse("s (cy=beltsville and in=smith)")).toEqual({ cmd: "unknown", text: "s (cy=beltsville and in=smith)" });
+// Parentheses now group a sub-expression (proto.select.precedence); a parenthesized AND
+// parses the same as the ungrouped form, since nothing else in this expression competes with
+// it for precedence.
+test("a parenthesized group parses like its ungrouped contents", () => {
+  expect(parse("s (cy=beltsville and in=smith)")).toEqual({
+    cmd: "select", echo: "(CY=BELTSVILLE AND IN=SMITH)",
+    expr: { kind: "and", left: { kind: "term", field: "CY", term: "beltsville" }, right: { kind: "term", field: "IN", term: "smith" } },
+  });
 });
 
 // A capability-notice stub. Each of these is a documented File 60 command but outside this

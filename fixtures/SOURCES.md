@@ -155,6 +155,18 @@ scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus after adding
 first four fields (`records`, `cy_beltsville`, `cy_beltsville_and_in_hammerschlag_f_a`,
 `in_hammerschlag_f_a`) are byte-for-byte unchanged.
 
+Added a sixth and seventh field for OR and NOT, checking `RetrievalEngine`'s union and
+difference against a set union/subtraction written fresh over the raw values rather than
+through the engine's own index lookup: `cy_beltsville_or_greenbelt` (AN list for CY=BELTSVILLE
+union CY=GREENBELT) and `cy_beltsville_not_st_maryland` (AN list for CY=BELTSVILLE minus any
+record whose ST also carries MARYLAND). Re-ran `python3 scripts/naive-split.py
+data/RG164.CRIS.FY94.txt` against the corpus after adding them: the first five fields are
+byte-for-byte unchanged. No record in this corpus carries CY=GREENBELT, so
+`cy_beltsville_or_greenbelt`'s 669 AN list is identical to `cy_beltsville`'s own; every
+CY=BELTSVILLE record in this corpus also carries ST=MARYLAND, so `cy_beltsville_not_st_maryland`
+is an empty list -- both are the corpus's own answer, not a simplified test case chosen to make
+the check easy.
+
 ## The corpus's own trailer line
 
 The last 82-byte line of `data/RG164.CRIS.FY94.txt` is
@@ -169,7 +181,7 @@ directly from the file's own accounting and does not share that
 assumption. `test/archival/loader.test.ts`'s full-corpus test asserts
 both figures against the parsed count.
 
-sha256: 9a28629ef3fb8b4692d35d17da662b577be9bb1b30298b263f1cf722dd70ac8b
+sha256: 7b27fd59664999eb1a86b4e1bb6c5bad36e0de5c1306bfa7a79b312fd484e98c
 
 Not re-run by the automated suite: no subprocess is spawned from inside a Vitest test (an
 `npx tsx` subprocess spawn from a Vitest worker had

@@ -61,10 +61,13 @@ rests on. This is the full registry, grouped by status, produced by
 - nara.file.trailer_record
 - proto.begin.set_header
 - proto.begin.set_reset
+- proto.error.unmatched_parens
 - proto.prompt
 - proto.prompt.spacing
+- proto.select.boolean
 - proto.select.echo_case
 - proto.select.per_term_postings
+- proto.select.precedence
 - proto.select.setline
 - proto.type.item_header
 - render.format5.layout

@@ -127,11 +127,12 @@ test("an unknown field (not a set) still cites proto.error.unknown_field", async
 
 // "e" is a recognized capability-notice command word (EXPAND), not an unrecognized one, so
 // the genuinely-unknown case pinned here is "zx" -- no command word this milestone recognizes
-// in any form.
+// in any form. OR itself now parses (proto.select.boolean); the failing SELECT below still
+// does not, because "smith?" carries a reserved character in its value.
 test("the bare ? never stands alone: an unrecognized command echoes its first token, a failed SELECT its first operand", async () => {
   const s = mk(); await s.submit("b 60");
   expect((await s.submit("zx cy=beltsville")).map(l => l.text)).toEqual(["? ZX"]);
-  expect((await s.submit("s cy=beltsville or cy=ames")).map(l => l.text)).toEqual(["? CY=BELTSVILLE OR CY=AMES"]);
+  expect((await s.submit("s cy=beltsville or in=smith?")).map(l => l.text)).toEqual(["? CY=BELTSVILLE OR IN=SMITH?"]);
 });
 
 // A TYPE the parser recognizes as TYPE (T/TYPE) but whose remainder
