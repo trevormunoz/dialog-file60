@@ -151,7 +151,6 @@ function parseOperand(tok: string): SearchExpression | null {
  * not parse as EXPAND with rest "able" -- the capture is only ever a separate word or words.
  */
 const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [
-  { pattern: /^(?:display\s+sets|ds)(?:\s+(.*))?$/i, command: "DISPLAY SETS" },
   { pattern: /^logoff(?:\s+(.*))?$/i, command: "LOGOFF" },
   { pattern: /^sort(?:\s+(.*))?$/i, command: "SORT" },
   { pattern: /^(?:print|pr)(?:\s+(.*))?$/i, command: "PRINT" },
@@ -186,6 +185,12 @@ export function parse(line: string): DialogCommand {
   }
   if ((m = /^(?:e|expand)\s+(.+)$/i.exec(t))) return { cmd: "expand", term: m[1]!.trim() };
   if ((m = /^(?:p|page)(-)?$/i.exec(t))) return { cmd: "page", back: m[1] === "-" };
+  // Both the bare (`DS 1-3`) and S-prefixed (`DS S1-S3`) range forms are documented; a single
+  // set number leaves `to` equal to `from`, and no number at all shows every set.
+  if ((m = /^(?:ds|display\s+sets)(?:\s+s?(\d+)(?:\s*-\s*s?(\d+))?)?$/i.exec(t))) {
+    const from = m[1] ? Number(m[1]) : null;
+    return { cmd: "displaysets", from, to: m[2] ? Number(m[2]) : from };
+  }
   for (const { pattern, command } of CAPABILITY_WORDS) {
     if ((m = pattern.exec(t))) return { cmd: "unsupported", command, rest: (m[1] ?? "").toUpperCase() };
   }

@@ -143,15 +143,15 @@ describe("capability notices", () => {
   test("the session records the last capability notice, cleared by any other command", async () => {
     const s = mk(); await s.submit("b 60");
     expect(s.lastNotice).toBeNull();
-    await s.submit("ds");
-    expect(s.lastNotice).toEqual({ command: "DISPLAY SETS" });
+    await s.submit("logoff");
+    expect(s.lastNotice).toEqual({ command: "LOGOFF" });
     await s.submit("s cy=beltsville"); // an ordinary command clears the stale notice
     expect(s.lastNotice).toBeNull();
   });
 
   // A SELECT naming a Blue Sheet documented prefix with no built
   // index (this milestone builds only CY, IN, DS, ST, SF, AN) answers with the same channel
-  // as EXPAND/DISPLAY SETS, not the simulated typo error -- FY= is a real File 60 search the
+  // as EXPAND/LOGOFF, not the simulated typo error -- FY= is a real File 60 search the
   // reconstruction has not implemented, not a mistyped field code.
   test("a documented File 60 prefix with no built index routes to the capability-notice channel, not the simulated typo error", async () => {
     const s = mk(); await s.submit("b 60");

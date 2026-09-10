@@ -13,6 +13,7 @@ test("docs/not-implemented.md names the real gaps", () => {
     "format 6",
     "user-defined format",
     "subfile limit",
+    "set detail on",
     // A capability-notice stub exists (EXPAND, PAGE, DISPLAY SETS, LOGOFF, SORT, PRINT,
     // KWIC, TYPE by accession number), so the section names the notice rather than
     // claiming no notice exists at all.

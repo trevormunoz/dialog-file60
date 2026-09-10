@@ -7,8 +7,9 @@ implement, and what it prints when you try it.
 
 Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
-guard as a suffix, never tested against the SF field), DISPLAY
-SETS, BEGIN's accounting block (the date/time/user line and the three `$`
+guard as a suffix, never tested against the SF field), SET DETAIL ON (the
+File column it adds to DISPLAY SETS' table is not printed), BEGIN's
+accounting block (the date/time/user line and the three `$`
 cost lines -- BEGIN prints only the blank line, banner, blank line, and set
 header), TYPE format 6 and user-defined formats from display codes (only
 format 5 is implemented; every other format number or code list prints the
@@ -45,12 +46,18 @@ IN=HAMMERSCHLAG` numbers S1 for CY=BELTSVILLE, S2 for IN=HAMMERSCHLAG, and S3
 for the combined search; a single-operand SS numbers one set, not the same
 line twice.
 
-A capability notice exists as a stub, not the full mechanism: DISPLAY SETS,
+DISPLAY SETS (`DS`, or `DISPLAY SETS`) is implemented: it reprints the set
+header and one line per set made since the session's last BEGIN, the same
+set-line layout SELECT and SELECT STEPS use. `DS` alone shows every set;
+`DS 1-3` or `DS S1-S3` shows a range, and a single number shows one set. `DS`
+before any SELECT shows the header alone, and BEGIN clears the list.
+
+A capability notice exists as a stub, not the full mechanism:
 LOGOFF, SORT, PRINT, KWIC, and TYPE by accession number
 (`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
 recognized by the parser as documented commands outside version 1's slice.
 Recognizing one prints nothing into the character stream; one modern line
-beneath the prompt reads "DIALOG documented `DISPLAY SETS` for File 60; this
+beneath the prompt reads "DIALOG documented `LOGOFF` for File 60; this
 reconstruction does not implement it yet." (registry `capability.notice`),
 outside the stream entirely -- it never appears in scrollback or in a copied
 selection, and it does not change the session. Every other out-of-slice

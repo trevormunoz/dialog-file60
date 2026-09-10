@@ -274,6 +274,14 @@ export class DialogSession {
         this.expand = { ...paged, rows: paged.rows.map(r => ({ ...r, starred: false })) };
         return expandLines(this.expand).map(t => line(t, { registryKeys: ["proto.expand.page", "proto.expand.enumbers"] }));
       }
+      case "displaysets": {
+        if (this.currentFile === null) return [line("? DS", { registryKeys: ["proto.error.bad_file"] })];
+        const shown = this.sets.filter(s => cmd.from === null || (s.id >= cmd.from && s.id <= cmd.to!));
+        return [
+          ...header.map(h => line(h, { registryKeys: ["proto.begin.set_header"] })),
+          ...shown.map(s => line(setLine(s.id, s.ordinals.length, s.echo), { registryKeys: ["proto.displaysets.table"] })),
+        ];
+      }
       case "unsupported": {
         // The terminal prints nothing for this. this.lastNotice (set in submit(), above) is
         // the app's route to it, outside the stream this method returns.

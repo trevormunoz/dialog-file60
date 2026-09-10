@@ -1691,5 +1691,25 @@
       }
     ],
     "note": "whether a plain SELECT also printed Processing first is not recorded in any source held; this reconstruction's SELECT does not print it."
+  },
+  "proto.displaysets.table": {
+    "value": true,
+    "status": "documented",
+    "claim": "DISPLAY SETS reprints the table of sets made since the session's last BEGIN.",
+    "sources": [
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 3, the set table under OneSearch",
+        "sourceDate": "1988",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "the DISPLAY SETS section: \"?display sets\" prints the header and every set, \"?ds s1-s2\" prints a range, and the list shows \"the set number, the number of items retrieved, and the contents of each set\" for the sets created since the last BEGIN",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "the same set-line layout as SELECT's, reusing the two header lines; the File column belongs to SET DETAIL ON, which is out of the slice, and both DS 1-3 and DS S1-S3 are accepted because both forms are documented."
   }
 }

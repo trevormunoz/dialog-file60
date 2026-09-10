@@ -61,6 +61,7 @@ rests on. This is the full registry, grouped by status, produced by
 - nara.file.trailer_record
 - proto.begin.set_header
 - proto.begin.set_reset
+- proto.displaysets.table
 - proto.error.unmatched_parens
 - proto.expand.enumbers
 - proto.expand.page
