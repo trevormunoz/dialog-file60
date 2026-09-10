@@ -3,6 +3,9 @@ import type { SearchExpression } from "../retrieval/engine";
 export type DialogCommand =
   | { cmd: "begin"; file: number }
   | { cmd: "select"; expr: SearchExpression; echo: string }
+  /** SELECT STEPS (SS): the same expression as SELECT, but numbers a set for each operand
+   * before the final combined set. */
+  | { cmd: "selectsteps"; expr: SearchExpression; echo: string }
   | { cmd: "type"; set: number; format: string; items: number[] }
   /** EXPAND, with the raw text after the command word: `PREFIX=value`, `PREFIX=` alone, or a
    * bare term to browse the Basic Index. Unparsed here -- the session splits it. */

@@ -7,7 +7,7 @@ implement, and what it prints when you try it.
 
 Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
-guard as a suffix, never tested against the SF field), SELECT STEPS, DISPLAY
+guard as a suffix, never tested against the SF field), DISPLAY
 SETS, BEGIN's accounting block (the date/time/user line and the three `$`
 cost lines -- BEGIN prints only the blank line, banner, blank line, and set
 header), TYPE format 6 and user-defined formats from display codes (only
@@ -38,6 +38,13 @@ ST=MARYLAND` parse to different expressions. Proximity operators
 ((W), (N), and the rest) are not implemented; a SELECT using one is
 indistinguishable from a typo, the same as before OR and NOT existed here.
 
+SELECT STEPS (`SS`, or `SELECT STEPS`) is implemented: it prints `Processing`,
+then a numbered set for each operand of the search, then the combined set,
+the same expression grammar as SELECT. `SS CY=BELTSVILLE AND
+IN=HAMMERSCHLAG` numbers S1 for CY=BELTSVILLE, S2 for IN=HAMMERSCHLAG, and S3
+for the combined search; a single-operand SS numbers one set, not the same
+line twice.
+
 A capability notice exists as a stub, not the full mechanism: DISPLAY SETS,
 LOGOFF, SORT, PRINT, KWIC, and TYPE by accession number
 (`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
@@ -48,7 +55,7 @@ reconstruction does not implement it yet." (registry `capability.notice`),
 outside the stream entirely -- it never appears in scrollback or in a copied
 selection, and it does not change the session. Every other out-of-slice
 command or option -- proximity, right truncation, subfile limits
-inside SELECT, multi-word implicit-adjacency terms, SELECT STEPS -- remains
+inside SELECT, multi-word implicit-adjacency terms -- remains
 indistinguishable from a typo and gets the simulated error form, `?`
 followed by the offending token (an out-of-slice TYPE format prints the item
 header first, as described above).

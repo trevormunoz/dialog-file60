@@ -162,6 +162,11 @@ export function parse(line: string): DialogCommand {
   const t = line.trim();
   let m: RegExpExecArray | null;
   if ((m = /^(?:b|begin)\s*(\d+)$/i.exec(t))) return { cmd: "begin", file: Number(m[1]) };
+  // Checked before plain SELECT, so "ss ..." is not read as "s" followed by the operand "s ...".
+  if ((m = /^(?:ss|select\s+steps)\s+(.+)$/i.exec(t))) {
+    const expr = parseExpression(m[1]!);
+    return expr ? { cmd: "selectsteps", expr, echo: m[1]!.replace(/\s+$/, "").toUpperCase() } : unknown(line);
+  }
   if ((m = /^(?:s|select)\s+(.+)$/i.exec(t))) {
     const expr = parseExpression(m[1]!);
     return expr ? { cmd: "select", expr, echo: m[1]!.replace(/\s+$/, "").toUpperCase() } : unknown(line);

@@ -22,6 +22,7 @@ export function statusWords(status: Status): string {
 // fails loudly rather than printing a raw key in a reader-facing panel.
 const SOURCE_NAMES: Record<string, string> = {
   "alin-1988": "Agricultural Libraries Information Notes, v.14 no.3, 1988, leaf 13",
+  "alin-1992": "Agricultural Libraries Information Notes, v.18 no.1/2, 1992, leaf 13",
   "dialog-catalog-1984": "Dialog Database Catalog, 1984",
   "agricola-guide-1984": "AGRICOLA User's Guide, National Agricultural Library, 1984",
   "bluesheet-1998-page": "DIALOG Blue Sheet for File 60, 2 March 1998",
@@ -66,6 +67,8 @@ export function sourceName(key: string): string {
 const SOURCE_GLOSSES: Record<string, string> = {
   "alin-1988":
     "One page of the National Agricultural Library's staff newsletter, costing out DIALOG printing at 1200 and 2400 baud.",
+  "alin-1992":
+    "One page of the National Agricultural Library's staff newsletter, naming DIALOG's Select command in its S or SS form.",
   "dialog-catalog-1984":
     "DIALOG's 1984 catalog of the databases it offered, listing File 60 among them.",
   "agricola-guide-1984":

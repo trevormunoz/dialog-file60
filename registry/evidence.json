@@ -1651,5 +1651,45 @@
       }
     ],
     "decision": "a new EXPAND naming a term erases the previous list and its ref numbers (2001: \"erases the previous list\"); PAGE and PAGE- keep the same list and continue the same E-number sequence."
+  },
+  "proto.selectsteps.sets": {
+    "value": true,
+    "status": "documented",
+    "claim": "SELECT STEPS numbers a separate set for each term as well as for the whole search.",
+    "sources": [
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 2: \"?ss expert(w)system? ?/de and scheduling\" answered S1 6605 EXPERT/DE",
+        "sourceDate": "1988",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "PDF page 99 (printed page 113): \"?ss technolog?(W)transfer?/ti\" answered S1 4322 TECHNOLOG?/TI, S2 1330 TRANSFER?/TI, S3 252 TECHNOLOG?(W)TRANSFER?/TI",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "alin-1992",
+        "locator": "\"DIALOG's Select (S, or SS) command\"",
+        "sourceDate": "1992",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "the alin-1992 citation is only a name for SS as a period search command, not a transcript of its output; the set shape itself comes from the 1988 and 1994 sources."
+  },
+  "proto.selectsteps.processing": {
+    "value": "Processing",
+    "status": "documented",
+    "claim": "SELECT STEPS prints the word Processing before its set lines.",
+    "sources": [
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 2, the line \"Processing\" printed before S1",
+        "sourceDate": "1988",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "whether a plain SELECT also printed Processing first is not recorded in any source held; this reconstruction's SELECT does not print it."
   }
 }

@@ -66,6 +66,24 @@ function offendingToken(text: string): string {
  * numbers, since it moves the window without reusing an already-computed ExpandState.nextRef. */
 const wrapRef = (n: number): number => ((n - 1) % MAX_REF + MAX_REF) % MAX_REF + 1;
 
+/** The leaf operands of an expression, left to right: what SELECT STEPS numbers a set for. A
+ * set reference is an operand too, and prints its own set line (1988 figure 2). */
+export function operands(expr: SearchExpression): SearchExpression[] {
+  return expr.kind === "and" || expr.kind === "or" || expr.kind === "not"
+    ? [...operands(expr.left), ...operands(expr.right)] : [expr];
+}
+
+/** The uppercased echo for one operand, rebuilt from the AST rather than re-split from the
+ * input line: SS prints each operand's own set line, and the input's spacing is not it. */
+export function echoOf(expr: SearchExpression): string {
+  switch (expr.kind) {
+    case "term": return `${expr.field}=${expr.term.toUpperCase()}`;
+    case "word": return `${expr.term.toUpperCase()}${expr.codes[0]}${expr.codes.slice(1).map(c => `,${c.slice(1)}`).join("")}`;
+    case "set": return `S${expr.id}`;
+    default: return "";   // operands() returns leaves only, so this is unreachable
+  }
+}
+
 export class DialogSession {
   sets: SearchSet[] = [];
   currentFile: number | null = null;
@@ -113,6 +131,60 @@ export class DialogSession {
     }
   }
 
+  /** Resolves `expr`, searches it, numbers and stores the resulting set, and returns its
+   * per-term lines (for a multi-term expression) followed by its own set line -- the set-
+   * creating half of both SELECT and SELECT STEPS, which differ only in how many times, and
+   * with what operands, they call this. A retrieval error is caught here, not by the caller:
+   * an operand that fails to resolve prints the simulated error form and consumes no set
+   * number, the same as a plain SELECT that fails. `showPerTerm` is false only for SELECT
+   * STEPS' own final combined set: SS already printed each operand's postings as its own
+   * numbered set line, so the plain per-term breakdown this method would otherwise add for a
+   * multi-term expression is the same information a second time, not new. `extraKeys` are
+   * merged into the set line's own registryKeys -- SELECT STEPS adds proto.selectsteps.sets
+   * there, since it is the same set line SELECT prints, just also evidence for SS's own
+   * per-term-and-final numbering rule. */
+  private async addSet(expr: SearchExpression, echo: string, showPerTerm = true, extraKeys: string[] = []): Promise<OutputLine[]> {
+    let result; let resolved: SearchExpression;
+    try {
+      // Resolve any E-number operand (SELECT E3, E3:E5) against the open EXPAND display
+      // first, so the retrieval engine only ever sees a "refs" node whose ordinals are
+      // already the postings that ref names -- it never learns what an E-number is.
+      resolved = await this.resolveRefs(expr);
+      // prepare() loads any word-index shards this expression needs (a no-op for an
+      // expression with no word operand); search() itself stays synchronous and only
+      // ever reads what prepare() already cached.
+      await this.engine.prepare(resolved);
+      result = this.engine.search(resolved, new Map(this.sets.map(s => [s.id, s.ordinals])));
+    }
+    catch (e) {
+      if (e instanceof UnknownSet) return [line(`? S${e.id}`, { registryKeys: ["proto.error.unknown_set"] })];
+      if (e instanceof UnknownSuffix) return [line(`? ${e.code}`, { registryKeys: ["proto.error.unknown_suffix"] })];
+      if (e instanceof UnknownRef) return [line(`? ${e.echo}`, { registryKeys: ["proto.error.unknown_field"] })];
+      if (e instanceof UnknownField) {
+        // A prefix the 1998 Blue Sheet documents but this build has no index for
+        // (e.g. FY=) is a real File 60 search this milestone has not implemented, not a
+        // typo -- route it to the same capability-notice channel as EXPAND/DISPLAY SETS
+        // (this.lastNotice, read by main.ts outside the character stream) instead of the
+        // simulated error form.
+        if (e.documented) { this.lastNotice = { command: `${e.field.toUpperCase()}= (search prefix)` }; return []; }
+        return [line(`? ${e.field.toUpperCase()}=${e.term.toUpperCase()}`, { registryKeys: ["proto.error.unknown_field"] })];
+      }
+      throw e;
+    }
+    const id = this.sets.length + 1;
+    const set: SearchSet = { id, echo, expr: resolved, perTerm: result.perTerm, ordinals: result.ordinals };
+    this.sets.push(set);
+    const out: OutputLine[] = [];
+    // render.setline.columns (the fixed setCol/itemsEnd/descCol
+    // positions setLine() reads) shapes every set line's spacing, not just the parts
+    // proto.select.per_term_postings/proto.select.setline name -- cited alongside them so
+    // the inspect panel reaches it from the set line itself.
+    if (showPerTerm && (result.perTerm.length > 1 || resolved.kind !== "term"))
+      for (const t of result.perTerm) out.push(line(setLine(null, t.postings, t.display), { registryKeys: ["proto.select.per_term_postings", "render.setline.columns", "index.phrase.uppercase"] }));
+    out.push(line(setLine(id, result.ordinals.length, echo), { registryKeys: ["proto.select.setline", "render.setline.columns", "render.record.order", ...extraKeys] }));
+    return out;
+  }
+
   private async run(cmd: DialogCommand): Promise<OutputLine[]> {
     switch (cmd.cmd) {
       case "begin": {
@@ -129,44 +201,16 @@ export class DialogSession {
         // offendingToken applies from raw text, applied here to the parsed command instead,
         // since this branch has no raw input text to re-derive it from.
         if (this.currentFile === null) return [line(`? ${firstAndOperand(cmd.echo)}`, { registryKeys: ["proto.error.bad_file"] })];
-        let result; let expr: SearchExpression;
-        try {
-          // Resolve any E-number operand (SELECT E3, E3:E5) against the open EXPAND display
-          // first, so the retrieval engine only ever sees a "refs" node whose ordinals are
-          // already the postings that ref names -- it never learns what an E-number is.
-          expr = await this.resolveRefs(cmd.expr);
-          // prepare() loads any word-index shards this expression needs (a no-op for an
-          // expression with no word operand); search() itself stays synchronous and only
-          // ever reads what prepare() already cached.
-          await this.engine.prepare(expr);
-          result = this.engine.search(expr, new Map(this.sets.map(s => [s.id, s.ordinals])));
-        }
-        catch (e) {
-          if (e instanceof UnknownSet) return [line(`? S${e.id}`, { registryKeys: ["proto.error.unknown_set"] })];
-          if (e instanceof UnknownSuffix) return [line(`? ${e.code}`, { registryKeys: ["proto.error.unknown_suffix"] })];
-          if (e instanceof UnknownRef) return [line(`? ${e.echo}`, { registryKeys: ["proto.error.unknown_field"] })];
-          if (e instanceof UnknownField) {
-            // A prefix the 1998 Blue Sheet documents but this build has no index for
-            // (e.g. FY=) is a real File 60 search this milestone has not implemented, not a
-            // typo -- route it to the same capability-notice channel as EXPAND/DISPLAY SETS
-            // (this.lastNotice, read by main.ts outside the character stream) instead of the
-            // simulated error form.
-            if (e.documented) { this.lastNotice = { command: `${e.field.toUpperCase()}= (search prefix)` }; return []; }
-            return [line(`? ${e.field.toUpperCase()}=${e.term.toUpperCase()}`, { registryKeys: ["proto.error.unknown_field"] })];
-          }
-          throw e;
-        }
-        const id = this.sets.length + 1;
-        const set: SearchSet = { id, echo: cmd.echo, expr, perTerm: result.perTerm, ordinals: result.ordinals };
-        this.sets.push(set);
-        const out: OutputLine[] = [];
-        // render.setline.columns (the fixed setCol/itemsEnd/descCol
-        // positions setLine() reads) shapes every set line's spacing, not just the parts
-        // proto.select.per_term_postings/proto.select.setline name -- cited alongside them so
-        // the inspect panel reaches it from the set line itself.
-        if (result.perTerm.length > 1 || expr.kind !== "term")
-          for (const t of result.perTerm) out.push(line(setLine(null, t.postings, t.display), { registryKeys: ["proto.select.per_term_postings", "render.setline.columns", "index.phrase.uppercase"] }));
-        out.push(line(setLine(id, result.ordinals.length, cmd.echo), { registryKeys: ["proto.select.setline", "render.setline.columns", "render.record.order"] }));
+        return await this.addSet(cmd.expr, cmd.echo);
+      }
+      case "selectsteps": {
+        if (this.currentFile === null) return [line(`? ${firstAndOperand(cmd.echo)}`, { registryKeys: ["proto.error.bad_file"] })];
+        const out: OutputLine[] = [line("Processing", { registryKeys: ["proto.selectsteps.processing"] })];
+        const leaves = operands(cmd.expr);
+        // A single-operand SS numbers one set: the operand and the whole statement are the same
+        // expression, and DIALOG prints one line for it, not the same line twice.
+        if (leaves.length > 1) for (const leaf of leaves) out.push(...await this.addSet(leaf, echoOf(leaf), true, ["proto.selectsteps.sets"]));
+        out.push(...await this.addSet(cmd.expr, cmd.echo, leaves.length === 1, ["proto.selectsteps.sets"]));
         return out;
       }
       case "type": {
