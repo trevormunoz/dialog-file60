@@ -10,15 +10,15 @@ File  60:CRIS/USDA - Current Research
 
       Set  Items  Description
       ---  -----  -----------
-?s cy=beltsville
-      S1     669  CY=BELTSVILLE
-?s s1 and in=hammerschlag  f a
-               2  IN=HAMMERSCHLAG  F A
-      S2       2  S1 AND IN=HAMMERSCHLAG  F A
-?t s2/5/1
-
-2/5/1
- DIALOG(R)File  60:CRIS/USDA
- (c) format only 1998 The Dialog Corporation plc
-
- 09049442
+?e in=hammerschlag
+Ref   Items  Index-term
+E1        1  HAMMER  P A
+E2        3  HAMMER  R D
+E3        0  *HAMMERSCHLAG
+E4        2  HAMMERSCHLAG  F A
+E5        1  HAMMERSCHMIDT     R
+E6        4  HAMMERSCHMIDT  R
+E7        1  HAMMERSTEDT       RH
+E8        3  HAMMERSTEDT  R H
+E9        1  HAMMIG            MD
+E10       3  HAMMIG  M D
