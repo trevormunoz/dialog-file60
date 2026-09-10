@@ -19,6 +19,7 @@ rests on. This is the full registry, grouped by status, produced by
 
 - dialog.file60.title
 - formatb.encoding.continuation_0xAC
+- formatb.encoding.fy1988_sc_percent
 - formatb.encoding.separator_0xA0_0x02
 - formatb.record.separator
 - index.word.stopwords
@@ -56,9 +57,13 @@ rests on. This is the full registry, grouped by status, produced by
 - map.UP
 - map.ZP
 - nara.conversion.line_form
+- nara.file.fy1988_fixity
+- nara.file.fy1988_header_record
+- nara.file.fy1988_trailer_record
 - nara.file.fy1994_fixity
 - nara.file.header_record
 - nara.file.trailer_record
+- nara.tape.fy1988_accession
 - proto.begin.set_header
 - proto.begin.set_reset
 - proto.displaysets.table

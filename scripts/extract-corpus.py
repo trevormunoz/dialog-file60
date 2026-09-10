@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Extract one NARA zip member from the WACZ capture, verify fixity, unzip.
 Usage: CRIS_ACQUISITION=<acquisition dir> python3 scripts/extract-corpus.py RG164.CRIS.FY94.txt.zip
+   or: CRIS_ACQUISITION=<acquisition dir> python3 scripts/extract-corpus.py RG310.CRIS.FY88.txt.zip
 
 CRIS_ACQUISITION is the directory of a WACZ capture of the NARA catalog
 download; it holds the WARC under output/ and the payload fixity list under
 validation/. A reader without a capture can download the file from the NARA
 catalog (NAID 1204533) instead and check its sha256 against
-registry/evidence.json.
+registry/evidence.json. RG310.CRIS.FY88.txt backs a typed encoding profile
+only (packages/cris-formatb/src/profiles.ts); the app never loads or serves
+its records.
 """
 import gzip, hashlib, json, os, re, sys, zipfile
 from pathlib import Path

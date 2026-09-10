@@ -29,6 +29,7 @@ const SOURCE_NAMES: Record<string, string> = {
   "bluesheet-1998-text": "DIALOG Blue Sheet for File 60, 2 March 1998",
   "pocket-guide-2001": "DIALOG Pocket Guide, basic commands, 9 July 2001",
   "cris-fy94-export": "the FY 1994 CRIS Format B export held by NARA, read directly",
+  "cris-fy88-export": "the FY 1988 CRIS Format B export held by NARA, read directly",
   "format-b-1990": "CRIS Format B specification, February 1990",
   "ontap-eric-1978": "ONTAP: ERIC training manual, 1978",
   "ontap-eric-1981": "ONTAP: ERIC training manual, 2nd edition, 1981",
@@ -81,6 +82,8 @@ const SOURCE_GLOSSES: Record<string, string> = {
     "DIALOG's quick-reference guide to basic search commands, published 9 July 2001.",
   "cris-fy94-export":
     "The FY 1994 CRIS export itself, the archival file this reconstruction reads directly.",
+  "cris-fy88-export":
+    "The FY 1988 CRIS export itself, read only to measure the encoding profile it backs; its records are not served.",
   "format-b-1990":
     "USDA's 1990 specification of the record layout CRIS exported for DIALOG.",
   "ontap-eric-1978":

@@ -1451,13 +1451,92 @@
         "observedSystem": "NARA"
       }
     ],
-    "note": "FY 1994 has no per-file validation statement of its own; these are the FY 1991 statement's media facts (already cited by nara.conversion.control_bytes), applied to FY 1994 by inference -- see src/inspect/panel.ts's FY1994_TAPE comment"
+    "note": "FY 1994 has no per-file validation statement of its own; these are the FY 1991 statement's media facts (already cited by nara.conversion.control_bytes), applied to FY 1994 by inference -- see src/app/corpora.ts's FY1994 tape comment"
   },
   "nara.tape.fy1994_accession": {
     "value": null,
     "status": "chosen",
     "claim": "The transfer record under which NARA received this file is not known; nothing on screen states one.",
     "note": "NAID 1204533 (fixtures/ACCEPTANCE.md) identifies the digitized text NARA now serves, not the transfer accession under which the physical FY 1994 tape was received. The FY 1991 validation statement's own accession is NN3-164-93-001 (CRIS Format B specification, February 1990, source note) -- the nearest documented instance, and it is not established whether FY 1994's accession is the same one. Statement of absence: not found by this project's method in the sources it consulted; would be resolved by the NARA Catalog's RG 164 series/accession record for the FY 1994 transfer, not yet located."
+  },
+  "nara.file.fy1988_fixity": {
+    "value": {
+      "bytes": 258555594,
+      "sha256": "34c434343821d83728de08d9e786011d123f5413b115a5d6fb734e202e43c930"
+    },
+    "status": "documented",
+    "claim": "The FY 1988 archival file this profile was measured against is this many bytes and hashes to this sha256.",
+    "sources": [
+      {
+        "source": "cris-fy88-export",
+        "locator": "whole file, shasum -a 256",
+        "sourceDate": "2026-09-10",
+        "observedSystem": "Format B"
+      }
+    ],
+    "note": "Matches the pattern of nara.file.fy1994_fixity. FY 1988's own file is not loaded by this app and is not present on every machine that runs it (unlike FY 1994's, which src/loader/cli.ts refuses to index without); packages/cris-formatb/fixtures/fy88-9000001.bin is a synthetic reconstruction of one field, not a corpus slice, where the real file is absent."
+  },
+  "nara.tape.fy1988_accession": {
+    "value": "NN3-310-90-001",
+    "status": "documented",
+    "claim": "The transfer record under which NARA received the FY 1988 tape is named in its validation statement.",
+    "sources": [
+      {
+        "source": "nara-cris-packet",
+        "locator": "FY 1988 validation statement, October 1990",
+        "sourceDate": "1990-10",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "Unlike nara.tape.fy1994_accession (not found), FY 1988's own validation statement gives this directly -- which is why the file carries the RG310 designation rather than RG164's."
+  },
+  "nara.file.fy1988_header_record": {
+    "value": "<< 000060900604",
+    "status": "documented",
+    "claim": "The FY 1988 file opens with a single header line recorded outside any project record, the same convention as FY 1994's.",
+    "sources": [
+      {
+        "source": "cris-fy88-export",
+        "locator": "line 1",
+        "sourceDate": "1988",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "the file's first line, preceding any '$$' record, matching nara.file.header_record's FY 1994 convention"
+  },
+  "nara.file.fy1988_trailer_record": {
+    "value": ">> 003153115000032016",
+    "status": "documented",
+    "claim": "The FY 1988 file closes with a single trailer line giving the total line and record counts, recorded outside any project record.",
+    "sources": [
+      {
+        "source": "cris-fy88-export",
+        "locator": "the file's last line",
+        "sourceDate": "1988",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "the trailer's own two counts, 3153115 (data lines between header and trailer) and 32016 (records), match a full-corpus scan and the FY 1988 column of sources/format-b-elements.md (32,016 records, 52,340 IN values). Like nara.file.trailer_record's FY 1994 value, the two counts run together with no separating space -- this reconstruction's earlier reading of the FY 1994 trailer as space-separated was a misreading corrected by a direct byte read, not a real difference between the two files' trailers."
+  },
+  "formatb.encoding.fy1988_sc_percent": {
+    "value": "under fy1988, an SC value's text is split at every 0xA0 0x02 separator: the first segment is the code, the second the label, a third the percent",
+    "status": "documented",
+    "claim": "In the FY 1988 file, an SC value's percentage is carried inside the SC block itself instead of in a separate SN line.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "section 6.1",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "cris-fy88-export",
+        "locator": "AN 9000001, SC field",
+        "sourceDate": "2026-09-10",
+        "observedSystem": "Format B"
+      }
+    ],
+    "note": "spec section 6.1 states the FY 1988 layout differs (no SN or BP lines); the AN 9000001 measurement is the transcribed evidence for how: 'SC XFRS  <A0><02>Forestry Related' / '  <A0><02>100%' / ' <AC>S0613 <A0><02>Other Western Conifers' / '  <A0><02>100%' -- a second separator on a continuation line of the same value, where FY 1991 onward keeps the percent in a separate SN tag and splitSegments' single-separator split is unchanged from before this profile distinction existed."
   },
   "nara.file.header_record": {
     "value": "<< 000060950718",

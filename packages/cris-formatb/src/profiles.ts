@@ -2,17 +2,16 @@ export type Profile = "fy1988" | "fy1991plus";
 export const PROFILE_NAMES: readonly Profile[] = ["fy1988", "fy1991plus"];
 
 /**
- * Registry keys: formatb.encoding.continuation_0xAC, formatb.encoding.separator_0xA0_0x02
+ * Registry keys: formatb.encoding.continuation_0xAC, formatb.encoding.separator_0xA0_0x02,
+ * formatb.encoding.fy1988_sc_percent
  *
- * fy1988 is a reserved name, not yet a distinct behavior. The FY 1988 layout differs (no SN
- * or BP lines; SC percents carried inside the SC block with control bytes), but nothing in
- * this reader reads those differently from fy1991plus yet -- both profiles below are
- * identical in every field a caller can observe. Continuation and separator handling for the
- * FY 1988 layout is not implemented here; until it is, the name exists so a caller can
- * already say which corpus year it is parsing (--profile fy1988) without that choice
- * changing anything.
+ * FY 1988 has no SN or BP lines; an SC value's percent is carried inside the SC block itself,
+ * as a third 0xA0 0x02 segment on a continuation line of the same value. FY 1991 onward keeps
+ * the percent out of the SC block, in a separate SN tag, so a value's raw text has only the
+ * one code/label separator -- `percentInBlock` is what tells `splitSegments` (record.ts)
+ * which of those two shapes it is reading.
  */
 export const PROFILES = {
-  fy1991plus: { continuationByte: 0xac, sepA: 0xa0, sepB: 0x02 },
-  fy1988:     { continuationByte: 0xac, sepA: 0xa0, sepB: 0x02 },
+  fy1991plus: { continuationByte: 0xac, sepA: 0xa0, sepB: 0x02, percentInBlock: false },
+  fy1988:     { continuationByte: 0xac, sepA: 0xa0, sepB: 0x02, percentInBlock: true },
 } as const;

@@ -6,8 +6,9 @@ import { renderFor } from "../dialog/render5";
 import { DomSink, type DisplayMode } from "../terminal/sink";
 import { reconstructionProse, setStatementHtml, sheetHeaderFragment, BAR_HEADING } from "./statement";
 import { PHRASE_FIELDS, indexUrls, offsetsUrl, corpusUrl, type Offsets, type Index } from "../loader/corpus-format";
-import { mountInspect, NAID } from "../inspect/panel";
+import { mountInspect } from "../inspect/panel";
 import { registry } from "../registry";
+import { FY1994 } from "./corpora";
 // Vite emits registry/evidence.json as a build asset and gives back a
 // URL already prefixed with the configured base. The same file is imported for its *data* by
 // src/registry/index.ts; this import is only for the link in the bar, so a reader can open
@@ -27,8 +28,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 const offsets = await fetchJson<Offsets>(offsetsUrl(import.meta.env));
 const indexes: Record<string, Index> = {};
 for (const [c, url] of indexUrls(PHRASE_FIELDS, import.meta.env)) indexes[c] = await fetchJson<Index>(url);
-const PROFILE = "fy1991plus";
-const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpusUrl(offsets.file, import.meta.env)), PROFILE, new FetchWordIndex(import.meta.env));
+const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpusUrl(offsets.file, import.meta.env)), FY1994.profile, new FetchWordIndex(import.meta.env));
 // Restart replaces this with a fresh DialogSession -- the DIALOG layer
 // gains no "restart" concept of its own; `new DialogSession` already starts with no current
 // file and no sets. `let`, not `const`, so the onSubmit closure below and restart() (further
@@ -182,7 +182,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // The SourceFile passed to mountInspect names only the archival-source facts the inspect
-// panel needs -- offsets.file and PROFILE are the same values the
-// RetrievalEngine above was built with; NAID and offsets.sha256 name the holding and the
-// corpus's own fixity hash, neither of which the engine's constructor takes.
-mountInspect(document.getElementById("inspect")!, sink.printout, engine, { file: offsets.file, naid: NAID, profile: PROFILE, sha256: offsets.sha256 }, () => sink.focusInput(), expandPanel);
+// panel needs -- offsets.file and FY1994.profile are the same values the
+// RetrievalEngine above was built with; FY1994.naid and offsets.sha256 name the holding and
+// the corpus's own fixity hash, neither of which the engine's constructor takes.
+mountInspect(document.getElementById("inspect")!, sink.printout, engine, { file: offsets.file, naid: FY1994.naid, profile: FY1994.profile, sha256: offsets.sha256 }, () => sink.focusInput(), expandPanel);

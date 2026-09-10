@@ -2,7 +2,7 @@ import { LINE_BYTES, DATA_START, DATA_END, latin1 } from "./index";
 import type { RecordSpan } from "./offsets";
 import { PROFILES, type Profile } from "./profiles";
 
-export interface SourceValue { raw: string; code?: string; label?: string; line: number; offset: number; continuation?: true; }
+export interface SourceValue { raw: string; code?: string; label?: string; percent?: string; line: number; offset: number; continuation?: true; }
 export interface SourceField { tag: string; values: SourceValue[]; lineStart: number; lineEnd: number; offset: number; length: number; }
 export interface LogicalRecord {
   file: string; firstLine: number; lastLine: number; offset: number; length: number; an: string; fields: SourceField[];
@@ -11,9 +11,22 @@ export interface LogicalRecord {
   orphanContinuations: number;
 }
 
-function splitCodeLabel(v: SourceValue, sepA: number, sepB: number): void {
-  const i = v.raw.indexOf(String.fromCharCode(sepA) + String.fromCharCode(sepB));
-  if (i >= 0) { v.code = v.raw.slice(0, i).trimEnd(); v.label = v.raw.slice(i + 2).trimEnd(); }
+/** Split a value at the first 0xA0 0x02 separator into code and label. Under a profile that
+ * carries the percent inside the block (FY 1988; spec 6.1), split what follows again at a
+ * second separator, so the label stops before the percent instead of absorbing it. FY 1991
+ * onward carries the percent as a separate SN tag, not a second separator here, so the label
+ * keeps everything after the first separator, unchanged from before this split existed. */
+function splitSegments(v: SourceValue, sepA: number, sepB: number, percentInBlock: boolean): void {
+  const sep = String.fromCharCode(sepA) + String.fromCharCode(sepB);
+  const i = v.raw.indexOf(sep);
+  if (i < 0) return;
+  v.code = v.raw.slice(0, i).trimEnd();
+  const rest = v.raw.slice(i + 2);
+  if (percentInBlock) {
+    const j = rest.indexOf(sep);
+    if (j >= 0) { v.label = rest.slice(0, j).trimEnd(); v.percent = rest.slice(j + 2).trim(); return; }
+  }
+  v.label = rest.trimEnd();
 }
 
 export function parseRecord(bytes: Uint8Array, span: RecordSpan, file: string, profile: Profile, bufferBaseLine?: number): LogicalRecord {
@@ -60,7 +73,7 @@ export function parseRecord(bytes: Uint8Array, span: RecordSpan, file: string, p
       orphanContinuations++; // a continuation line with no open field (full-corpus check)
     }
   }
-  for (const f of fieldsOut) for (const v of f.values) { v.raw = v.raw.trimEnd(); splitCodeLabel(v, p.sepA, p.sepB); }
+  for (const f of fieldsOut) for (const v of f.values) { v.raw = v.raw.trimEnd(); splitSegments(v, p.sepA, p.sepB, p.percentInBlock); }
   return { file, firstLine: span.firstLine, lastLine: span.lastLine, offset: span.offset, length: span.length, an: span.an, fields: fieldsOut, orphanContinuations };
 }
 

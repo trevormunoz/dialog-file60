@@ -3,6 +3,7 @@ import type { RetrievalEngine } from "../retrieval/engine";
 import { MAP } from "../dialog/map";
 import { registry, type Status } from "../registry";
 import { statusWords, sourceName, sourceGloss } from "../registry/words";
+import { FY1994, type TapeProvenance } from "../app/corpora";
 
 registry.get("inspect.mode");
 
@@ -10,26 +11,17 @@ registry.get("inspect.mode");
  * (data/README.md; fixtures/ACCEPTANCE.md); a fact about the holding, not about any one
  * record, so it has no home in the per-record Offsets type -- panel.ts is the one place that
  * displays it, and main.ts imports it from here to build the SourceFile it passes in. */
-export const NAID = "1204533";
+export const NAID = FY1994.naid;
 
 /** The archival-source facts describeLine needs, all of them values main.ts already has in
  * scope from building the RetrievalEngine (`offsets.file`, `offsets.sha256`) or from NAID
  * above -- never a whole Offsets object, most of which describeLine has no use for. */
 export interface SourceFile { file: string; naid: string; profile: string; sha256: string; }
 
-export interface TapeProvenance {
-  accession: string | null; transferMedia: string | null; transferBlocking: number | null; naraCopy: string | null;
-  logicalRecordLength: 80; asciiConversion: { manifestPrepared: string; codePage: null }; evidence: string[];
-}
-/** FY 1994: no per-file validation statement is held; media facts are the FY 1991 statement's, applied by inference. */
-export const FY1994_TAPE: TapeProvenance = {
-  accession: null,
-  transferMedia: "two 1/2-inch open reel, 9-track, 6250 bpi, EBCDIC, non-labeled (the FY 1991 file's media, applied to FY 1994 by inference)",
-  transferBlocking: 15440,
-  naraCopy: "a 3480 cartridge, EBCDIC, blocked 5040, OS standard labels (the FY 1991 file's copy, applied to FY 1994 by inference)",
-  logicalRecordLength: 80, asciiConversion: { manifestPrepared: "2018-07-17", codePage: null },
-  evidence: ["nara.conversion.line_form", "nara.conversion.control_bytes", "nara.tape.fy1994_media", "nara.tape.fy1994_accession"],
-};
+export type { TapeProvenance };
+/** The tape facts for the file this app actually serves; ../app/corpora.ts holds the typed
+ * config (FY1994, FY1988) both this panel and main.ts read from. */
+export const FY1994_TAPE: TapeProvenance = FY1994.tape;
 
 export interface InspectView {
   historical: string[]; dialog: { code: string; value: string }[];
