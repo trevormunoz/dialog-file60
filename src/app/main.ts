@@ -4,7 +4,7 @@ import { FetchWordIndex } from "../retrieval/words";
 import { DialogSession } from "../dialog/session";
 import { renderFor } from "../dialog/render5";
 import { DomSink, type DisplayMode } from "../terminal/sink";
-import { reconstructionProse, setStatementHtml, BAR_HEADING } from "./statement";
+import { reconstructionProse, setStatementHtml, sheetHeaderFragment, BAR_HEADING } from "./statement";
 import { PHRASE_FIELDS, indexUrls, offsetsUrl, corpusUrl, type Offsets, type Index } from "../loader/corpus-format";
 import { mountInspect, NAID } from "../inspect/panel";
 import { registry } from "../registry";
@@ -67,6 +67,10 @@ barEl.append(barText, registryLink, restartButton, displayModeButton);
 // and escapes every interpolated value itself. setStatementHtml preserves the reader's
 // SHA-256 "show full" reveal across the rewrite.
 const refresh = () => { setStatementHtml(statementEl, reconstructionProse(offsets, registryUrl)); };
+// The sheet's own header (CSS shows it only in paper mode and under @media print), set once:
+// sheetHeaderFragment(offsets) reads only the corpus offsets captured at startup, the same as
+// reconstructionProse above, so nothing in it changes across a restart or a display-mode change.
+document.getElementById("sheet-header")!.innerHTML = sheetHeaderFragment(offsets);
 // proto.prompt (documented): the prompt DIALOG emits is a bare "?"; proto.prompt.spacing
 // (documented): no trailing space -- any space after the prompt was typed by the searcher or
 // set by a compositor, so the mockup's "?s cy=beltsville" is right.

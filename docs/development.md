@@ -80,6 +80,25 @@ The BARC story site embeds this recording with the asciinema player
 embedded recording to a running instance of this reconstruction is possible
 because the corpus is hosted; see [Hosting](hosting.md).
 
+## Display modes
+
+Three display modes, cycled by the bar's control or Alt+S: printout keeps
+every scrollback line and lets the pane scroll; screen keeps only the last
+`terminal.screen_rows` lines; paper restyles the same retained scrollback as
+one continuous fixed-pitch sheet, bounded at the app's 80-column measure,
+with the tractor-feed strip every 1993-94 printout in the corpus of evidence
+carries down the left edge and the searcher's typed commands printed heavier
+than DIALOG's output, as the local terminal's own double-struck echo did.
+The sheet shows no paper colour, striping, perforations, or page marks --
+the surviving printouts are photocopies, which destroy stock and ribbon
+colour, so the sheet makes no claim about what the paper looked like.
+Switching into paper mode holds the sheet empty for 600 ms before the
+printout appears, skipped under reduced motion and when the mode is read
+back from `localStorage` on load; leaving paper restores the rest of the
+page at once. A browser print of the page, in any display mode, yields the
+same sheet: this is a consequence of the layout paper mode already applies,
+not a separate feature.
+
 ## Archival tests and the corpus file
 
 `data/RG164.CRIS.FY94.txt` is gitignored (`scripts/extract-corpus.py` produces it from the

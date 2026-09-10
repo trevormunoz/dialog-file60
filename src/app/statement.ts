@@ -47,17 +47,30 @@ export function setStatementHtml(container: HTMLElement, html: string): void {
  * Returns an HTML string; the caller sets it as innerHTML (this module builds no DOM of its
  * own, so it stays testable under plain Node -- see test/regression/statement.test.ts).
  */
-export function reconstructionProse(offsets: Offsets, registryUrl: string): string {
+/**
+ * The heading and framing paragraph shared by the on-screen statement panel and the
+ * paper-mode sheet's header, so the two prose blocks cannot drift apart. The heading does
+ * not deny the archival record on screen, and the framing says where the rules come from
+ * when no source of the anchor years survives, rather than calling them all in-period.
+ *
+ * reconstructionProse wraps this with its own registry-link paragraph and an interactive
+ * Integrity reveal; sheetHeaderFragment wraps the same four integrity values plainly,
+ * since the sheet carries no checkbox and is read, and printed, as a whole.
+ */
+export function headerFragment(): string {
   return [
     `<h2>${escapeHtml(BAR_HEADING)}</h2>`,
-    // The heading does not deny the archival record on screen, and the framing says where
-    // the rules come from when no source of the anchor years survives, rather than calling
-    // them all in-period.
     `<p>This is File 60's documented rules applied to the FY 1994 CRIS export held by NARA ` +
       `(National Archives Identifier 1204533). The anchor is c. 1990-1994; where no source of ` +
       `those years survives, the rules come from before them (1978-1988) or after (the 1998 ` +
       `Blue Sheet, the 2001 Pocket Guide), and each registry entry says which. It is not ` +
       `DIALOG's software, and not a record of any session that took place.</p>`,
+  ].join("\n");
+}
+
+export function reconstructionProse(offsets: Offsets, registryUrl: string): string {
+  return [
+    headerFragment(),
     `<p>Every behaviour on this screen has an entry in the ` +
       `<a href="${escapeHtml(registryUrl)}">evidence registry</a> naming its source, or saying ` +
       `it was inferred or chosen.</p>`,
@@ -76,5 +89,26 @@ export function reconstructionProse(offsets: Offsets, registryUrl: string): stri
     `<dt>Registry hash</dt><dd>${escapeHtml(__REGISTRY_HASH__)}</dd>`,
     `</dl>`,
     `</details>`,
+  ].join("\n");
+}
+
+/**
+ * The paper-mode sheet's header, rendered once inside `#sheet` above the first printout
+ * line: headerFragment's heading and paragraph, followed by the same four integrity
+ * values the panel's Integrity details hold (terminal.paper_sheet: the header is part of
+ * the sheet, so it carries no `data-` annotation and is not a session line). Shown
+ * plainly, with no checkbox -- the sheet has no interactive control, and a printed page
+ * needs the full hash visible rather than truncated behind a reveal. main.ts sets this
+ * once at startup and never rewrites it, the same as the panel's own refresh().
+ */
+export function sheetHeaderFragment(offsets: Offsets): string {
+  return [
+    headerFragment(),
+    `<dl>`,
+    `<dt>Corpus file</dt><dd>${escapeHtml(offsets.file)}</dd>`,
+    `<dt>SHA-256</dt><dd><code>${escapeHtml(offsets.sha256)}</code></dd>`,
+    `<dt>Software version</dt><dd>${escapeHtml(__APP_VERSION__)}</dd>`,
+    `<dt>Registry hash</dt><dd>${escapeHtml(__REGISTRY_HASH__)}</dd>`,
+    `</dl>`,
   ].join("\n");
 }
