@@ -1668,7 +1668,8 @@
       "resetsTo": 1
     },
     "status": "documented",
-    "claim": "Each EXPAND row gets a ref number E1 through E50; past E50 the numbering starts over at E1, and a ref number can be used in SELECT until the next EXPAND with a term.",
+    "claim": "Each EXPAND row gets a ref number E1 through E50, restarting at E1 after E50.",
+    "note": "A ref number stays usable in SELECT until the next EXPAND with a term.",
     "sources": [
       {
         "source": "successful-searching-2001",
@@ -1742,11 +1743,12 @@
   "proto.logoff.template": {
     "value": {
       "stampIndent": 10,
-      "rowPrefix": "   $",
-      "rowGap": "   "
+      "rowPrefix": "  $",
+      "rowGap": "  "
     },
     "status": "documented",
-    "claim": "LOGOFF prints a date/time/user line, then one costed line per charge, ending with the estimated total; BEGIN opens with the same date/time/user line.",
+    "claim": "LOGOFF prints a date/time/user line, then one costed line per charge, ending with the estimated total.",
+    "note": "BEGIN opens with the same date/time/user line.",
     "decision": "the Descriptors and Prints lines the 1978 session shows belong to commands (EXPAND-adjacent descriptor display, PRINT) outside this slice and are not reconstructed; only the connect-time line, one line per TYPE format actually used, and the two total lines print.",
     "sources": [
       {
@@ -1773,7 +1775,7 @@
     "sources": [
       {
         "source": "bluesheet-1998-text",
-        "locator": "Rates: Cost per minute; Format/Types/Prints table",
+        "locator": "Rates section: 'Cost per minute: $0.25'; Types/Prints table, $0.60 for every format except 1, 6 and 8 at $0.00",
         "sourceDate": "1998-03-02",
         "observedSystem": "File 60"
       }
@@ -1783,8 +1785,8 @@
   "proto.accounting.combination": {
     "value": null,
     "status": "inferred",
-    "claim": "This reconstruction prices a session using the 1978/1988 LOGOFF template with the 1998 rate card -- no single source gives both the template and rates for the same year.",
-    "note": "labeled inferred rather than documented for that reason; pricing never bills anything, and BEGIN's opts.accounting flag (spec 7.9) can switch it off entirely."
+    "claim": "This reconstruction prices a session using the 1978/1988 LOGOFF template with the 1998 rate card.",
+    "note": "No single source gives both the template and rates for the same year, so this key is labeled inferred rather than documented. Pricing never bills anything, and BEGIN's opts.accounting flag (spec 7.9) can switch it off entirely."
   },
   "proto.session.user_number": {
     "value": "013140",

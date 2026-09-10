@@ -8,10 +8,10 @@ test("LOGOFF prices the session after a record typed in format 5", async () => {
   const out = (await s.submit("logoff")).map(l => l.text);
   expect(out).toEqual([
     "          03may94 10:00:00 User013140",
-    "   $0.00   0.000 Hrs File60",
-    "   $0.60   1 Types in Format 5",
-    "   $0.60   Estimated cost File60",
-    "   $0.60   Estimated cost this search",
+    "  $0.00  0.000 Hrs File60",
+    "  $0.60  1 Types in Format 5",
+    "  $0.60  Estimated cost File60",
+    "  $0.60  Estimated cost this search",
     "LOGOFF 10:00:00",
   ]);
 });

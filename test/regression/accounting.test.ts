@@ -11,16 +11,16 @@ test("the logoff block prices connect time and each format typed", () => {
   const end = new Date(Date.UTC(1994, 4, 3, 10, 6, 0));
   expect(logoffBlock({ start, end, user: "013140", types: { "5": 2 }, rates })).toEqual([
     "          03may94 10:06:00 User013140",
-    "   $1.50   0.100 Hrs File60",
-    "   $1.20   2 Types in Format 5",
-    "   $2.70   Estimated cost File60",
-    "   $2.70   Estimated cost this search",
+    "  $1.50  0.100 Hrs File60",
+    "  $1.20  2 Types in Format 5",
+    "  $2.70  Estimated cost File60",
+    "  $2.70  Estimated cost this search",
   ]);
 });
 
 test("a free format prints its line at zero rather than being dropped", () => {
   const t = new Date(Date.UTC(1994, 4, 3, 10, 0, 0));
-  expect(logoffBlock({ start: t, end: t, user: "1", types: { "6": 1 }, rates })).toContain("   $0.00   1 Types in Format 6");
+  expect(logoffBlock({ start: t, end: t, user: "1", types: { "6": 1 }, rates })).toContain("  $0.00  1 Types in Format 6");
 });
 
 test("no TYPE means no Types line at all", () => {

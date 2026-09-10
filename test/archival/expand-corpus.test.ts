@@ -10,9 +10,10 @@ import { render5 } from "../../src/dialog/render5";
 const FILE = "data/RG164.CRIS.FY94.txt";
 const exists = existsSync(FILE);
 const skip = !exists && process.env.CRIS_CORPUS_OPTIONAL === "1";
+const acc = JSON.parse(readFileSync("fixtures/acceptance-fy94.json", "utf8"));
 
 test.skipIf(skip)(
-  "e in=hammerschlag: twelve rows, the entered term third, item counts matching the loaded IN index; p, p- and s e3 against the real corpus",
+  "e in=hammerschlag: twelve rows, the entered term third, item counts matching the loaded IN index; p, p- and select against the real corpus",
   async () => {
     if (!exists) {
       throw new Error(
@@ -35,7 +36,19 @@ test.skipIf(skip)(
     expect(first[0]).toBe("Ref   Items  Index-term");
     expect(opened!.rows.filter(r => r.starred)).toHaveLength(1);
     expect(opened!.rows[2]!.starred).toBe(true);
-    for (const row of opened!.rows) expect(row.items).toBe((indexes.IN!.terms[row.term] ?? []).length);
+
+    // The entered term "HAMMERSCHLAG" (the query, uppercased) is not itself a posting in the
+    // IN index -- the real index term nearest it is "HAMMERSCHLAG  F A". The starred row's
+    // zero-item count is the entered term's own absence, not a bug, so it is asserted
+    // explicitly here rather than folded into the per-row check below, where a missing index
+    // entry would otherwise read as a passing zero.
+    expect(opened!.rows[2]!.term).toBe("HAMMERSCHLAG");
+    expect(indexes.IN!.terms["HAMMERSCHLAG"]).toBeUndefined();
+    expect(opened!.rows[2]!.items).toBe(0);
+    for (const row of opened!.rows) {
+      if (row.starred) continue;
+      expect(row.items).toBe(indexes.IN!.terms[row.term]!.length);
+    }
 
     await session.submit("p");
     const paged = session.expand!;
@@ -48,10 +61,17 @@ test.skipIf(skip)(
     expect(back.rows.every(r => !r.starred)).toBe(true);
     expect(back.rows.map(r => r.term)).toEqual(opened!.rows.map(r => r.term));
 
-    const target = back.rows.find(r => r.ref === 3)!;
-    const setLines = (await session.submit("s e3")).map(l => l.text);
-    expect(setLines.at(-1)).toBe(setLine(1, target.items, "E3"));
-    expect(session.sets[0]!.ordinals.length).toBe(target.items);
+    // Select the row with a real posting -- "HAMMERSCHLAG  F A" -- rather than the starred,
+    // absent entered term: selecting the absent term would carry a zero postings count that
+    // any broken set-building code would also produce, so it would not exercise real
+    // retrieval. The expected count comes from fixtures/acceptance-fy94.json's
+    // in_hammerschlag_f_a, an independently derived number (scripts/naive-split.py), not from
+    // this test's own row.items, which the session under test built itself.
+    const target = back.rows.find(r => r.term === "HAMMERSCHLAG  F A")!;
+    const setLines = (await session.submit(`s e${target.ref}`)).map(l => l.text);
+    expect(target.items).toBe(acc.in_hammerschlag_f_a.count);
+    expect(setLines.at(-1)).toBe(setLine(1, acc.in_hammerschlag_f_a.count, `E${target.ref}`));
+    expect(session.sets[0]!.ordinals.length).toBe(acc.in_hammerschlag_f_a.count);
   },
   120_000,
 );

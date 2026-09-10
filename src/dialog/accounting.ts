@@ -4,7 +4,7 @@
 import { registry } from "../registry";
 
 // proto.logoff.template documents the column form both functions reproduce below (ten
-// leading spaces before the stamp, three before each `$` amount, three more before its
+// leading spaces before the stamp, two before each `$` amount, two more before its
 // description) -- cited here for reachability; the literal spacing is reproduced directly
 // rather than re-read from a stored width table, the same way the 1978/1988 sources give it.
 registry.get("proto.logoff.template");
@@ -31,7 +31,7 @@ export function stamp(d: Date, user: string): string {
   return `          ${dd}${mon}${yy} ${hhmmss(d)} User${user}`;
 }
 
-const row = (amount: number, desc: string): string => `   $${amount.toFixed(2)}   ${desc}`;
+const row = (amount: number, desc: string): string => `  $${amount.toFixed(2)}  ${desc}`;
 
 /** The LOGOFF cost block beneath its own stamp: connect time at `rates.perMinute`, one line
  * per format actually typed (present even at a documented free rate, rather than dropped --
