@@ -133,3 +133,44 @@ test("the printout carries a rule at its 80-column edge that a container query r
   expect(html).toMatch(/\.printout\{[^}]*border-right:1px solid var\(--rule\)/);
   expect(html).toMatch(/@container \(max-width: 82ch\)\{\.printout\{border-right:0\}\}/);
 });
+
+// terminal.paper_sheet's two tokens: both neutral greys, defined at :root, no medium reading
+// in either name or value.
+test("paper mode's surround and sprocket tokens are neutral greys defined at :root", () => {
+  const root = html.match(/:root\{[^}]*\}/)?.[0] ?? "";
+  expect(root).toMatch(/--surround:\s*#[0-9a-f]{6}/i);
+  expect(root).toMatch(/--sprocket:\s*#[0-9a-f]{6}/i);
+});
+
+// terminal.width (80) enacted a second time, inside :root.paper -- the sheet's own edges are
+// the 80-column bounds there, not the .printout max-width rule the default layout uses.
+test("the paper sheet's printout is bounded at 80ch, with the right-edge rule not drawn", () => {
+  expect(html).toMatch(/:root\.paper \.printout\{[^}]*width:\s*80ch/);
+  expect(html).toMatch(/:root\.paper \.printout\{[^}]*border-right:0/);
+});
+
+// terminal.paper_input_weight: the data-echo marker sink.ts stamps on an echoed command
+// line's spans, weighted only on the sheet -- printout and screen mode's CSS never mentions it.
+test("echoed input is weighted only under paper mode", () => {
+  expect(html).toMatch(/:root\.paper \[data-echo\]\{font-weight:700\}/);
+  expect(html.match(/\[data-echo\]/g)?.length).toBe(2); // the :root.paper rule and its @media print twin
+});
+
+// A browser print of the page, in any mode, is required to hide the same chrome paper mode
+// hides and lay the sheet out the same way -- "the same rules apply," not a second design.
+test("the print block hides the same chrome the paper block hides and lays out the same sheet", () => {
+  const printBlock = html.match(/@media print\{([\s\S]*?)\n  \}\n/)?.[1] ?? "";
+  expect(printBlock).not.toBe("");
+  const hides = [
+    "#bar > *:not(#display-mode){display:none}",
+    "aside{display:none}",
+    ".pane-label{display:none}",
+    "#notice{display:none}",
+  ];
+  for (const rule of hides) {
+    expect(html).toContain(`:root.paper ${rule}`);
+    expect(printBlock).toContain(rule);
+  }
+  expect(printBlock).toMatch(/#sheet\{width:calc\(80ch \+ 6\.5rem\)/);
+  expect(printBlock).toMatch(/\.printout\{border-right:0;width:80ch\}/);
+});

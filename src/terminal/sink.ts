@@ -11,8 +11,9 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLEl
 
 /** "printout" (the default) keeps
  * every line and lets the pane scroll -- a printing terminal's paper; "screen" keeps only the
- * most recent terminal.screen_rows lines, an unbuffered CRT. */
-export type DisplayMode = "printout" | "screen";
+ * most recent terminal.screen_rows lines, an unbuffered CRT; "paper" keeps every line, like
+ * printout, and restyles the retained scrollback as a fixed-pitch sheet (terminal.paper_sheet). */
+export type DisplayMode = "printout" | "screen" | "paper";
 
 /** Runs `fn` after `ms` milliseconds. The default is setTimeout; a test injects a fake clock
  * so paced output can be driven without waiting in real time (test/regression/sink.dom.test.ts).
@@ -26,6 +27,11 @@ const setTimeoutScheduler: Scheduler = (fn, ms) => { setTimeout(fn, ms); };
  * per second is a speed documented for DIALOG access in 1984-1988; no source records the speed
  * of a File 60 session (see the entry's note for the statement of absence). */
 const CHAR_MS = 1000 / (registry.get("terminal.pacing").value as { cps: number }).cps;
+
+/** terminal.paper_delay's own figure: the empty-sheet pause on a live switch into paper mode.
+ * The entry's value is prose, not a structured number, so the milliseconds live here; the
+ * registry.get call in setDisplayMode is the citation. */
+const PAPER_DELAY_MS = 600;
 
 /** One queued write. `paced` is false for the echo of a line the searcher typed: those
  * characters came from the keyboard, not down the line, so no transmission speed applies. */
@@ -59,7 +65,11 @@ export class DomSink {
    * reset(), which drops any line queued for a session that no longer exists. */
   private pendingLines: string[] = [];
   private submitting = false;
-  constructor(root: HTMLElement, onSubmit: (line: string) => Promise<void>, private prompt = "?", private schedule: Scheduler = setTimeoutScheduler) {
+  /** Set while paper mode's empty-sheet pause is running (a live switch, not a restored one,
+   * and not under reduced motion). A line submitted during it queues in pendingLines exactly
+   * as a second Enter during a drain does, and is released the same way once the pause ends. */
+  private paperPending = false;
+  constructor(root: HTMLElement, private onSubmit: (line: string) => Promise<void>, private prompt = "?", private schedule: Scheduler = setTimeoutScheduler) {
     // terminal.scrollback: scrolling this <pre> is a modern
     // convenience, not a reconstruction of any DIALOG-period behavior. No custom scroll
     // chrome is added -- the browser's own scrollbar is kept as-is.
@@ -84,41 +94,50 @@ export class DomSink {
     this.live = el("div", "live"); this.live.setAttribute("aria-live", "polite");
     promptline.append(promptSpan, this.input, this.cursor);
     root.replaceChildren(this.printout, promptline, this.live);
-    const moveCursor = (): void => {
-      const pos = this.input.selectionStart ?? this.input.value.length;
-      this.cursor.style.left = `${this.prompt.length + pos}ch`;
-    };
-    this.input.addEventListener("input", moveCursor);
-    this.input.addEventListener("keyup", moveCursor);
-    this.input.addEventListener("click", moveCursor);
+    this.input.addEventListener("input", this.moveCursor);
+    this.input.addEventListener("keyup", this.moveCursor);
+    this.input.addEventListener("click", this.moveCursor);
     // A submission runs to completion (echo, then onSubmit's own
     // paced drain) before the next one starts, but the input is never disabled while that
     // happens -- only Enter is intercepted here, so ordinary typing reaches the textarea the
-    // whole time. A second Enter pressed while one submission is still running queues its line
-    // in pendingLines instead of starting a second, overlapping onSubmit; runSubmit echoes and
+    // whole time. A second Enter pressed while one submission is still running, or pressed
+    // while paperPending holds (paper mode's empty-sheet pause), queues its line in
+    // pendingLines instead of starting a second, overlapping onSubmit; runSubmit echoes and
     // submits each queued line only once the one ahead of it has finished, in the order Enter
     // was pressed.
-    const runSubmit = async (l: string): Promise<void> => {
-      this.submitting = true;
-      this.echo(this.prompt, l);
-      moveCursor();
-      await onSubmit(l);
-      this.submitting = false;
-      const next = this.pendingLines.shift();
-      if (next !== undefined) { void runSubmit(next); return; }
-      this.input.focus();
-      moveCursor();
-    };
     this.input.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       e.preventDefault();
       const l = this.input.value; this.input.value = "";
-      moveCursor();
-      if (this.submitting) { this.pendingLines.push(l); return; }
-      void runSubmit(l);
+      this.moveCursor();
+      if (this.submitting || this.paperPending) { this.pendingLines.push(l); return; }
+      void this.runSubmit(l);
     });
-    moveCursor();
+    this.moveCursor();
     this.input.focus();
+  }
+  /** Moves the visible caret span to match the textarea's own selection (the textarea's own
+   * caret is hidden -- index.html's promptline textarea rule -- so this span is the caret the
+   * reader sees). An arrow function field, not a method, so it keeps its `this` when passed
+   * directly as an event listener above. */
+  private moveCursor = (): void => {
+    const pos = this.input.selectionStart ?? this.input.value.length;
+    this.cursor.style.left = `${this.prompt.length + pos}ch`;
+  };
+  /** Echoes and submits one typed line, then picks up whatever queued behind it in
+   * pendingLines -- a second Enter pressed during this submission's own drain, or a line
+   * submitted while paperPending held (see the keydown listener above and endPaperPending
+   * below). */
+  private async runSubmit(l: string): Promise<void> {
+    this.submitting = true;
+    this.echo(this.prompt, l);
+    this.moveCursor();
+    await this.onSubmit(l);
+    this.submitting = false;
+    const next = this.pendingLines.shift();
+    if (next !== undefined) { void this.runSubmit(next); return; }
+    this.input.focus();
+    this.moveCursor();
   }
   /** The prompt keeps focus after each command already (see the
    * keydown handler below); this is the same return-to-prompt action, callable from
@@ -149,10 +168,49 @@ export class DomSink {
   /** Switching into screen mode discards everything above the last
    * screenful immediately (no confirmation -- the reader chose it); switching back to
    * printout does not restore what screen mode already removed, since those rows are gone
-   * from the DOM, not hidden. */
-  setDisplayMode(mode: DisplayMode): void {
+   * from the DOM, not hidden. Paper retains every line, exactly as printout does -- only
+   * screen discards.
+   *
+   * Entering paper toggles a `paper` class on the document root (terminal.display_mode) and,
+   * for a live switch with motion allowed, a `pending` class the injected Scheduler clears
+   * after terminal.paper_delay's pause; `restored` is true when main.ts is applying a mode
+   * read back from localStorage on load, which shows the sheet at once, the pause marking the
+   * act of switching, not the page loading. Leaving paper removes both classes at once, with
+   * no pause, and releases anything still queued behind the pause (endPaperPending). */
+  setDisplayMode(mode: DisplayMode, opts: { restored?: boolean } = {}): void {
+    registry.get("terminal.display_mode"); // cited here, where the mode is applied
     this.displayMode = mode;
     if (mode === "screen") this.trimToScreenRows();
+    const root = document.documentElement;
+    if (mode === "paper") {
+      registry.get("terminal.paper_sheet"); // cited here, where the sheet class is set
+      root.classList.add("paper");
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (opts.restored || reduced) {
+        this.paperPending = false;
+        root.classList.remove("pending");
+      } else {
+        registry.get("terminal.paper_delay");
+        this.paperPending = true;
+        root.classList.add("pending");
+        this.schedule(() => { this.endPaperPending(); }, PAPER_DELAY_MS);
+      }
+    } else {
+      root.classList.remove("paper");
+      this.endPaperPending();
+    }
+  }
+  /** Clears paper mode's pending state (the `pending` class and the flag that queues a
+   * submitted line) and, if nothing is already submitting, releases the oldest queued line --
+   * the same release runSubmit itself performs when a submission ahead of it finishes. Called
+   * both when the pause's own scheduled callback fires and when the mode changes away from
+   * paper before the pause has run out. */
+  private endPaperPending(): void {
+    this.paperPending = false;
+    document.documentElement.classList.remove("pending");
+    if (this.submitting) return;
+    const next = this.pendingLines.shift();
+    if (next !== undefined) void this.runSubmit(next);
   }
   private trimToScreenRows(): void {
     const rows = registry.get("terminal.screen_rows").value as number;
@@ -206,6 +264,13 @@ export class DomSink {
     const before = this.discipline.lines.length;
     this.discipline.write(l.text);
     const rows = this.discipline.lines.slice(before).map(text => ({ span: this.stampedSpan(l), text }));
+    if (!paced) {
+      // terminal.paper_input_weight (chosen): an echoed command line -- the only unpaced
+      // writeLine caller -- carries this marker so paper mode's CSS can weight it; the marker
+      // changes nothing printed, and printout and screen mode's CSS ignore it.
+      registry.get("terminal.paper_input_weight");
+      for (const row of rows) row.span.dataset.echo = "true";
+    }
     for (const row of rows) this.printout.appendChild(row.span);
     const endOfLine = (): void => {
       // The cap lives in this one place; the line discipline stays

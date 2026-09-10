@@ -58,7 +58,10 @@ const registryLink = document.createElement("a"); registryLink.href = registryUr
 const restartButton = document.createElement("button");
 restartButton.type = "button"; restartButton.textContent = "Restart session";
 const displayModeButton = document.createElement("button");
-displayModeButton.type = "button";
+// id="display-mode": paper mode's CSS keeps only this one control visible in the bar
+// (index.html's `#bar > *:not(#display-mode)`), relocating it above the sheet rather than
+// building a second control.
+displayModeButton.type = "button"; displayModeButton.id = "display-mode";
 barEl.append(barText, registryLink, restartButton, displayModeButton);
 // reconstructionProse builds its markup from local corpus offsets -- none of it user input --
 // and escapes every interpolated value itself. setStatementHtml preserves the reader's
@@ -103,7 +106,14 @@ function setPanelCollapsed(collapsed: boolean): void {
   panelToggle.title = name;
   try { localStorage.setItem(PANEL_COLLAPSE_KEY, collapsed ? "1" : "0"); } catch { /* per-viewer convenience only */ }
 }
-function expandPanel(): void { if (panelEl.classList.contains("collapsed")) setPanelCollapsed(false); }
+// Alt+I in paper mode also leaves paper for printout, the same way it expands a collapsed
+// panel -- both are onExpand's job (mountInspect calls it at every inspect entry point:
+// click, Enter/Space on a stamped span, Alt+I), so opening inspect from the sheet always
+// lands somewhere inspect is visible to look at.
+function expandPanel(): void {
+  if (sink.displayMode === "paper") setDisplayMode("printout");
+  if (panelEl.classList.contains("collapsed")) setPanelCollapsed(false);
+}
 panelToggle.addEventListener("click", () => setPanelCollapsed(!panelEl.classList.contains("collapsed")));
 setPanelCollapsed(readPanelCollapsed());
 
@@ -124,26 +134,38 @@ function restart(): void {
 }
 restartButton.addEventListener("click", restart);
 
-// Printout mode (default) keeps every line and lets the pane scroll;
-// screen mode keeps only the last terminal.screen_rows lines. State kept in localStorage
-// under one key, read inside try/catch, default printout. sink.setDisplayMode() (not this
-// function) does the actual trimming; this function only persists the choice and updates
-// the button label.
+// Printout mode (default) keeps every line and lets the pane scroll; screen mode keeps only
+// the last terminal.screen_rows lines; paper mode keeps every line, restyled as a sheet. The
+// control and Alt+S cycle through the three in this order. State kept in localStorage under
+// one key, beside the collapsed-panel state, read inside try/catch, default printout.
+// sink.setDisplayMode() (not this function) does the actual trimming and class toggling;
+// this function only persists the choice and updates the button's label and accessible name.
+const DISPLAY_MODES: DisplayMode[] = ["printout", "screen", "paper"];
 const DISPLAY_MODE_KEY = "dialog-file60.display-mode";
-function readDisplayMode(): DisplayMode {
-  try { return localStorage.getItem(DISPLAY_MODE_KEY) === "screen" ? "screen" : "printout"; } catch { return "printout"; }
+function nextDisplayMode(mode: DisplayMode): DisplayMode {
+  return DISPLAY_MODES[(DISPLAY_MODES.indexOf(mode) + 1) % DISPLAY_MODES.length]!;
 }
-function setDisplayMode(mode: DisplayMode): void {
-  sink.setDisplayMode(mode);
+function readDisplayMode(): DisplayMode {
+  try {
+    const stored = localStorage.getItem(DISPLAY_MODE_KEY);
+    return stored === "screen" || stored === "paper" ? stored : "printout";
+  } catch { return "printout"; }
+}
+function setDisplayMode(mode: DisplayMode, opts: { restored?: boolean } = {}): void {
+  sink.setDisplayMode(mode, opts);
+  const next = nextDisplayMode(mode);
   displayModeButton.textContent = `Display: ${mode}`;
+  displayModeButton.setAttribute("aria-label", `Display mode: ${mode}. Press to switch to ${next} mode.`);
   try { localStorage.setItem(DISPLAY_MODE_KEY, mode); } catch { /* per-viewer convenience only */ }
   // No refresh() here: reconstructionProse(offsets) does not read the display mode, or any
   // other session state -- see restart()'s comment above.
 }
-displayModeButton.addEventListener("click", () => setDisplayMode(sink.displayMode === "printout" ? "screen" : "printout"));
-setDisplayMode(readDisplayMode());
+displayModeButton.addEventListener("click", () => setDisplayMode(nextDisplayMode(sink.displayMode)));
+// restored: true -- a mode read back from localStorage on load shows paper's sheet at once;
+// the pause marks the act of switching, not the page loading.
+setDisplayMode(readDisplayMode(), { restored: true });
 
-// Alt+R restarts the session; Alt+S toggles the display mode. Matches panel.ts's Alt+I
+// Alt+R restarts the session; Alt+S cycles the display mode. Matches panel.ts's Alt+I
 // handling: ke.code, not ke.key,
 // since Option is a dead-key modifier on macOS (this app's only platform) and composes an
 // accented character rather than letting ke.key report the plain letter.
@@ -151,7 +173,7 @@ document.addEventListener("keydown", (e) => {
   if (!e.altKey) return;
   if (e.code === "KeyR" || e.key.toLowerCase() === "r") { e.preventDefault(); restart(); }
   else if (e.code === "KeyS" || e.key.toLowerCase() === "s") {
-    e.preventDefault(); setDisplayMode(sink.displayMode === "printout" ? "screen" : "printout");
+    e.preventDefault(); setDisplayMode(nextDisplayMode(sink.displayMode));
   }
 });
 

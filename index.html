@@ -17,6 +17,12 @@
     --ring:#3a6ea5; --tint:#eaf1f8;   /* modern apparatus only; no colour in the corpus belongs to DIALOG */
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* chosen: no web fonts; fixed pitch is documented, the specific typeface is not */
     --sans: system-ui, sans-serif;
+    /* Paper mode only (terminal.paper_sheet). Both neutral greys, chosen, with no medium
+       reading -- --surround is the ground the sheet sits on, not a claim about a desk or a
+       wall; --sprocket draws the tractor-feed strip in the same neutral, no hole colour or
+       shadow. */
+    --surround:#e4e4e4;
+    --sprocket:#d9d9d9;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -32,6 +38,10 @@
   .layout{flex:1;display:flex;min-height:0}
   .terminal-pane{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;min-height:0;padding:12px;overflow:hidden}
   .pane-label{flex:0 0 auto;font:11px var(--sans);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:6px}
+  /* #sheet wraps the printout and prompt in every mode. Outside paper mode and print it is a
+     plain pass-through flex column -- the same box #terminal alone used to be -- so printout
+     and screen mode look exactly as before. */
+  #sheet{flex:1;display:flex;flex-direction:column;min-height:0}
   #terminal{flex:1;display:flex;flex-direction:column;min-height:0}
   /* terminal.width_rule (chosen): a one-pixel line at the printout's 80ch edge marks where
      the documented terminal width ended; the terminals sent no such line. .terminal-pane is
@@ -108,13 +118,63 @@
   .pill-documented{background:#3f7d4f}
   .pill-inferred{background:#b8863b}
   .pill-chosen{background:#7a5ea8}
+
+  /* Paper mode (terminal.display_mode, terminal.paper_sheet): the retained scrollback
+     restyled as one continuous fixed-pitch sheet on a neutral surround, with nothing else on
+     the page but the display-mode control itself, relocated above the sheet -- this is the
+     same #bar and the same control main.ts builds, not a second one. */
+  :root.paper body{background:var(--surround)}
+  :root.paper #bar{justify-content:center;background:transparent;color:var(--ink);border-bottom:0}
+  :root.paper #bar > *:not(#display-mode){display:none}
+  :root.paper aside{display:none}
+  :root.paper .pane-label{display:none}
+  :root.paper #notice{display:none}
+  :root.paper .layout{display:block;min-height:100vh}
+  :root.paper .terminal-pane{padding:2.5rem 1rem 3rem;display:flex;flex-direction:column;align-items:center;overflow:visible}
+  /* The sheet is an object, not a region: a white rectangle, its own edges the 80-column
+     bounds, centred on a wide viewport and filling a narrow one. From the left: the
+     tractor-feed strip (a repeating gradient in --sprocket, the documented margin every
+     1993-94 facsimile carries, drawn with no hole colour or shadow), a margin, 80 columns of
+     text, a right margin. */
+  :root.paper #sheet{width:calc(80ch + 6.5rem);max-width:100%;background:var(--ground);color:var(--ink);flex:none;position:relative;padding:2.25rem 1.75rem 2rem 4.75rem;background-image:repeating-linear-gradient(to bottom, transparent 0 .55rem, var(--sprocket) .55rem 1.05rem, transparent 1.05rem 1.6rem);background-size:.6rem 1.6rem;background-repeat:repeat-y;background-position:1.15rem 0}
+  :root.paper #sheet::before{content:"";position:absolute;top:0;bottom:0;left:2.9rem;border-left:1px solid var(--sprocket)}
+  /* terminal.width_rule's right-edge rule marks the printout's own box; the sheet's edge
+     does that work in paper mode, so the rule is not drawn. */
+  :root.paper .printout{border-right:0;width:80ch;max-width:100%}
+  /* terminal.paper_input_weight (chosen): the data-echo marker sink.ts stamps on an echoed
+     command line's spans. */
+  :root.paper [data-echo]{font-weight:700}
+  :root.paper .promptline{width:80ch;max-width:100%}
+  /* terminal.paper_delay: the empty-sheet pause on entering paper mode. Reduced motion skips
+     the pause (sink.ts never adds `pending` in that case), and this override is a second
+     guard against it in case the class is ever applied some other way. */
+  :root.paper.pending .printout, :root.paper.pending .promptline{visibility:hidden}
+  @media (prefers-reduced-motion: reduce){:root.paper.pending .printout, :root.paper.pending .promptline{visibility:visible}}
+  @media (max-width: 60rem){:root.paper .terminal-pane{padding:1rem .5rem 2rem} :root.paper #sheet{padding-left:3.5rem}}
+  /* A browser print of the page, in any mode, yields the sheet -- a consequence of the same
+     rules paper mode applies, not a separate feature. Selector-for-selector the same hides
+     and the same sheet layout as the :root.paper rules above. */
+  @media print{
+    #bar > *:not(#display-mode){display:none}
+    aside{display:none}
+    .pane-label{display:none}
+    #notice{display:none}
+    .layout{display:block}
+    .terminal-pane{padding:2.5rem 1rem 3rem;display:flex;flex-direction:column;align-items:center}
+    #sheet{width:calc(80ch + 6.5rem);background:var(--ground);color:var(--ink);position:relative;padding:2.25rem 1.75rem 2rem 4.75rem;background-image:repeating-linear-gradient(to bottom, transparent 0 .55rem, var(--sprocket) .55rem 1.05rem, transparent 1.05rem 1.6rem);background-size:.6rem 1.6rem;background-repeat:repeat-y;background-position:1.15rem 0}
+    #sheet::before{content:"";position:absolute;top:0;bottom:0;left:2.9rem;border-left:1px solid var(--sprocket)}
+    .printout{border-right:0;width:80ch}
+    [data-echo]{font-weight:700}
+  }
 </style></head>
 <body>
 <header id="bar"></header>
 <div class="layout">
   <div class="terminal-pane">
-    <div class="pane-label">DIALOG File 60 &middot; session &middot; Alt+I inspects the last typed record &middot; Alt+R restarts the session &middot; Alt+S toggles printout/screen display</div>
-    <main id="terminal"></main>
+    <div class="pane-label">DIALOG File 60 &middot; session &middot; Alt+I inspects the last typed record &middot; Alt+R restarts the session &middot; Alt+S cycles printout/screen/paper display</div>
+    <div id="sheet">
+      <main id="terminal"></main>
+    </div>
     <p id="notice" class="modern"></p>
   </div>
   <aside id="panel">

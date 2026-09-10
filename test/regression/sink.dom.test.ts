@@ -5,6 +5,7 @@
 //
 // This file exercises DomSink in a real (if headless) DOM, proving the happy-dom
 // environment wiring in vitest.config.ts before covering DomSink's actual contract.
+import { readFileSync } from "node:fs";
 import { DomSink, type Scheduler } from "../../src/terminal/sink";
 import { DialogSession } from "../../src/dialog/session";
 import { RetrievalEngine, type RangeReader } from "../../src/retrieval/engine";
@@ -356,5 +357,148 @@ describe("the prompt stays live during output", () => {
 
     expect(submitted).toEqual(["first"]); // "second" was still queued, never submitted
     expect(sink.printout.textContent).toBe(""); // reset cleared everything, including "first"'s in-flight output
+  });
+});
+
+// Paper mode (terminal.display_mode, terminal.paper_sheet, terminal.paper_delay). These tests
+// exercise the real CSS in index.html against a fixture built from the same element shapes
+// main.ts assembles -- #bar, aside, .pane-label, #notice, #sheet around DomSink's own root --
+// rather than reimplementing the hiding rules, the same way inspect.dom.test.ts's wrapping
+// test checks a real computed style instead of asserting a class name.
+describe("paper mode", () => {
+  let styleEl: HTMLStyleElement;
+  beforeAll(() => {
+    const css = readFileSync("index.html", "utf8").match(/<style>([\s\S]*?)<\/style>/)![1]!;
+    styleEl = document.createElement("style");
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+  });
+  afterAll(() => { styleEl.remove(); });
+  afterEach(() => {
+    document.body.replaceChildren();
+    document.documentElement.classList.remove("paper", "pending");
+  });
+
+  /** Builds the chrome paper mode hides or keeps -- #bar (a text node, a link, a restart
+   * button, and the one button that keeps the id="display-mode" CSS keys off), aside, the
+   * pane label, the notice paragraph -- around a DomSink mounted in #sheet > #terminal, and
+   * attaches all of it to document.body (getComputedStyle only reflects a connected element).
+   */
+  function chromeFixture(onSubmit?: (line: string) => Promise<void>) {
+    const bar = document.createElement("div"); bar.id = "bar";
+    const link = document.createElement("a"); link.textContent = "registry";
+    const restartButton = document.createElement("button"); restartButton.textContent = "Restart session";
+    const displayModeButton = document.createElement("button"); displayModeButton.id = "display-mode";
+    bar.append(document.createTextNode("A reconstruction, not a recorded session"), link, restartButton, displayModeButton);
+    const aside = document.createElement("aside");
+    const paneLabel = document.createElement("div"); paneLabel.className = "pane-label";
+    const notice = document.createElement("p"); notice.id = "notice";
+    const layout = document.createElement("div"); layout.className = "layout";
+    const pane = document.createElement("div"); pane.className = "terminal-pane";
+    const sheet = document.createElement("div"); sheet.id = "sheet";
+    const { clock, root: terminal, sink } = pacedSink(onSubmit);
+    terminal.id = "terminal";
+    sheet.appendChild(terminal);
+    pane.append(paneLabel, sheet, notice);
+    layout.append(pane, aside);
+    document.body.append(bar, layout);
+    return { bar, aside, paneLabel, notice, link, restartButton, displayModeButton, sheet, terminal, clock, sink };
+  }
+
+  /** happy-dom caches an element's computed style and does not recompute it from a later
+   * classList change alone; re-appending the element (a no-op move -- it is already its
+   * parent's child) forces a fresh cascade before the next getComputedStyle call on it. Only
+   * needed before a second getComputedStyle read on the same element within one test. */
+  function restyle(el: Element): void { el.parentNode?.appendChild(el); }
+
+  test("entering paper hides the aside, the bar (except the display-mode control), the pane label and the notice", () => {
+    const f = chromeFixture();
+    f.sink.setDisplayMode("paper", { restored: true });
+    expect(getComputedStyle(f.aside).display).toBe("none");
+    expect(getComputedStyle(f.paneLabel).display).toBe("none");
+    expect(getComputedStyle(f.notice).display).toBe("none");
+    expect(getComputedStyle(f.link).display).toBe("none");
+    expect(getComputedStyle(f.restartButton).display).toBe("none");
+    expect(getComputedStyle(f.displayModeButton).display).not.toBe("none");
+  });
+
+  test("paper mode keeps every printed line, exactly as printout does", async () => {
+    const f = chromeFixture();
+    f.sink.setDisplayMode("paper", { restored: true });
+    await printAll(f.sink, f.clock, Array.from({ length: 30 }, (_, i) => ({ text: `line ${i}` })));
+    expect(f.sink.printout.querySelectorAll("span").length).toBe(30);
+  });
+
+  test("entering paper live shows an empty sheet until the scheduler advances 600 ms", () => {
+    const f = chromeFixture();
+    f.sink.setDisplayMode("paper");
+    expect(document.documentElement.classList.contains("pending")).toBe(true);
+    expect(getComputedStyle(f.sink.printout).visibility).toBe("hidden");
+    const stepped = f.clock.step();
+    expect(stepped).toBe(true);
+    expect(f.clock.now).toBe(600);
+    expect(document.documentElement.classList.contains("pending")).toBe(false);
+    restyle(f.sink.printout);
+    expect(getComputedStyle(f.sink.printout).visibility).not.toBe("hidden");
+  });
+
+  test("no pause under reduced motion", () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: true, media: q })) as typeof window.matchMedia;
+    try {
+      const f = chromeFixture();
+      f.sink.setDisplayMode("paper");
+      expect(document.documentElement.classList.contains("pending")).toBe(false);
+      expect(getComputedStyle(f.sink.printout).visibility).not.toBe("hidden");
+    } finally { window.matchMedia = original; }
+  });
+
+  test("no pause when the mode is restored on load", () => {
+    const f = chromeFixture();
+    f.sink.setDisplayMode("paper", { restored: true });
+    expect(document.documentElement.classList.contains("pending")).toBe(false);
+    expect(getComputedStyle(f.sink.printout).visibility).not.toBe("hidden");
+  });
+
+  test("leaving paper restores the chrome immediately, with no pause", () => {
+    const f = chromeFixture();
+    f.sink.setDisplayMode("paper", { restored: true });
+    expect(getComputedStyle(f.aside).display).toBe("none");
+    f.sink.setDisplayMode("printout");
+    expect(document.documentElement.classList.contains("paper")).toBe(false);
+    expect(document.documentElement.classList.contains("pending")).toBe(false);
+    restyle(f.aside);
+    expect(getComputedStyle(f.aside).display).not.toBe("none");
+  });
+
+  test("a command submitted while paper mode is pending runs only after the pause", async () => {
+    const submitted: string[] = [];
+    const f = chromeFixture(async (l) => { submitted.push(l); });
+    f.sink.setDisplayMode("paper");
+    const input = f.terminal.querySelector("textarea")!;
+    input.value = "b 60";
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
+    await Promise.resolve(); await Promise.resolve();
+    expect(submitted).toEqual([]);
+    expect(f.sink.printout.textContent).toBe("");
+    f.clock.step();
+    await Promise.resolve(); await Promise.resolve();
+    expect(submitted).toEqual(["b 60"]);
+    expect(f.sink.printout.textContent).toBe("?b 60\n");
+  });
+
+  test("an echoed command line carries the paper input-weight marker", () => {
+    const f = chromeFixture();
+    f.sink.echo("?", "b 60");
+    const span = f.sink.printout.querySelector("span[data-echo]");
+    expect(span).not.toBeNull();
+    expect(span!.textContent).toBe("?b 60\n");
+  });
+
+  test("a printed output line does not carry the echo marker", async () => {
+    const f = chromeFixture();
+    await printAll(f.sink, f.clock, [{ text: "plain output" }]);
+    const span = f.sink.printout.querySelector("span")!;
+    expect(span.dataset.echo).toBeUndefined();
   });
 });
