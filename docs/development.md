@@ -108,7 +108,9 @@ rather than a fixture. On a fresh clone, or any machine without the file, those 
 loudly by default, naming the missing file and the extraction script, rather than silently
 skipping and letting `pnpm test` report success without ever touching the corpus. Set
 `CRIS_CORPUS_OPTIONAL=1` to opt out and skip them instead (`CRIS_CORPUS_OPTIONAL=1 pnpm
-test`).
+test`). `test/archival/fy88-record.test.ts` reads the separate, not-required
+`data/RG310.CRIS.FY88.txt` and skips itself with a printed note whenever that file is
+absent, no opt-out flag needed.
 
 One layer has no automated test at all: `src/app/main.ts`, the wiring that
 fetches the indexes, builds the engine and session, and mounts the terminal

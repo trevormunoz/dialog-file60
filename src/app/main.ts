@@ -185,4 +185,4 @@ document.addEventListener("keydown", (e) => {
 // panel needs -- offsets.file and FY1994.profile are the same values the
 // RetrievalEngine above was built with; FY1994.naid and offsets.sha256 name the holding and
 // the corpus's own fixity hash, neither of which the engine's constructor takes.
-mountInspect(document.getElementById("inspect")!, sink.printout, engine, { file: offsets.file, naid: FY1994.naid, profile: FY1994.profile, sha256: offsets.sha256 }, () => sink.focusInput(), expandPanel);
+mountInspect(document.getElementById("inspect")!, sink.printout, engine, { file: offsets.file, naid: FY1994.naid!, profile: FY1994.profile, sha256: offsets.sha256 }, () => sink.focusInput(), expandPanel);

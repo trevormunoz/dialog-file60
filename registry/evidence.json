@@ -1474,7 +1474,7 @@
         "observedSystem": "Format B"
       }
     ],
-    "note": "Matches the pattern of nara.file.fy1994_fixity. FY 1988's own file is not loaded by this app and is not present on every machine that runs it (unlike FY 1994's, which src/loader/cli.ts refuses to index without); packages/cris-formatb/fixtures/fy88-9000001.bin is a synthetic reconstruction of one field, not a corpus slice, where the real file is absent."
+    "note": "Matches the pattern of nara.file.fy1994_fixity. FY 1988's own file is not loaded by this app and is not present on every machine that runs it (unlike FY 1994's, which src/loader/cli.ts refuses to index without); packages/cris-formatb/fixtures/fy88-9000001.bin is a synthetic reconstruction of one field, not a corpus slice, where the real file is absent. The values were transcribed from a measurement recorded on 2026-09-10 and have not been re-read in this tree."
   },
   "nara.tape.fy1988_accession": {
     "value": "NN3-310-90-001",
@@ -1502,7 +1502,7 @@
         "observedSystem": "NARA"
       }
     ],
-    "note": "the file's first line, preceding any '$$' record, matching nara.file.header_record's FY 1994 convention"
+    "note": "the file's first line, preceding any '$$' record, matching nara.file.header_record's FY 1994 convention. The values were transcribed from a measurement recorded on 2026-09-10 and have not been re-read in this tree."
   },
   "nara.file.fy1988_trailer_record": {
     "value": ">> 003153115000032016",
@@ -1516,19 +1516,13 @@
         "observedSystem": "NARA"
       }
     ],
-    "note": "the trailer's own two counts, 3153115 (data lines between header and trailer) and 32016 (records), match a full-corpus scan and the FY 1988 column of sources/format-b-elements.md (32,016 records, 52,340 IN values). Like nara.file.trailer_record's FY 1994 value, the two counts run together with no separating space -- this reconstruction's earlier reading of the FY 1994 trailer as space-separated was a misreading corrected by a direct byte read, not a real difference between the two files' trailers."
+    "note": "the trailer's own two counts, 3153115 (data lines between header and trailer) and 32016 (records), correspond to the FY 1988 column of the CRIS Format B element table (32,016 records, 52,340 IN values); this has not been confirmed by an independent full-corpus scan in this tree. Like nara.file.trailer_record's FY 1994 value, the two counts run together with no separating space -- this reconstruction's earlier reading of the FY 1994 trailer as space-separated was a misreading corrected by a direct byte read, not a real difference between the two files' trailers. The values were transcribed from a measurement recorded on 2026-09-10 and have not been re-read in this tree."
   },
   "formatb.encoding.fy1988_sc_percent": {
     "value": "under fy1988, an SC value's text is split at every 0xA0 0x02 separator: the first segment is the code, the second the label, a third the percent",
-    "status": "documented",
+    "status": "inferred",
     "claim": "In the FY 1988 file, an SC value's percentage is carried inside the SC block itself instead of in a separate SN line.",
     "sources": [
-      {
-        "source": "format-b-1990",
-        "locator": "section 6.1",
-        "sourceDate": "1990-02",
-        "observedSystem": "Format B"
-      },
       {
         "source": "cris-fy88-export",
         "locator": "AN 9000001, SC field",
@@ -1536,7 +1530,7 @@
         "observedSystem": "Format B"
       }
     ],
-    "note": "spec section 6.1 states the FY 1988 layout differs (no SN or BP lines); the AN 9000001 measurement is the transcribed evidence for how: 'SC XFRS  <A0><02>Forestry Related' / '  <A0><02>100%' / ' <AC>S0613 <A0><02>Other Western Conifers' / '  <A0><02>100%' -- a second separator on a continuation line of the same value, where FY 1991 onward keeps the percent in a separate SN tag and splitSegments' single-separator split is unchanged from before this profile distinction existed."
+    "note": "inferred rather than documented: the general FY 1988 layout is generalized from a single measured record, AN 9000001: 'SC XFRS  <A0><02>Forestry Related' / '  <A0><02>100%' / ' <AC>S0613 <A0><02>Other Western Conifers' / '  <A0><02>100%' -- a second separator on a continuation line of the same value, where FY 1991 onward keeps the percent in a separate SN tag and splitSegments' single-separator split is unchanged from before this profile distinction existed. A source formerly cited here as the CRIS Format B specification, February 1990, section 6.1, was actually a section of this project's own unpublished design document, not the 1990 specification, and has been dropped."
   },
   "nara.file.header_record": {
     "value": "<< 000060950718",

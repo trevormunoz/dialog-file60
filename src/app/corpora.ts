@@ -1,4 +1,6 @@
 import type { Profile } from "@barcstory/cris-formatb";
+import { registry } from "../registry";
+import type { Fixity } from "../loader/fixity";
 
 // The tape chain and the source-file facts for each annual CRIS export the National Archives
 // holds, whether or not this app serves it. Only FY 1994 is loaded and searched (spec section
@@ -11,20 +13,22 @@ export interface TapeProvenance {
   transferBlocking: number | null;
   naraCopy: string | null;
   logicalRecordLength: 80;
-  asciiConversion: { manifestPrepared: string; codePage: null };
+  asciiConversion: { manifestPrepared: string | null; codePage: null };
   evidence: string[];
 }
 
 export interface SourceFileConfig {
   name: string;
-  naid: string;
+  naid: string | null;
   bytes: number;
   sha256: string;
-  acquisition: string;
+  acquisition: string | null;
   lineLength: 82;
   encoding: string;
   profile: Profile;
   tape: TapeProvenance;
+  headerRecord?: string | null;
+  trailerRecord?: string | null;
 }
 
 const LATIN1_LINE = "80 columns + CRLF, read as Latin-1";
@@ -51,13 +55,17 @@ export const FY1994: SourceFileConfig = {
   },
 };
 
-/** Registry: nara.file.fy1988_fixity, nara.file.fy1988_header_record, nara.file.fy1988_trailer_record */
+const fy1988Fixity = registry.get("nara.file.fy1988_fixity").value as Fixity;
+
 export const FY1988: SourceFileConfig = {
   name: "RG310.CRIS.FY88.txt",
-  naid: "1204533",
-  bytes: 258555594,
-  sha256: "34c434343821d83728de08d9e786011d123f5413b115a5d6fb734e202e43c930",
-  acquisition: "NARA series 6207709, NAID 1204533",
+  // FY 1994's naid and acquisition have no FY 1988 source registered here; left null rather
+  // than assumed to match a neighboring year, the same practice as tape.transferMedia and
+  // tape.naraCopy below.
+  naid: null,
+  bytes: fy1988Fixity.bytes,
+  sha256: fy1988Fixity.sha256,
+  acquisition: null,
   lineLength: 82,
   encoding: LATIN1_LINE,
   profile: "fy1988",
@@ -72,7 +80,11 @@ export const FY1988: SourceFileConfig = {
     transferBlocking: null,
     naraCopy: null,
     logicalRecordLength: 80,
-    asciiConversion: { manifestPrepared: "2018-07-17", codePage: null },
+    // Unlike FY 1994's, no FY 1988 source is registered for when NARA prepared this file's
+    // own ASCII-conversion manifest; left null rather than assumed to match FY 1994's date.
+    asciiConversion: { manifestPrepared: null, codePage: null },
     evidence: ["nara.conversion.line_form", "nara.conversion.control_bytes", "nara.tape.fy1988_accession"],
   },
+  headerRecord: registry.get("nara.file.fy1988_header_record").value as string,
+  trailerRecord: registry.get("nara.file.fy1988_trailer_record").value as string,
 };

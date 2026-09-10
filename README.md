@@ -37,8 +37,8 @@ pnpm install
 The corpus file is not in this repository and is never committed. Obtain it
 first: `data/README.md` names the source and `scripts/extract-corpus.py`
 extracts and fixity-checks it into `data/RG164.CRIS.FY94.txt`. This is the
-only file the running app loads; the FY 1988 export `data/README.md` also
-describes backs a reader encoding profile
+only file the running app loads; the FY 1988 export that `data/README.md`
+also describes backs a reader encoding profile
 (`packages/cris-formatb/src/profiles.ts`) but is never served.
 
 ```

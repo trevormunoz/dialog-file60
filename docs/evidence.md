@@ -19,7 +19,6 @@ rests on. This is the full registry, grouped by status, produced by
 
 - dialog.file60.title
 - formatb.encoding.continuation_0xAC
-- formatb.encoding.fy1988_sc_percent
 - formatb.encoding.separator_0xA0_0x02
 - formatb.record.separator
 - index.word.stopwords
@@ -89,6 +88,7 @@ rests on. This is the full registry, grouped by status, produced by
 
 ## inferred
 
+- formatb.encoding.fy1988_sc_percent
 - index.phrase.uppercase
 - index.sh.phrase_only
 - index.word.tokens

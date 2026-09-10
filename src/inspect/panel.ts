@@ -11,7 +11,7 @@ registry.get("inspect.mode");
  * (data/README.md; fixtures/ACCEPTANCE.md); a fact about the holding, not about any one
  * record, so it has no home in the per-record Offsets type -- panel.ts is the one place that
  * displays it, and main.ts imports it from here to build the SourceFile it passes in. */
-export const NAID = FY1994.naid;
+export const NAID = FY1994.naid!;
 
 /** The archival-source facts describeLine needs, all of them values main.ts already has in
  * scope from building the RetrievalEngine (`offsets.file`, `offsets.sha256`) or from NAID
