@@ -26,10 +26,17 @@ import { appDefine } from "../config/define";
 const FILE = "RG164.CRIS.FY94.txt";
 const COMMANDS = ["b 60", "s cy=beltsville", "s s1 and in=hammerschlag  f a", "t s2/5/1", "logoff"];
 
-// A fixed clock, not the real one -- the recording is reproducible byte for byte across runs,
-// so its stamp and LOGOFF connect-time lines cannot drift with wall-clock time the way BEGIN's
-// stamp would with `new Date()`.
-const CAST_CLOCK = { now: () => new Date(Date.UTC(1994, 4, 3, 10, 0, 0)) };
+// A deterministic clock, not the real one -- the recording is reproducible byte for byte
+// across runs, so its stamp and LOGOFF connect-time lines cannot drift with wall-clock time
+// the way BEGIN's stamp would with `new Date()`. It advances a fixed 12 seconds on every call
+// (session construction, BEGIN's stamp, LOGOFF's end) rather than returning one frozen
+// instant, so LOGOFF's connect-time line shows a nonzero span and BEGIN and LOGOFF print
+// different stamps -- the times are chosen for the recording, not measured from a real
+// session.
+let castClockCalls = 0;
+const CAST_CLOCK = {
+  now: () => new Date(Date.UTC(1994, 4, 3, 10, 0, 0) + 12_000 * castClockCalls++),
+};
 
 /** Loads offsets and phrase indexes the same way the app does (fetch, in main.ts) or the
  * loader CLI does (build, in src/loader/cli.ts): prefer the already-built public/corpus
