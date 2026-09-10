@@ -1295,6 +1295,25 @@
       }
     ]
   },
+  "map.SC.row_alignment": {
+    "value": { "decision": "rows formed only where both SC and SN carry a value at the same position; everything beyond that is preserved unaligned under its own tag, nothing truncated" },
+    "status": "inferred",
+    "claim": "A special-classification line shows a percentage only when the record actually carries one for that line.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "SPECIAL CLASSIFICATION AND HEADINGS sample line",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "nara-cris-packet",
+        "locator": "FY 1991 validation statement, p.28: SN 'Percentage that refers to the previous SC field tag'",
+        "sourceDate": "1995-06-12",
+        "observedSystem": "NARA"
+      }
+    ]
+  },
   "map.PP.display_from_PX": {
     "value": true,
     "status": "documented",

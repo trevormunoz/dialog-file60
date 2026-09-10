@@ -88,6 +88,7 @@ rests on. This is the full registry, grouped by status, produced by
 - index.sh.phrase_only
 - index.word.tokens
 - map.AN.display_padding
+- map.SC.row_alignment
 - map.SX_TX.display_text
 - nara.conversion.control_bytes
 - nara.tape.fy1994_media

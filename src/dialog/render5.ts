@@ -7,7 +7,7 @@ const HEADER = registry.get("render.type.header").value as string[];
 const JUST = registry.get("render.text.justify").value as { width: number };
 const JOIN = registry.get("render.headings.join").value as string;
 registry.get("render.format5.layout"); registry.get("map.AN.display_padding"); registry.get("map.PO.displays_PF_PI");
-registry.get("map.PC.composite"); registry.get("map.GC.composite"); registry.get("map.SC.percent_from_SN"); registry.get("map.PP.display_from_PX");
+registry.get("map.PC.composite"); registry.get("map.GC.composite"); registry.get("map.SC.percent_from_SN"); registry.get("map.SC.row_alignment"); registry.get("map.PP.display_from_PX");
 registry.get("proto.error.bad_format");
 
 const v = (rec: LogicalRecord, tag: string, i = 0): string => field(rec, tag)?.values[i]?.raw ?? "";
@@ -112,8 +112,20 @@ export function render5(rec: LogicalRecord): OutputLine[] {
     // column 59 (measured: XHMR/S2540/S2550/S3110 rows all put the percent at that column,
     // whether the code is 4 or 5 characters -- the code-label gap is a fixed 3 spaces, not
     // a fixed code width).
-    sc.forEach((x, i) => out.push(L(`         ${pad(`${x.code ?? x.raw}   ${x.label ?? ""}`, 50)}${sn[i]?.raw ?? ""}`, ["SC", "SN"], i)));
-    for (const extra of sn.slice(sc.length)) out.push(L(`         SN ${extra.raw}`, ["SN"]));
+    // Rows are formed only where both tags carry a value at the same position (spec 6.3, the
+    // rule the classification grid above already follows). A blank percent would assert that
+    // the row has none; an unpaired SC value has no asserted row relationship at all, so it
+    // prints under its own tag below the block, unaligned and untruncated.
+    const scSnN = Math.min(sc.length, sn.length);
+    for (let i = 0; i < scSnN; i++) {
+      const x = sc[i]!;
+      out.push(L(`         ${pad(`${x.code ?? x.raw}   ${x.label ?? ""}`, 50)}${sn[i]!.raw}`, ["SC", "SN"], i));
+    }
+    for (let i = scSnN; i < sc.length; i++) {
+      const x = sc[i]!;
+      out.push(L(`         SC ${x.code ?? x.raw}   ${x.label ?? ""}`.trimEnd(), ["SC"], i));
+    }
+    for (let i = scSnN; i < sn.length; i++) out.push(L(`         SN ${sn[i]!.raw}`, ["SN"], i));
   }
   out.push(lit(""), L(`      BASIC ${v(rec, "BT")}    APPLIED ${v(rec, "AT")}    DEVELOPMENTAL ${v(rec, "DT")}`, ["BT", "AT", "DT"]));
   out.push(...textBlock(rec, "OB", "OBJECTIVES:"), ...textBlock(rec, "AP", "APPROACH:"), ...textBlock(rec, "DE", "KEYWORDS:"));
