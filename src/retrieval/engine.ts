@@ -118,17 +118,41 @@ export class RetrievalEngine {
 
   /** Every term the given field or suffix carries, paired with its postings count -- used by
    * the EXPAND browse list (not used by search()). BASIC_INDEX ("*") merges the /TX, /TI, /DE
-   * and /PB word-term lists (proto.expand.display's note); a word suffix code reads its
-   * prebuilt terms.json; a phrase field code (e.g. "IN", "CY") is derived from the loaded
-   * phrase index and sorted here, once, then cached. */
+   * and /PB word-term lists (proto.expand.display's note): the count printed for each term is
+   * the real union of that term's postings across the four indexes, the same figure a SELECT
+   * on the row's E-number would retrieve, not a per-code approximation. A word suffix code
+   * reads its prebuilt terms.json; a phrase field code (e.g. "IN", "CY") is derived from the
+   * loaded phrase index and sorted here, once, then cached. */
   async termList(code: string): Promise<[string, number][]> {
     if (code === "*") {
       if (this.basicIndexTerms) return this.basicIndexTerms;
-      const merged = new Map<string, number>();
-      for (const c of ["/TX", "/TI", "/DE", "/PB"]) {
-        for (const [term, count] of await this.termList(c)) merged.set(term, Math.max(merged.get(term) ?? 0, count));
-      }
-      const out = [...merged.entries()].sort((a, b) => collate(a[0], b[0]));
+      const codes = ["/TX", "/TI", "/DE", "/PB"];
+      const perCode = await Promise.all(codes.map(c => this.termList(c)));
+      const terms = new Set<string>();
+      for (const list of perCode) for (const [term] of list) terms.add(term);
+      // Every shard any merged term needs, loaded once per (code, shard) pair and cached in
+      // this.shards -- the same cache prepare() and termOrdinals() use -- rather than once per
+      // term, since many terms share a first-character shard.
+      const shardsNeeded = new Set<string>();
+      for (const term of terms) shardsNeeded.add(shardOf(phraseKey(term)));
+      await Promise.all([...shardsNeeded].flatMap(shard => codes.map(async c => {
+        const resolved = resolveWordCode(c);
+        const key = `${resolved}:${shard}`;
+        if (!this.shards.has(key)) {
+          if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
+          this.shards.set(key, await this.wordSource.shard(resolved, shard));
+        }
+      })));
+      const out: [string, number][] = [...terms].map((term): [string, number] => {
+        const key = phraseKey(term);
+        const shard = shardOf(key);
+        const union = new Set<number>();
+        for (const c of codes) {
+          const resolved = resolveWordCode(c);
+          for (const o of this.shards.get(`${resolved}:${shard}`)?.[key] ?? []) union.add(o);
+        }
+        return [term, union.size];
+      }).sort((a, b) => collate(a[0], b[0]));
       this.basicIndexTerms = out;
       return out;
     }

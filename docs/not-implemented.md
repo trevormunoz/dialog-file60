@@ -32,12 +32,6 @@ bare term (`E PEACH`) browses the merged Basic Index instead of one field.
 before it. A row's ref number (`E3`, or a range `E3:E5`) can be used as a
 SELECT operand once its EXPAND display is open.
 
-For the merged Basic Index (`E PEACH`, no prefix), the Items count printed
-next to each row is a cheap per-code maximum across the four merged word
-indexes, not the same figure SELECT retrieves. Selecting that row's ref
-unions the real postings from all four indexes, so the set SELECT builds can
-be larger than the number EXPAND printed.
-
 OR and NOT are implemented, following the order of processing a later DIALOG
 manual documents: without parentheses, NOT is worked out first, then AND,
 then OR; parentheses change the order, innermost group first. `S CY=AMES OR

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { buildIndexes } from "../../src/loader/index-builder";
 import { RetrievalEngine } from "../../src/retrieval/engine";
 import { FsRangeReader } from "../../src/retrieval/reader-node";
+import { FsWordIndex } from "../../src/retrieval/words-node";
 import { DialogSession, setLine } from "../../src/dialog/session";
 import { render5 } from "../../src/dialog/render5";
 
@@ -72,6 +73,46 @@ test.skipIf(skip)(
     expect(target.items).toBe(acc.in_hammerschlag_f_a.count);
     expect(setLines.at(-1)).toBe(setLine(1, acc.in_hammerschlag_f_a.count, `E${target.ref}`));
     expect(session.sets[0]!.ordinals.length).toBe(acc.in_hammerschlag_f_a.count);
+  },
+  120_000,
+);
+
+// A bare EXPAND (no prefix) browses the merged Basic Index, unioning the /TX, /TI, /DE and
+// /PB word indexes per term rather than approximating with a per-code maximum. This runs the
+// merge against the real corpus and the prebuilt word-index shards under public/corpus/word
+// (built by `pnpm load`), the same layout test/archival/word-corpus.test.ts reads. Measured
+// 2026-09-10: the merged EXPAND itself (past the corpus and index build already timed by the
+// test above) took 853ms, once, for the whole merged term list; the twelve rows shown to the
+// session are then free, since termList() caches the merged list per engine instance.
+test.skipIf(skip)(
+  "e peach: a merged Basic Index row's Items count equals what SELECT then retrieves for its E-number",
+  async () => {
+    if (!exists) {
+      throw new Error(
+        `missing ${FILE} -- run scripts/extract-corpus.py to produce it, or set CRIS_CORPUS_OPTIONAL=1 to skip archival tests`,
+      );
+    }
+    if (!existsSync("public/corpus/word/TX/terms.json")) {
+      throw new Error("missing public/corpus/word -- run `pnpm load` to build the word-index shards first");
+    }
+    const bytes = new Uint8Array(readFileSync(FILE));
+    const { offsets, indexes } = buildIndexes(bytes, "RG164.CRIS.FY94.txt");
+    const engine = new RetrievalEngine(
+      offsets, indexes, new FsRangeReader(FILE), "fy1991plus", new FsWordIndex("public/corpus"),
+    );
+    const session = new DialogSession(
+      engine,
+      (rec, format) => (format === "5" ? render5(rec) : [{ text: `? /${format}` }]),
+    );
+    await session.submit("b 60");
+    await session.submit("e peach");
+
+    const opened = session.expand!;
+    expect(opened.rows).toHaveLength(12);
+    const target = opened.rows[0]!;
+    const setLines = (await session.submit(`s e${target.ref}`)).map(l => l.text);
+    expect(setLines.at(-1)).toBe(setLine(1, target.items, `E${target.ref}`));
+    expect(session.sets[0]!.ordinals.length).toBe(target.items);
   },
   120_000,
 );
