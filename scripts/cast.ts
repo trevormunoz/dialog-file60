@@ -24,7 +24,15 @@ import { appDefine } from "../config/define";
 (globalThis as Record<string, unknown>).__REGISTRY_HASH__ = JSON.parse(appDefine.__REGISTRY_HASH__);
 
 const FILE = "RG164.CRIS.FY94.txt";
-const COMMANDS = ["b 60", "s cy=beltsville", "s s1 and in=hammerschlag  f a", "t s2/5/1", "logoff"];
+const COMMANDS = [
+  "b 60",
+  "e in=hammerschlag",
+  "ss cy=beltsville or cy=greenbelt",
+  "s s3 and in=hammerschlag  f a",
+  "ds",
+  "t s4/5/1",
+  "logoff",
+];
 
 // A deterministic clock, not the real one -- the recording is reproducible byte for byte
 // across runs, so its stamp and LOGOFF connect-time lines cannot drift with wall-clock time
@@ -84,10 +92,10 @@ function castStatement(offsets: Offsets): string {
 }
 
 /**
- * Runs the acceptance session (fixtures/ACCEPTANCE.md) exactly as the app does -- the same
- * RetrievalEngine and DialogSession wiring as src/app/main.ts, the same four commands as
- * test/archival/session-corpus.test.ts -- and builds the asciicast recording from its
- * output. Exported so test/archival/cast-session.test.ts can run it in-process rather than
+ * Runs an extended research session -- the acceptance session's CY=BELTSVILLE/IN=HAMMERSCHLAG
+ * question (fixtures/ACCEPTANCE.md) plus EXPAND, an OR across SELECT STEPS, DISPLAY SETS, and
+ * LOGOFF -- through the same RetrievalEngine and DialogSession wiring as src/app/main.ts, and
+ * builds the asciicast recording from its output. Exported so test/archival/cast-session.test.ts can run it in-process rather than
  * shelling out to a subprocess from inside a Vitest test; the module's own bottom guard is the
  * `pnpm cast` entry point.
  */

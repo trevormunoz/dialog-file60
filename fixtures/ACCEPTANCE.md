@@ -241,3 +241,39 @@ panel's own reported lines and, by `(line - 1) * 82`, its byte offsets.
 The sha256 matches `offsets.json`, the inspect panel's displayed hash, and
 `registry.get("nara.file.fy1994_fixity").value.sha256`, unchanged since the
 first browser run.
+
+## Run record, 2026-09-10 (extended session: EXPAND, SS with OR, DS, LOGOFF)
+
+Extended the recorded session (`casts/first-session.cast`, `scripts/cast.ts`) past the
+original four-command acceptance question to show more of what this reconstruction now does:
+
+```
+? b 60
+? e in=hammerschlag                    → EXPAND window; entered form absent, E4 HAMMERSCHLAG  F A present, 2 postings
+? ss cy=beltsville or cy=greenbelt     → S1  669  S2    0  S3  669
+? s s3 and in=hammerschlag  f a        → S4    2
+? ds                                    → all four set lines
+? t s4/5/1                             → AN 9049442 in format 5
+? logoff                                → 1 Types in Format 5, 0.007 Hrs File60
+```
+
+Each count reproduces a fixture value from `fixtures/acceptance-fy94.json`, derived by
+`scripts/naive-split.py`, not by the loader: `cy_beltsville` 669, `cy_greenbelt` 0 (added this
+session; no record in this corpus carries CY=GREENBELT, the same absence already recorded for
+`cy_beltsville_or_greenbelt`, now checkable on its own operand), `cy_beltsville_or_greenbelt`
+669, `cy_beltsville_and_in_hammerschlag_f_a` 2, `in_hammerschlag_f_a` 2 (the S4 per-term
+posting). `T S4/5/1` types AN 09049442, matching every earlier run record's format 5 text
+byte for byte. `pnpm verify:acceptance` reran clean after adding `cy_greenbelt`; the script's
+new sha256 is recorded in `fixtures/SOURCES.md`.
+
+The LOGOFF block's connect time, 0.007 Hrs, is unchanged from the four-command session's own
+LOGOFF: the cast clock (`scripts/cast.ts`) only advances on session construction, BEGIN's
+stamp, and LOGOFF's stamp -- `src/dialog/session.ts` never reads it for SELECT, SELECT STEPS,
+EXPAND, DISPLAY SETS, or TYPE -- so the 24-second BEGIN-to-LOGOFF span holds regardless of how
+many commands run between them.
+
+`test/archival/cast-session.test.ts` was extended to assert the S1-S4 set lines above, the
+LOGOFF Types count, and the connect time against the rebuilt cast, in addition to the AN
+9049442 line it already checked. `pnpm test` ran green (54 files, 324 tests) and `pnpm
+typecheck` was clean after this session's changes, including the regenerated
+`casts/first-session.cast` and `casts/first-session.poster.txt` (`pnpm cast && pnpm poster`).
