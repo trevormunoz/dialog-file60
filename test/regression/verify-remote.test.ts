@@ -5,6 +5,7 @@ import { registry } from "../../src/registry";
 import type { Fixity } from "../../src/loader/fixity";
 import { WORD_CODES } from "../../src/loader/words";
 import { wordDir } from "../../src/loader/corpus-urls";
+import { PHRASE_FIELDS } from "../../src/loader/corpus-format";
 
 // verifyRemote is the deploy-time check that the public copy of the
 // corpus is the corpus: the whole object's sha256 against the registry, plus a spot Range
@@ -41,7 +42,9 @@ const syntheticFixity: Fixity = {
   bytes: synthetic.length,
   sha256: createHash("sha256").update(synthetic).digest("hex"),
 };
-const INDEX_CODES = ["CY", "IN", "DS", "ST", "SF", "AN"];
+// Derived from PHRASE_FIELDS, not hand-typed, so this stub never drifts from the real list of
+// built phrase indexes verifyRemote() actually fetches.
+const INDEX_CODES = PHRASE_FIELDS;
 // Every WORD_CODE's terms.json holds one term, "A", so the deterministic first-term shard is
 // always A.json -- keeps the stub small while still exercising the real shardOf() choice.
 const wordUrls = WORD_CODES.flatMap(code => {

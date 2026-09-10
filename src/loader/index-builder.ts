@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { scanRecords, parseRecord, fields, type LogicalRecord } from "@barcstory/cris-formatb";
 import { phraseKey } from "./phrase";
-import { PHRASE_FIELDS, type Offsets, type Index, type Report, type WordIndex } from "./corpus-format";
+import { PHRASE_FIELDS, PHRASE_PREFIX_TAGS, type Offsets, type Index, type Report, type WordIndex } from "./corpus-format";
 import { WORD_CODES, WORD_FIELDS, tokenize, shardOf } from "./words";
 
 // Node-only: hashes the corpus bytes with node:crypto. Kept out of corpus-format.ts, which
@@ -35,11 +35,13 @@ export function buildIndexes(bytes: Uint8Array, file: string) {
     offsets.records.push([rec.an, rec.firstLine, rec.lastLine]);
     for (const code of PHRASE_FIELDS) {
       const seen = new Set<string>();
-      for (const f of fields(rec, code)) for (const v of f.values) {
-        const k = phraseKey(v.raw);
-        if (!k || seen.has(k)) continue;
-        seen.add(k);
-        (indexes[code]!.terms[k] ??= []).push(ordinal);
+      for (const tag of PHRASE_PREFIX_TAGS[code]!) {
+        for (const f of fields(rec, tag)) for (const v of f.values) {
+          const k = phraseKey(v.raw);
+          if (!k || seen.has(k)) continue;
+          seen.add(k);
+          (indexes[code]!.terms[k] ??= []).push(ordinal);
+        }
       }
     }
     for (const code of WORD_CODES) {

@@ -25,13 +25,33 @@ export interface Report {
   wordPostings: Record<string, number>;
 }
 
-export const PHRASE_FIELDS = ["CY", "IN", "DS", "ST", "SF", "AN"] as const;
+/**
+ * Each built phrase prefix's Format B source tag(s), measured against the FY 1994 corpus
+ * (`LC_ALL=C grep -c "^<tag>" data/RG164.CRIS.FY94.txt`, 2026-09-10; every tag below occurs at
+ * least once in the corpus's 34,090 records). Most prefixes are a direct one-tag reading of
+ * their own DIALOG label; the composites follow render5.ts's own field grouping: B1/A1/D1
+ * print the BT/AT/DT percentages (map.BT, map.AT, map.DT), GC is PA+JC (map.GC.composite), PC
+ * is RP+AC+CM+FS+CT (map.PC.composite), PP is PX (map.PP.display_from_PX), PO is PF+PI
+ * (map.PO.displays_PF_PI), and SH is PH+GH, the same Format B "Word and Phrase" reading for
+ * PH/GH already recorded at index.sh.phrase_only. A code's component tags are deduplicated
+ * per record before indexing, the same rule the word indexer applies to a composite code like
+ * /TX -- a term present under two component tags of one record posts once, not twice.
+ */
+export const PHRASE_PREFIX_TAGS: Readonly<Record<string, readonly string[]>> = {
+  AN: ["AN"], CY: ["CY"], DS: ["DS"], IN: ["IN"], SF: ["SF"], ST: ["ST"],
+  AS: ["AS"], B1: ["BT"], A1: ["AT"], D1: ["DT"], FY: ["FY"], GC: ["PA", "JC"],
+  GY: ["GY"], IC: ["IC"], OC: ["OC"], PC: ["RP", "AC", "CM", "FS", "CT"], PD: ["PD"],
+  PN: ["PN"], PP: ["PX"], PS: ["PS"], PT: ["PT"], RE: ["RE"], SC: ["SC"], SD: ["SD"],
+  SH: ["PH", "GH"], TD: ["TD"], UP: ["UP"], ZP: ["ZP"], PO: ["PF", "PI"],
+};
+export const PHRASE_FIELDS = Object.keys(PHRASE_PREFIX_TAGS);
 /**
  * The 1998 Blue Sheet's full list of documented File 60 Additional Index (phrase-indexed)
- * prefixes,
- * including PO and SP (word and phrase both). Version 1 builds an index for only
- * PHRASE_FIELDS; every other prefix here is documented for File 60 but has no built index in
- * this milestone. Used by RetrievalEngine to tell "a documented prefix this build has not
+ * prefixes, including PO and SP (word and phrase both). Version 1 builds an index for every
+ * prefix in PHRASE_FIELDS. SP is the one documented prefix left unbuilt: its Format B tag SP
+ * is HNRIMS-only and has a measured count of 0 on this CRIS-only corpus (same measurement
+ * method as the note on PHRASE_PREFIX_TAGS), matching PO='s own word-index comment about SP in
+ * src/loader/words.ts. Used by RetrievalEngine to tell "a documented prefix this build has not
  * implemented" (routed to the capability-notice channel) apart from "not a File 60 code at
  * all" (the simulated typo error).
  */

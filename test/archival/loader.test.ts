@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import { scanRecords, parseRecord, fields } from "@barcstory/cris-formatb";
-import { phraseKey, indexUrls, PHRASE_FIELDS, type WordIndex } from "../../src/loader/corpus-format";
+import { phraseKey, indexUrls, PHRASE_FIELDS, DOCUMENTED_PHRASE_PREFIXES, type WordIndex } from "../../src/loader/corpus-format";
 import { buildIndexes } from "../../src/loader/index-builder";
 import { WORD_CODES } from "../../src/loader/words";
 const acc = JSON.parse(readFileSync("fixtures/acceptance-fy94.json", "utf8"));
@@ -136,6 +136,17 @@ test.skipIf(skip)("word indexes: non-empty terms, strictly-ascending unique post
     const naive = new Set<string>();
     for (const f of fields(rec, "TI")) for (const v of f.values) for (const t of naiveTokenize(v.raw)) naive.add(t);
     expect(termsForOrdinal(ti, ordinal), `ordinal ${ordinal}`).toEqual(naive);
+  }
+}, 120_000);
+
+// Every documented phrase prefix but SP now has a built index (round-3 finding: the
+// remaining prefixes for fields the corpus carries). SP's Format B tag is HNRIMS-only and has
+// a measured count of 0 on this corpus, so it stays the one documented prefix with no index.
+test.skipIf(skip)("every documented phrase prefix but SP has a non-empty full-corpus index", () => {
+  const { indexes } = corpus();
+  expect(new Set(PHRASE_FIELDS)).toEqual(new Set((DOCUMENTED_PHRASE_PREFIXES as readonly string[]).filter(p => p !== "SP")));
+  for (const code of PHRASE_FIELDS) {
+    expect(Object.keys(indexes[code]!.terms).length, code).toBeGreaterThan(0);
   }
 }, 120_000);
 

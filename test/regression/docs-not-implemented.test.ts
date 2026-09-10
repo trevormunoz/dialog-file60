@@ -19,11 +19,11 @@ test("docs/not-implemented.md names the real gaps", () => {
     "capability notice",
     "TYPE by accession number",
     "the offending token",
-    // A phrase index is built for only six of the phrase prefixes the 1998 Blue Sheet
-    // documents; every other one routes to the capability-notice channel rather than being
-    // unnamed and indistinguishable from a typo.
-    "CY, IN, DS, ST, SF, AN",
-    "every other",
+    // A phrase index is built for every documented File 60 prefix except SP, whose Format B
+    // tag is HNRIMS-only and has a measured count of 0 on this corpus; SP routes to the
+    // capability-notice channel rather than being unnamed and indistinguishable from a typo.
+    "every one of them except",
+    "hnrims-only",
   ]) {
     expect(section.toLowerCase(), `expected the not-implemented section to mention "${phrase}"`).toContain(phrase.toLowerCase());
   }

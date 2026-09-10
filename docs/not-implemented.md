@@ -46,12 +46,12 @@ followed by the offending token (an out-of-slice TYPE format prints the item
 header first, as described above).
 
 The 1998 Blue Sheet documents 30 Additional Index (phrase-indexed) prefixes
-for File 60. Version 1 builds a phrase index for only six of them --
-CY, IN, DS, ST, SF, AN -- because those are the fields this corpus carries;
-every other documented prefix (AS, B1, A1, D1, FY, GC, GY, IC, OC, PC, PD,
-PN, PP, PS, PT, RE, SC, SD, SH, TD, UP, ZP, PO, SP) is unbuilt. A SELECT naming one
-of the unbuilt prefixes routes to the same capability-notice channel as
-EXPAND: `S FY=1992` prints nothing into the character stream and shows
-"DIALOG documented `FY= (search prefix)` for File 60; this reconstruction
-does not implement it yet." beneath the prompt. A field the Blue Sheet does
-not document at all (e.g. `S ZZ=X`) still gets the simulated typo error.
+for File 60. Version 1 builds a phrase index for every one of them except
+SP: its Format B tag is HNRIMS-only and has a measured count of 0 on this
+CRIS-only corpus (the same reason `PO='s` word index comment in
+`src/loader/words.ts` gives for not building SP there either). A SELECT
+naming SP routes to the same capability-notice channel as EXPAND: `S
+SP=USDA-CSRS` prints nothing into the character stream and shows "DIALOG
+documented `SP= (search prefix)` for File 60; this reconstruction does not
+implement it yet." beneath the prompt. A field the Blue Sheet does not
+document at all (e.g. `S ZZ=X`) still gets the simulated typo error.
