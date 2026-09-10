@@ -85,7 +85,7 @@ and are ordinary fixture content rather than `# unreproduced` markers.
   stray non-`&nbsp;` byte (0xA6, "¦" under Latin-1) for the *first* pair on the PRIMARY
   HEADINGS line, and with a doubled space for every later pair on both PH= and GH= lines;
   render5()'s render.headings.join uses a single space throughout. PH's word-wrap breaks
-  after that point also differ from this milestone's greedy-fill algorithm. **Left
+  after that point also differ from this reconstruction's greedy-fill algorithm. **Left
   unreproduced** — the greedy-fill/single-space-join algorithm genuinely cannot produce
   these without a different join rule and a different wrap rule, both out of scope here.
 
