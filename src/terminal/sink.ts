@@ -4,34 +4,18 @@
 import type { OutputLine } from "../dialog/stream";
 import { LineDiscipline } from "./discipline";
 import { registry } from "../registry";
+import { type DisplayMode, type Scheduler, setTimeoutScheduler, PaperPause } from "./display-mode";
+
+export type { DisplayMode, Scheduler };
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] => {
   const e = document.createElement(tag); if (cls) e.className = cls; return e;
 };
 
-/** "printout" (the default) keeps
- * every line and lets the pane scroll -- a printing terminal's paper; "screen" keeps only the
- * most recent terminal.screen_rows lines, an unbuffered CRT; "paper" keeps every line, like
- * printout, and restyles the retained scrollback as a fixed-pitch sheet (terminal.paper_sheet). */
-export type DisplayMode = "printout" | "screen" | "paper";
-
-/** Runs `fn` after `ms` milliseconds. The default is setTimeout; a test injects a fake clock
- * so paced output can be driven without waiting in real time (test/regression/sink.dom.test.ts).
- * Injected through the constructor rather than read from a module-level global, so two sinks
- * in one process can be paced differently. */
-export type Scheduler = (fn: () => void, ms: number) => void;
-
-const setTimeoutScheduler: Scheduler = (fn, ms) => { setTimeout(fn, ms); };
-
 /** Milliseconds between printed characters: registry terminal.pacing's own cps. 120 characters
  * per second is a speed documented for DIALOG access in 1984-1988; no source records the speed
  * of a File 60 session (see the entry's note for the statement of absence). */
 const CHAR_MS = 1000 / (registry.get("terminal.pacing").value as { cps: number }).cps;
-
-/** terminal.paper_delay's own figure: the empty-sheet pause on a live switch into paper mode.
- * The entry's value is prose, not a structured number, so the milliseconds live here; the
- * registry.get call in setDisplayMode is the citation. */
-const PAPER_DELAY_MS = 600;
 
 /** One queued write. `paced` is false for the echo of a line the searcher typed: those
  * characters came from the keyboard, not down the line, so no transmission speed applies. */
@@ -65,11 +49,14 @@ export class DomSink {
    * reset(), which drops any line queued for a session that no longer exists. */
   private pendingLines: string[] = [];
   private submitting = false;
-  /** Set while paper mode's empty-sheet pause is running (a live switch, not a restored one,
-   * and not under reduced motion). A line submitted during it queues in pendingLines exactly
-   * as a second Enter during a drain does, and is released the same way once the pause ends. */
-  private paperPending = false;
+  /** Owns paper mode's classList toggling and its empty-sheet pause (display-mode.ts). While
+   * `paperPause.pending` is set, a line submitted queues in pendingLines exactly as a second
+   * Enter during a drain does, and is released the same way once the pause ends. Assigned in
+   * the constructor body, not as a field initializer, so it is built after `schedule` (a
+   * parameter property) is definitely assigned. */
+  private paperPause: PaperPause;
   constructor(root: HTMLElement, private onSubmit: (line: string) => Promise<void>, private prompt = "?", private schedule: Scheduler = setTimeoutScheduler) {
+    this.paperPause = new PaperPause(this.schedule);
     // terminal.scrollback: scrolling this <pre> is a modern
     // convenience, not a reconstruction of any DIALOG-period behavior. No custom scroll
     // chrome is added -- the browser's own scrollbar is kept as-is.
@@ -110,7 +97,7 @@ export class DomSink {
       e.preventDefault();
       const l = this.input.value; this.input.value = "";
       this.moveCursor();
-      if (this.submitting || this.paperPending) { this.pendingLines.push(l); return; }
+      if (this.submitting || this.paperPause.pending) { this.pendingLines.push(l); return; }
       void this.runSubmit(l);
     });
     this.moveCursor();
@@ -171,47 +158,29 @@ export class DomSink {
    * from the DOM, not hidden. Paper retains every line, exactly as printout does -- only
    * screen discards.
    *
-   * Entering paper toggles a `paper` class on the document root (terminal.display_mode) and,
-   * for a live switch with motion allowed, a `pending` class the injected Scheduler clears
-   * after terminal.paper_delay's pause; `restored` is true when main.ts is applying a mode
-   * read back from localStorage on load, which shows the sheet at once, the pause marking the
-   * act of switching, not the page loading. Leaving paper removes both classes at once, with
-   * no pause, and releases anything still queued behind the pause (endPaperPending). */
+   * Entering or leaving paper mode is display-mode.ts's PaperPause (the `paper`/`pending`
+   * classes and the empty-sheet pause, terminal.display_mode / terminal.paper_sheet /
+   * terminal.paper_delay); `restored` is true when main.ts is applying a mode read back from
+   * localStorage on load. releasePending is PaperPause's onEnd callback either way -- the
+   * pause completing, or a mode change away from paper before it has run out -- and releases
+   * a line submitted during the pause the same way runSubmit releases one queued behind it. */
   setDisplayMode(mode: DisplayMode, opts: { restored?: boolean } = {}): void {
     registry.get("terminal.display_mode"); // cited here, where the mode is applied
     this.displayMode = mode;
     if (mode === "screen") this.trimToScreenRows();
-    const root = document.documentElement;
     if (mode === "paper") {
       registry.get("terminal.paper_sheet"); // cited here, where the sheet class is set
-      root.classList.add("paper");
-      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (opts.restored || reduced) {
-        this.paperPending = false;
-        root.classList.remove("pending");
-      } else {
-        registry.get("terminal.paper_delay");
-        this.paperPending = true;
-        root.classList.add("pending");
-        this.schedule(() => { this.endPaperPending(); }, PAPER_DELAY_MS);
-      }
+      registry.get("terminal.paper_delay"); // cited here, at the switch into paper
+      this.paperPause.enter(opts, this.releasePending);
     } else {
-      root.classList.remove("paper");
-      this.endPaperPending();
+      this.paperPause.leave(this.releasePending);
     }
   }
-  /** Clears paper mode's pending state (the `pending` class and the flag that queues a
-   * submitted line) and, if nothing is already submitting, releases the oldest queued line --
-   * the same release runSubmit itself performs when a submission ahead of it finishes. Called
-   * both when the pause's own scheduled callback fires and when the mode changes away from
-   * paper before the pause has run out. */
-  private endPaperPending(): void {
-    this.paperPending = false;
-    document.documentElement.classList.remove("pending");
+  private releasePending = (): void => {
     if (this.submitting) return;
     const next = this.pendingLines.shift();
     if (next !== undefined) void this.runSubmit(next);
-  }
+  };
   private trimToScreenRows(): void {
     const rows = registry.get("terminal.screen_rows").value as number;
     while (this.printout.children.length > rows) this.printout.firstElementChild?.remove();
