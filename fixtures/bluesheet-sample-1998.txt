@@ -1,0 +1,181 @@
+# Transcribed from the SAMPLE RECORD table's <td> cells in the DIALOG Blue Sheet for
+# File 60, 2 March 1998, as published (Wayback capture of 23 April 1998), not from the
+# lynx rendering of the same page. Method and normalization rule documented in
+# fixtures/SOURCES.md; checked 2026-09-09 against the raw HTML bytes directly, not against
+# render5()'s own output. That check found six render5.ts literals measurably wrong against
+# the sample (grid indent, the GENERAL/PRIMARY CLASSIFICATION heading columns, the SPECIAL
+# CLASSIFICATION indent and percent column, and the PROGRESS indent); render5.ts, both tests'
+# pinned strings, and this fixture all follow the measured columns rather than being left as
+# "# unreproduced" (see fixtures/SOURCES.md and registry key render.format5.layout for the
+# six deltas and the measured values).
+#
+# Every line a CRIS-only record can produce, in order, with the two header lines. This
+# sample record belongs to both the CRIS and HNRIMS subfiles, so lines (or line segments)
+# that exist only because of HNRIMS membership are left out, matching what a CRIS-only
+# record's Format B source would actually carry:
+#   - AT= (HNRIMS ACT TYPE), ID= (HNRIMS PROJ ID) -- whole lines omitted.
+#   - NC=, SH= under "NUTRITION CLASSIFICATION AND HEADINGS" (N06/N15/N16/N18/N25), and
+#     N1= (Nutrition Percent) -- whole lines omitted.
+#   - the "HNRIMS SUPPLEMENTARY DATA:" block (AG=/AI=, XP=/CD=, GD=/UL=, 3 lines) --
+#     omitted.
+#   - SP= (Sponsor Code): its footnote (footnote 3 on the Additional Indexes table) marks it
+#     HNRIMS-only same as AT=/ID=/NC=/N1=; the sample's PN=/AS=/DS=/SP= line carries a
+#     trailing " SPON: USDA-CSRS" segment from it. It is on this omission list because of
+#     that footnote.
+#   - SF= (Subfile): the sample's SUBFILE line reads "SUBFILE: CRIS  HNRIMS"; the second
+#     subfile token is dropped for the same reason (a CRIS-only record has one subfile).
+#
+# OB=/AP=/DE=/PB=/PR= (OBJECTIVES, APPROACH, KEYWORDS, PUBLICATIONS, and the PROGRESS
+# narrative) are valid CRIS-only fields and the sample carries several paragraphs of each.
+# The reconstructed LogicalRecord in test/evidence/render5.test.ts does not populate any of
+# them, so render5() never emits a line from those blocks for that record -- but the lines
+# themselves are real CRIS-only evidence and stay in this file as "# not-exercised" comments
+# carrying the sample's transcribed text, in source order, rather than being left out.
+#
+# Normalization rule (derived from the raw HTML, not by reconciling against render5()'s own
+# output): decode &nbsp; to a plain space,
+# then drop exactly one leading literal space and the one trailing &nbsp; that every
+# SAMPLE RECORD <td> carries around its content -- except the first header line ("
+# DIALOG(R)File  60:CRIS/USDA") and the AN= line ("09089306"), whose raw <td> cells hold
+# only a single literal space before their content, with no following &nbsp; run; for
+# those two lines that single space is real content (matching the leading space already on
+# record for both in registry key render.type.header and in the given fixed-form assertions
+# for AN=), not an artifact, and is kept rather than dropped. Every other line's cell has
+# the literal-space-then-&nbsp;-run pattern, so the generic drop-one-leading-char rule
+# applies to it. Verified against the raw HTML bytes directly (see SOURCES.md for the parse
+# and per-row measurements); no comparison to render5()'s own output was used to derive this
+# file's content.
+#
+# justify-width: 65
+# Measured over the OB, AP, DE and PR cells (see SOURCES.md and
+# registry key render.text.justify): every full-justified continuation line, after removing
+# render5()'s own added indent (1 leading space), is 65 characters; the widest line of all
+# is the APPROACH label line ("APPROACH:  The  effect...") at 66 after removing render5()'s
+# own 2-space label-row indent. render.text.justify's stored width is 65, and TI's wrap is
+# called at that width directly (not width-1);
+# see the registry entry's note for the trial and what it produced.
+#
+# Two comment conventions, not to be confused:
+#   - "# unreproduced: <sample text> -- <reason>": a CRIS-only line render5() is expected to
+#     produce (nothing else omits it) but does not reproduce verbatim with today's
+#     algorithm/literals. The comment carries the sample's actual transcribed text; nothing
+#     render5() emits is added to this file as ordinary content in its place.
+#   - "# not-exercised: <sample text> -- <reason>": a CRIS-only line render5() cannot
+#     produce for this specific test record because the given synthetic LogicalRecord
+#     (test/evidence/render5.test.ts) does not populate the source field -- a limitation of
+#     the test input, not of the algorithm.
+#
+# No line in this file (including the now-included OB/AP/DE/PB/PR blocks) ends "(p"; checked
+# directly against the reconciled per-row content, not inferred from the blocks' prior
+# absence.
+ DIALOG(R)File  60:CRIS/USDA
+ (c) format only 1998 The Dialog Corporation plc
+
+ 09089306
+ PROJ NO: OHO00748   AGENCY : CSRS OHO
+ PROJ TYPE: HATCH               REGIONAL PROJ NO: NC 00167
+ START: 01 OCT 87  TERM: 30 SEP 92              FY: 1989
+ INVEST: SNOOK J T
+ HOME ECONOMICS
+ OHIO STATE UNIV
+ COLUMBUS OHIO 43210
+
+  HEALTH MAINTENANCE ASPECTS OF DIETARY RECOMMENDATIONS DESIGNED TO
+  MODIFY LIPID METABOLISM
+
+                                                 GENERAL
+              PRIMARY CLASSIFICATION         CLASSIFICATION
+
+        RPA   ACTVTY  CMMDTY  SCNCE   PRCNT    PRGM   JTC
+        R708  A6360   C2500   F0913   040%     P8.01  J4A
+        R708  A6360   C3100   F0913   020%     P8.01  J4A
+        R708  A6360   C1400   F0913   020%     P8.01  J4A
+        R708  A6360   C4000   F0913   020%     P8.01  J4A
+
+# unreproduced: " PRIMARY HEADINGS: R708 ¦Human Nutrition; A6360 ¦Metabolism," -- sample separates the first code/label pair with a stray non-nbsp byte (0xA6, between R708 and Human, and between A6360 and Metabolism) and hard-wraps after 'Metabolism,'; render5's greedy-fill wraps after 'of' instead ( PRIMARY HEADINGS: R708 Human Nutrition; A6360 Metabolism, Function of )
+# unreproduced: " Function of Nutrients-Food; C2500 ¦Other Oilseeds and Oil Crops;" -- continuation of the sample's PRIMARY HEADINGS wrap, which breaks after 'Crops;'; render5 wraps this span differently ( Nutrients-Food; C2500 Other Oilseeds and Oil Crops; C3100 Dairy )
+# unreproduced: " C3100  Dairy Cattle; C1400  Corn; C4000  People as Individual" -- continuation of the sample's PRIMARY HEADINGS wrap (double space before each later label, C3100/C1400/C4000), breaking after 'Individual'; render5 wraps this span differently ( Cattle; C1400 Corn; C4000 People as Individual Workers, Consumers; )
+# unreproduced: " Workers, Consumers; F0913  Nutrition and Metabolism-Human" -- continuation of the sample's PRIMARY HEADINGS wrap, breaking after 'Metabolism-Human' as its own short line; render5 wraps this span differently ( F0913 Nutrition and Metabolism-Human )
+
+# unreproduced: " GENERAL HEADINGS: P8.01  Human Nutrition; J4A  Human Nutrition" -- sample doubles the space before each label (P8.01  Human Nutrition; J4A  Human Nutrition); render5's given fixed-form line uses a single space, per render.headings.join
+
+                     SPECIAL CLASSIFICATION AND HEADINGS
+         XHMR   Health and Medical Related                 100%
+         S2540   Safflower                                 020%
+         S2550   Sunflower                                 020%
+         S3110   Butter                                    020%
+
+      BASIC 050%    APPLIED 050%    DEVELOPMENTAL 000%
+
+# not-exercised: "  OBJECTIVES: To     determine     the     effects     of dietary" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " omega-3/omega-6/omega-9 fatty acid ratios onphysiological factors" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " in  humans  and  experimental animals. To evaluate the effects of" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " caloric  intake,  expenditure distribution, and dilution on serum" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " lipid levels, metabolism, blood response, and body composition." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "" -- blank line in the sample between the OB and AP blocks; render5() has no corresponding gap here since it emits neither block, so this separator is not itself checked in order
+# not-exercised: "  APPROACH:  The  effect  on  serum lipids of diets providing 35% of" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " energy  as fat will be contrasted. Healthy women self-selecting a" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " set basal diet will consume in random order supplements providing" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " 10% of energy as butter, safflower oil, high oleic safflower oil," -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " and fish oil. In a second crossover study a diet providing 28% of" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " energy  as  high  oleic  sunflower  oil will be contrasted over a" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " 14-week  period  with  a  corn-oil diet in male subjects fed in a" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " metabolic  unit.  The  effect  of fat/carbohydrate ratio on serum" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " lipoproteins  and energy efficiency will be studied in exercising" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " subjects." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "" -- blank line in the sample between the AP and DE blocks; same reasoning as the OB/AP separator above
+# not-exercised: "  KEYWORDS:      LIPID-METABOLISM    DIET    NUTRIENT-REQUIREMENTS" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " RECOMMENDATIONS  HUMAN-HEALTH HUMAN-NUTRITION OMEGA-3-FATTY-ACIDS" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " DIETARY-FATTY-ACIDS    PHYSIOLOGY    CALORIES    BODY-COMPOSITION" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " CHOLESTEROL   ENERGY-EXPENDITURE  LIPOPROTEINS  ENERGY-EFFICIENCY" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " SERUM-LIPIDS" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "" -- blank line in the sample between the DE block and PP=/PR; same reasoning as the OB/AP separator above
+  PROGRESS: 8901 TO 8912
+# not-exercised: " This  randomized  blind study measured changes in serum lipid and" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " apolipoprotein  levels  in 16-17 men consuming 39+1% of energy as" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " fat  from  either  a  safflower  oil-based  (POLY)  or  a  canola" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " oil-based  (MONO)  diet compared to a typical American (baseline)" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " diet.  Three  weeks of the baseline diet were followed by 8 weeks" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " of  the  designated  vegetable  oil-based  diet.  Compared to the" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " baseline  diet,  the  POLY  and  MONO  diets  reduced serum total" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " cholesterol  by 9 and 15% (p<0.002), LDL-cholesterol by 2 and 20%" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " (p<0.002)  and  apolipoprotein  B-100  by  24%  (p<0.001). Larger" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " decreases  were  seen after the POLY diet. Final values for serum" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " triglycerides,    HDL-cholesterol   or   its   subfractions,   or" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " apolipoprotein   A-2   were  not  different  from  baseline,  but" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " transient  declines  in  total  HDL-cholesterol  levels were seen" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " during  the  POLY  diet.  As  compared to the POLY diet, the MONO" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " diet, which provided 3 percent of energy as 18:3 n-3 fatty acids," -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " produced  higher  (p<0.05) levels of 18:1 n-9 and 18:3 n-3, lower" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " (p<0.05)  levels  of  18:2 n-6 and 20:4 n-6 and similar levels of" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " 20:5n-3   and  22:6n-3  in  platelet  phospholipid  fatty  acids." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " Compared  to  the  baseline  diet,  MONO  and  POLY diets reduced" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " collagen-induced whole blood platelet aggregation after 3 but not" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " 8  weeks.  MONO  but  not  POLY  lowered  platelet  ATP secretion" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " (p<0.05)  after  8  weeks.  Plasma  TXB(2)  levels did not differ" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " between  oil  groups  at 8 weeks. Platelet phosopholipid 20:3 n-6" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: " and TXB(2) correlated negatively (r=0.60)." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "" -- blank line in the sample between the PR block and PUBLICATIONS; same reasoning as the OB/AP separator above
+# not-exercised: "  PUBLICATIONS:" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "   WARDLAW,  G.M., SNOOK, J.T. The Effect of Diets High in Butter," -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Corn Oil or High-oleic Acid Sunflower Oil on Serum Lipids and" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Apolipoproteins  in  Men.  Am  J Clin Nutr. In press. DELANY," -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     J.P., VIVIAN, V.M., SNOOK, J.T., ANDERSON, P. Effects of Fish" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Oil  on  Serum  Lipids in College Men in a Controlled Feeding" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Trial.  Am  J Clin Nutr. In press. WARDLAW, G.M., SNOOK, J.T." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Effect  of Diets High in Butter, Corn Oil and High Oleic Acid" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Sunflower  Oil  on  Serum  Lipids and Apolipoproteins in Men." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     FASEB J 1989; 3: A1243, abstr no 5812. LIN, M.C. The Relative" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Effects  of  Diets  Containing Canola oil, Safflower Oil, and" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Lipid  High  in  Saturated  Fat  on  Serum Total Cholesterol," -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     High-density   Lipoprotein   (HDL)   Cholesterol,   and   HDL" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Subfractions.  LEE,  J.S.  Effect  of  Dietary Fatty Acids on" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Platelet  Function and Phospholipid Fatty Acids in Plasma and" -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Platelets.  Dissertation.  The Ohio State Univ., August 1989," -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+# not-exercised: "     Columbus, OH." -- the fixture's LogicalRecord omits OB/AP/DE/PB/PR, so render5() emits no line here
+
+ CRIS SUPPLEMENTARY DATA:  INST CODE:  001370;  ORG CODE:  003090;
+ REG:  3;   PROCESS  DATE:   880304;   PROGRESS  UPDATE:   900618;
+ PROJECT STATUS:  REVISED
+
+ SUBFILE: CRIS

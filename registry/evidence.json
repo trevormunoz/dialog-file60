@@ -1,0 +1,1510 @@
+{
+  "cast.pacing": {
+    "value": {
+      "cps": 120,
+      "typeCps": 8,
+      "pauseAfterCommand": 0.6
+    },
+    "status": "chosen",
+    "claim": "The recording plays at a chosen pace; no source records how fast a 1990s session arrived.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "15:05.5, sampled at 8 fps, character-arrival rate",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "Roughly 120-150 characters per second was measured at 15:05 of the 1984 Computer Chronicles recording (sampled at 8 fps): a property of that connection only, not of DIALOG or of any 1990-1994 session. Statement of absence: no record of a 1990s session's pace was found in the sources held. Distinct from terminal.pacing (the rate at which the live app prints characters, 120 per second from a documented range): this key paces the asciicast recording's own playback -- the 8 cps typing rate and 0.6 s post-command pause are chosen for watchability, not drawn from any source."
+  },
+  "dialog.file60.title": {
+    "value": "CRIS/USDA - Current Research",
+    "status": "documented",
+    "claim": "The project's title prints as \"CRIS/USDA - Current Research.\"",
+    "sources": [
+      {
+        "source": "bluesheet-1998-page",
+        "locator": "title",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "dialog-catalog-1984",
+        "locator": "line 565",
+        "sourceDate": "1984",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "nara.conversion.line_form": {
+    "value": "82-byte lines, 80 columns + CRLF",
+    "status": "documented",
+    "claim": "NARA serves this file as 82-byte lines: 80 text columns plus a carriage return and line feed.",
+    "sources": [
+      {
+        "source": "nara-tss-2018",
+        "locator": "manifest, Record_Length 82",
+        "sourceDate": "2018-07-17",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "NARA's served form, not the tape's"
+  },
+  "nara.conversion.control_bytes": {
+    "value": "EBCDIC-to-ASCII conversion products of an unidentified code page",
+    "status": "inferred",
+    "claim": "Three bytes left over from NARA's tape-to-text conversion appear in the file; which conversion produced them is not known.",
+    "sources": [
+      {
+        "source": "nara-cris-packet",
+        "locator": "FY 1991 validation statement, p.28",
+        "sourceDate": "1995-06-12",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "0xAC/0xA0/0x02 are taken to be EBCDIC-to-ASCII conversion products; code page unknown"
+  },
+  "formatb.encoding.continuation_0xAC": {
+    "value": "0xAC at column 4 starts a new value",
+    "status": "documented",
+    "claim": "A control byte at the start of a value marks where one field's text continues from an earlier line.",
+    "sources": [
+      {
+        "source": "cris-fy94-export",
+        "locator": "lines 83085-83088",
+        "sourceDate": "1994",
+        "observedSystem": "Format B"
+      }
+    ]
+  },
+  "formatb.encoding.separator_0xA0_0x02": {
+    "value": "code, 0xA0 0x02, label",
+    "status": "documented",
+    "claim": "In the raw bytes, a field's code is separated from its label by two control bytes, not by a printable character.",
+    "sources": [
+      {
+        "source": "cris-fy94-export",
+        "locator": "line 83110",
+        "sourceDate": "1994",
+        "observedSystem": "Format B"
+      }
+    ]
+  },
+  "formatb.record.separator": {
+    "value": "a line beginning \"$$\" starts a new logical record",
+    "status": "documented",
+    "claim": "A line beginning with two dollar signs marks the start of a new record in the file.",
+    "sources": [
+      {
+        "source": "cris-fy94-export",
+        "locator": "line 83052",
+        "sourceDate": "1994",
+        "observedSystem": "Format B"
+      }
+    ]
+  },
+  "nara.file.fy1994_fixity": {
+    "value": {
+      "bytes": 277539004,
+      "sha256": "437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a"
+    },
+    "status": "documented",
+    "claim": "The archival file the loader reads is this many bytes and hashes to this sha256; a mismatch means the wrong file.",
+    "sources": [
+      {
+        "source": "cris-fy94-export",
+        "locator": "whole file, shasum -a 256",
+        "sourceDate": "2026-09-09",
+        "observedSystem": "Format B"
+      }
+    ],
+    "note": "src/loader/cli.ts refuses to write indexes when data/RG164.CRIS.FY94.txt does not match both figures. Computed once (shasum -a 256) against the corpus present in this checkout on 2026-09-09; matches the independent confirmations already on record in fixtures/ACCEPTANCE.md."
+  },
+  "map.DS": {
+    "value": {
+      "source": "DS",
+      "dialog": "DS="
+    },
+    "status": "documented",
+    "claim": "The USDA division or station code prints under the DIALOG label DS=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element DS",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 343",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.PN": {
+    "value": {
+      "source": "PN",
+      "dialog": "PN="
+    },
+    "status": "documented",
+    "claim": "The project number assigned by the performing organization prints under the DIALOG label PN=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element PN",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 356",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.AS": {
+    "value": {
+      "source": "AS",
+      "dialog": "AS="
+    },
+    "status": "documented",
+    "claim": "The sponsoring agency or service's abbreviation prints under the DIALOG label AS=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element AS",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 335",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.PT": {
+    "value": {
+      "source": "PT",
+      "dialog": "PT="
+    },
+    "status": "documented",
+    "claim": "The project's type prints under the DIALOG label PT=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element PT",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 362",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.RG": {
+    "value": {
+      "source": "RG",
+      "dialog": "RG="
+    },
+    "status": "documented",
+    "claim": "The regional project's region abbreviation prints under the DIALOG label RG=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element RG",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 364",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.RN": {
+    "value": {
+      "source": "RN",
+      "dialog": "RN="
+    },
+    "status": "documented",
+    "claim": "The regional project's five-digit number prints under the DIALOG label RN=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element RN",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 365",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.FY": {
+    "value": {
+      "source": "FY",
+      "dialog": "FY="
+    },
+    "status": "documented",
+    "claim": "The project's fiscal year prints under the DIALOG label FY=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element FY",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 344",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.IN": {
+    "value": {
+      "source": "IN",
+      "dialog": "IN="
+    },
+    "status": "documented",
+    "claim": "Each investigator's name prints under the DIALOG label IN=; a project can list up to six.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element IN",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 350",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.CY": {
+    "value": {
+      "source": "CY",
+      "dialog": "CY="
+    },
+    "status": "documented",
+    "claim": "The performing institution's city prints under the DIALOG label CY=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element CY",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 341",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.ST": {
+    "value": {
+      "source": "ST",
+      "dialog": "ST="
+    },
+    "status": "documented",
+    "claim": "The performing institution's state or country name prints under the DIALOG label ST=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element ST",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 373",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.ZP": {
+    "value": {
+      "source": "ZP",
+      "dialog": "ZP="
+    },
+    "status": "documented",
+    "claim": "The performing institution's zip code prints under the DIALOG label ZP=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element ZP",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 379",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.TI": {
+    "value": {
+      "source": "TI",
+      "dialog": "/TI"
+    },
+    "status": "documented",
+    "claim": "The project title prints under the DIALOG label /TI.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element TI",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 309",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.OB": {
+    "value": {
+      "source": "OB",
+      "dialog": "/OB"
+    },
+    "status": "documented",
+    "claim": "The project's objectives print under the DIALOG label /OB.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element 41 (OB)",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 306",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "display code for the OB text block; the justification of its text is a separate rule, render.text.justify"
+  },
+  "map.AP": {
+    "value": {
+      "source": "AP",
+      "dialog": "/AP"
+    },
+    "status": "documented",
+    "claim": "The project's approach prints under the DIALOG label /AP.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element 42 (AP)",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 303",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "display code for the AP text block; the justification of its text is a separate rule, render.text.justify"
+  },
+  "map.DE": {
+    "value": {
+      "source": "DE",
+      "dialog": "/DE"
+    },
+    "status": "documented",
+    "claim": "The project's keywords print under the DIALOG label /DE.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element 43 (DE)",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 304",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "display code for the DE text block; the justification of its text is a separate rule, render.text.justify"
+  },
+  "map.PR": {
+    "value": {
+      "source": "PR",
+      "dialog": "/PR"
+    },
+    "status": "documented",
+    "claim": "The project's most recent progress report prints under the DIALOG label /PR.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element 44 (PR)",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 308",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "display code for the PR text block; the justification of its text is a separate rule, render.text.justify"
+  },
+  "map.PB": {
+    "value": {
+      "source": "PB",
+      "dialog": "/PB"
+    },
+    "status": "documented",
+    "claim": "The project's list of recent publications prints under the DIALOG label /PB.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element 45.1 (PB)",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 307",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "display code for the PB text block; the justification of its text is a separate rule, render.text.justify"
+  },
+  "map.BT": {
+    "value": {
+      "source": "BT",
+      "dialog": "B1="
+    },
+    "status": "documented",
+    "claim": "The basic-research percentage of effort prints under the DIALOG label B1=, alongside the applied and developmental percentages.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element BT",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 338",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.AT": {
+    "value": {
+      "source": "AT",
+      "dialog": "A1="
+    },
+    "status": "documented",
+    "claim": "The applied-research percentage of effort prints under the DIALOG label A1=, alongside the basic and developmental percentages.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element AT",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 331",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.DT": {
+    "value": {
+      "source": "DT",
+      "dialog": "D1="
+    },
+    "status": "documented",
+    "claim": "The developmental-research percentage of effort prints under the DIALOG label D1=, alongside the basic and applied percentages.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element DT",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 342",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.OC": {
+    "value": {
+      "source": "OC",
+      "dialog": "OC="
+    },
+    "status": "documented",
+    "claim": "The performing organization's internal CRIS code prints under the DIALOG label OC=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element OC",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 353",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.IC": {
+    "value": {
+      "source": "IC",
+      "dialog": "IC="
+    },
+    "status": "documented",
+    "claim": "The performing institution's internal CRIS code prints under the DIALOG label IC=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element IC",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 348",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.RE": {
+    "value": {
+      "source": "RE",
+      "dialog": "RE="
+    },
+    "status": "documented",
+    "claim": "The performing institution's region code prints under the DIALOG label RE=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element RE",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 363",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.PD": {
+    "value": {
+      "source": "PD",
+      "dialog": "PD="
+    },
+    "status": "documented",
+    "claim": "The date CRIS processed the record prints under the DIALOG label PD=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element PD",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 355",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.UP": {
+    "value": {
+      "source": "UP",
+      "dialog": "UP="
+    },
+    "status": "documented",
+    "claim": "The date of the project's last progress update prints under the DIALOG label UP=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element UP",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 377",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.PS": {
+    "value": {
+      "source": "PS",
+      "dialog": "PS="
+    },
+    "status": "documented",
+    "claim": "The project's status, for example TERMINATED, prints under the DIALOG label PS=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element PS",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 361",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.SF": {
+    "value": {
+      "source": "SF",
+      "dialog": "SF="
+    },
+    "status": "documented",
+    "claim": "The record's subfile code prints under the DIALOG label SF=.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "element SF",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "line 368",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.SX_TX.display_text": {
+    "value": {
+      "source": "SX,TX",
+      "dialog": null
+    },
+    "status": "inferred",
+    "claim": "The printed start and termination dates are the record's own display-text values; they carry no DIALOG label of their own.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "elements 21 and 23: 'Display form for SD search field' / 'Display form for TD field'",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      }
+    ],
+    "note": "SD and TD are the indexed, documented pair: they carry the DIALOG codes SD= and TD=, are phrase-indexed from the YYMMDD form, and print on the START/TERM line. SX and TX are that line's display text and carry no DIALOG display code of their own (inferred); render5 prints their raw values because that is what the START/TERM line shows, not because SX/TX are indexed or coded. SD and TD are not parsed as separate source tags by this reconstruction's record model and so are not given their own MAP entry, but would keep SD=/TD= if added."
+  },
+  "index.phrase.uppercase": {
+    "value": true,
+    "status": "inferred",
+    "claim": "Search terms and set descriptions are matched and printed in capitals, whatever case was typed.",
+    "sources": [
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 2",
+        "sourceDate": "1988-04",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "line 1382",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "every printed example shows uppercase set descriptions; keys uppercased"
+  },
+  "proto.prompt": {
+    "value": "?",
+    "status": "documented",
+    "claim": "The session prompt is a bare question mark.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "14:57",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "page 114 (printed 131), fixed-pitch printout: '?begin 247', '?s cholesterol'",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "pocket-guide-2001",
+        "locator": "Entering Commands",
+        "sourceDate": "2001-07-09",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "proto.prompt.spacing": {
+    "value": "",
+    "status": "documented",
+    "claim": "Typed text follows the prompt immediately, with no space between the question mark and what was typed.",
+    "sources": [
+      {
+        "source": "ontap-eric-1978",
+        "locator": "PDF page 49 (printed 52)",
+        "sourceDate": "1978",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "ontap-eric-1981",
+        "locator": "PDF page 46 (printed 41)",
+        "sourceDate": "1981",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "database-magazine-1988",
+        "locator": "figures 1-5",
+        "sourceDate": "1988-04",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "PDF pp. 99, 114, 117, 126 (printed 113, 131, 136, 145)",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "17:07-17:10, cursor position",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "No space between '?' and the typed command in the 1978/1981 printing-terminal facsimiles, the 1988 magazine figures, or the 1994 printouts; the 1984 cursor sits immediately after '?', confirming the space, where it appears elsewhere, is the searcher's typing or a compositor's."
+  },
+  "proto.begin.banner": {
+    "value": {
+      "fileNumber": "60",
+      "title": "CRIS/USDA - Current Research"
+    },
+    "status": "inferred",
+    "claim": "Starting the session prints a banner naming the file number and its title; File 60's own date-range text is not known.",
+    "note": "shape documented (1984, 1988, 2001); File 60's date-range string unknown",
+    "sources": [
+      {
+        "source": "curso-1994",
+        "locator": "PDF page 99 (printed page 113), banner line 'File  49:Pais Int.  1976-1994/Apr', '4' measured at column 7",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "bluesheet-1998-page",
+        "locator": "SAMPLE RECORD row 1, 'DIALOG(R)File  60:CRIS/USDA'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "decision": "the stored value separates the file number from the title text so session.ts composes the printed line ('File  ' + fileNumber + ':' + title) rather than storing a full string and string-surgering a prefix off it. The composed two-space form ('File  60:') matches both the 1994 fixed-pitch printout ('File  49:', page 99, '4' at column 7) and the 1998 Blue Sheet header ('File  60:'). The title text remains inferred."
+  },
+  "proto.begin.set_header": {
+    "value": [
+      "      Set  Items  Description",
+      "      ---  -----  -----------"
+    ],
+    "status": "documented",
+    "claim": "After BEGIN, a two-line header labels the columns Set, Items, and Description, with a dashed rule beneath.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "14:57",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "page 114 (printed 131), fixed-pitch printout after '?begin 247'; the typeset illustration on page 113 shows the same header",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "page 99 (printed 113), fixed-pitch printout after '?b 49'",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "The value is a direct pixel measurement of the page 99/printed 113 fixed-pitch printout (400 dpi render, character ink bounding boxes calibrated against the 'File  49:' line's known column-7 field). Measured: Set at column 7, Items at column 12, Description at column 19 -- a 6-space indent with double-space separators, consistent with render.setline.columns' setCol 7 / descCol 19. See fixtures/SOURCES.md. This value is measured from the page 99/printed 113 source only; the 1984 video frame (14:57) and page 114 (printed 131) are corroborating for the header's shape (a 'Set / Items / Description' block with a dashed rule beneath it appears at both) and were not independently re-measured for column spacing -- page 114 in particular is a degraded photocopy mixing typefaces, not a clean column source."
+  },
+  "proto.select.per_term_postings": {
+    "value": true,
+    "status": "documented",
+    "claim": "A SELECT with more than one term prints the number of matches for each term as well as the combined set.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "14:57",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "page 20",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "proto.select.echo_case": {
+    "value": "uppercase",
+    "status": "documented",
+    "claim": "A SELECT command's search expression echoes back in capitals, whatever case was typed.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "14:57",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "page 114 (printed 131): '?s cholesterol' echoed as 'CHOLESTEROL', '?s restrict? or reduc? or lower' as 'RESTRICT? OR REDUC? OR LOWER'; page 117 '?ss maastricht and treaty' as 'MAASTRICHT AND TREATY'; page 126 '?s wind(w)shear and detect?' as 'WIND(W)SHEAR AND DETECT?'",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "every fixed-pitch printout SELECT echo is uppercase regardless of how the operator typed it (spec 7.4). Counter-example to avoid: the typeset teaching illustrations on pages 112-113 keep the typed case ('Movie or video or film'); they are typeset by the course author, not terminal output regardless of how the operator typed it (spec 7.4)"
+  },
+  "render.setline.columns": {
+    "value": {
+      "setCol": 7,
+      "itemsEnd": 16,
+      "descCol": 19
+    },
+    "status": "documented",
+    "claim": "A set's line prints its number at a fixed column, the item count right-aligned to another, and the description starting at a third.",
+    "sources": [
+      {
+        "source": "curso-1994",
+        "locator": "page 114 (printed 131), earlier measurement from a degraded photocopy that gave itemsEnd 17; superseded by the page 99 measurement",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "PDF page 99 (printed page 113), fixed-pitch printout, S1/S2/S3 set lines",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "The value is a direct pixel measurement of the page 99/printed 113 fixed-pitch printout (400 dpi render, character ink bounding boxes calibrated against the 'File  49:' line's known column-7 field). Measured: S1/S2/S3 at column 7; item counts right-aligned ending at column 16 (S1's '4322' at columns 13-16, S3's '252' at columns 14-16); description starting at column 19 in all three lines, matching the header's Description column. See fixtures/SOURCES.md. The value is a pixel measurement of one printout, not a rule stated in words; the entry carries the two page citations it was measured from."
+  },
+  "render.type.header": {
+    "value": [
+      " DIALOG(R)File  60:CRIS/USDA",
+      " (c) format only 1998 The Dialog Corporation plc"
+    ],
+    "status": "documented",
+    "claim": "A typed record is preceded by a two-line banner naming the file and a copyright notice; this exact wording is only documented from 1998.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-page",
+        "locator": "SAMPLE RECORD table rows 1-2",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "decision": "printed verbatim; 1990-1994 form unknown; no year substitution"
+  },
+  "render.record.order": {
+    "value": "ascending byte offset",
+    "status": "chosen",
+    "claim": "Within a set, records print in the order they sit in the file.",
+    "note": "DIALOG's within-set order unknown; alternative: descending accession number"
+  },
+  "terminal.textColor": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records the text color a searcher's terminal showed; this reconstruction prints dark text on a plain light ground.",
+    "note": "Display color depended on the terminal environment; the 1984 frames show a PC program's chrome"
+  },
+  "terminal.backgroundColor": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records the background color a searcher's terminal showed; this reconstruction uses a plain light ground.",
+    "note": "No text colour or background colour anywhere in the corpus belongs to DIALOG. The 1984 dark ground is the IBM PC's; the 1994 printouts are photocopies, which destroy stock and ribbon colour; the 1998 Blue Sheet's pale cyan page is the Dialog Corporation's 1998 web design, not a session."
+  },
+  "terminal.cursorForm": {
+    "value": "underline",
+    "status": "inferred",
+    "claim": "The input cursor is a blinking underline, taken from a 1984 television demonstration of a DIALOG search on an IBM PC. The underline is that PC program's, not DIALOG's: DIALOG sent characters, and the cursor was drawn by the searcher's terminal.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "17:07.5-17:10.5, sampled at 10 fps over 30 frames, cropped to the prompt region",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "IBM PC communications program, Computer Chronicles 1984-05-21"
+      }
+    ],
+    "note": "At an idle prompt the cursor is a short underscore one character cell to the right of '?', with trailing typed input, measured at 17:07.5-17:10.5 over 30 frames of the 1984 Computer Chronicles recording. The broadcast is Roger Summit, DIALOG's founder, demonstrating a live DIALOG search, so the source is a DIALOG session, not an unrelated programme; what is not DIALOG's is the cursor, which the IBM PC's communications program drew locally. The reconstruction adopts that form rather than inventing one. Statement of absence: no DIALOG-issued cursor or screen-control behaviour was found by a search of this project's sources for cursor and control-sequence terms, on 2026-09-10; the project consulted no DIALOG-issued manual from 1985 to 1997 at all."
+  },
+  "terminal.width": {
+    "value": 80,
+    "status": "inferred",
+    "claim": "The screen is treated as 80 characters wide, the width used by every source held.",
+    "sources": [
+      {
+        "source": "nara-cris-packet",
+        "locator": "FY 1991 validation statement, p.28: \"card image form which is 80 columns in length\"",
+        "sourceDate": "1995-06-12",
+        "observedSystem": "NARA"
+      },
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "14:57",
+        "sourceDate": "1984",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "terminal.screen_rows": {
+    "value": 24,
+    "status": "inferred",
+    "claim": "In screen mode only the last 24 lines are kept; 24 is inferred from a 1984 PC screen.",
+    "sources": [
+      {
+        "source": "computer-chronicles-1984",
+        "locator": "14:40, what appears to be the whole screen; right edge at or just beyond the frame edge; the machine is an IBM PC, text mode 80x25",
+        "sourceDate": "1984-05-21",
+        "observedSystem": "IBM PC communications program, Computer Chronicles 1984-05-21"
+      }
+    ],
+    "note": "80 columns is not directly counted -- in the 1984 Computer Chronicles recording the camera shows what appears to be the whole screen, with the right edge at or just beyond the frame edge, and the machine is an IBM PC, whose text mode is 80x25; this is the source terminal.width already draws its own 80-column figure from. The bottom row of that screen carries the communications program's function-key legend, which persists while DIALOG's output scrolls above it and leaves 24 rows for DIALOG's text; that is where 24 comes from. A 1970s National Agricultural Library memo on DIALOG describes a Hazeltine 2000 CRT at approximately 27 visible rows; that figure is mid-1970s, and the memo's claims are unverified -- the underlying ALIN issue has not been found. It is recorded here as an earlier, unadopted candidate value, not as a source for this entry."
+  },
+  "terminal.display_mode": {
+    "value": "printout (default, every line persists and the pane scrolls) or screen (only the last terminal.screen_rows lines are kept)",
+    "status": "chosen",
+    "claim": "The reader can choose whether output persists or only the last 24 lines stay; in the period the terminal decided this.",
+    "note": "Printout mode corresponds to a printing terminal's paper; screen mode corresponds to an unbuffered CRT. Switching into screen mode discards everything above the last screenful; switching back does not restore it. Registered separately from terminal.screen_rows, which carries the row count itself."
+  },
+  "proto.begin.set_reset": {
+    "value": "A new BEGIN command erases all previous sets.",
+    "status": "documented",
+    "claim": "A new BEGIN command erases all of the session's previous sets.",
+    "sources": [
+      {
+        "source": "pocket-guide-2001",
+        "locator": "BEGIN",
+        "sourceDate": "2001-07-09",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "proto.begin.copyright_line": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source holds File 60's database-owner copyright line, so this reconstruction prints none after the banner.",
+    "note": "fixtures/1994-curso-pais.txt line 4 ('(c) 1994 Public Affairs Information Service') shows a different File's (49, Pais Int.) in-period BEGIN transcript printing a copyright line right after the banner. No source held for File 60 records a comparable line or names CRIS/USDA's database owner in that position, so this reconstruction's BEGIN prints none. Statement of absence: not found by this project's method in the sources held."
+  },
+  "proto.select.suffix": {
+    "value": "word/CODE or word/CODE,CODE,...",
+    "status": "inferred",
+    "claim": "A word followed by one suffix code searches only the named Basic Index field, e.g. /TI for Title; a comma-joined list of codes after one word searches each named field and unions the results.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "lines 296-322 (BASIC INDEX table: SUFFIX/CODE/FIELD NAME/SELECT EXAMPLES for /AP /DE /NR /OB /PB /PR /TI /TX)",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "lines 396-400 (LIMITING: 'Sets and terms may be limited by Basic Index suffixes, i.e., /AP, /DE, /DF, /NR, /OB, /PB, /PR, /TI, /TX')",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "The Blue Sheet documents each suffix code and that a set or term may be limited by one. Every SELECT EXAMPLE in the BASIC INDEX table and every LIMITING example shows exactly one suffix (e.g. 'S LIPID?(3N)METABOL?/TI', 'S S2/TI'); no example anywhere in this Blue Sheet shows a comma-joined list of Basic Index suffixes after one word or set. The word/CODE,CODE... form is inferred from the single-suffix grammar these examples do show, not read directly from an example."
+  },
+  "proto.select.setline": {
+    "value": "S<n>  <items right-aligned>  <expression uppercased>",
+    "status": "documented",
+    "claim": "A set's line shows its number, its item count right-aligned, and its search expression in capitals.",
+    "sources": [
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 2",
+        "sourceDate": "1988-04",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "curso-1994",
+        "locator": "PDF page 99 (printed page 113), fixed-pitch printout, S1/S2/S3 lines",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "proto.error.unknown_command": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed for a line it did not recognize; this reconstruction prints a question mark followed by the part of the line that failed to parse: for a SELECT its first search term, for a TYPE everything after the command word, otherwise the first word.",
+    "note": "the parser recognized no command form for the typed line (parser.ts's 'unknown' case); no error text for this case read from any source"
+  },
+  "proto.error.bad_file": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed for a bad file number, whether BEGIN named a file other than 60 or a command needing an open file (SELECT) was issued before any BEGIN; this reconstruction prints a question mark and the offending token in either case.",
+    "note": "BEGIN named a file number other than 60, or a command that needs an open file (SELECT) was issued before BEGIN opened one -- both are the session's currentFile being unset or wrong; no error text for either case read from any source"
+  },
+  "proto.error.bad_format": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed for a display format it did not offer; this reconstruction prints a question mark and the format.",
+    "note": "TYPE requested a display format other than the implemented format 5; no error text for this case read from any source"
+  },
+  "proto.error.unknown_field": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed for a field it did not recognize; this reconstruction prints a question mark, the field and the term as typed, in capitals.",
+    "note": "SELECT's expression named a field code the retrieval engine could not resolve (e.g. 'S ZZ=X'); no error text for this case read from any source. A SELECT naming an unknown set number ('S S7') is a separate case and cites proto.error.unknown_set."
+  },
+  "proto.error.unknown_suffix": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed when a word SELECT named a suffix code the word indexes did not carry; this reconstruction prints a question mark and the suffix as typed, uppercased with its leading slash.",
+    "note": "SELECT's expression named a suffix code after a word term that this build's word indexes do not carry (e.g. 'S PEACH/ZZ'); no error text for this case read from any source. Distinct from proto.error.unknown_field, which is about a PREFIX=value's field code the engine cannot resolve, not a word/CODE suffix."
+  },
+  "proto.error.unknown_set": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed for a set number that did not exist; this reconstruction prints a question mark and the set.",
+    "note": "'Unknown set' is its own error case, distinct from 'bad field code' and from an item number past the end of a set that does exist. Covers both a SELECT operand naming an unset set number (e.g. 'S S7' with no S7, prints '? S7') and a TYPE naming an unset set number (e.g. 'T S9/5/1' with no S9, prints '? S9'); no error text for either case read from any source. One key covers the identical condition in both commands; proto.error.unknown_field is about a field code the engine cannot resolve and proto.error.type_range about an item number past the end of a set that does exist, so neither fits it."
+  },
+  "proto.error.type_range": {
+    "value": null,
+    "status": "chosen",
+    "claim": "No source records what DIALOG printed for an item past the end of a set; this reconstruction prints a question mark and the number.",
+    "note": "an item number past the end of a set that does exist (e.g. 'T S1/5/1-3' on a one-record S1, prints the existing item then '? 2' for the first missing item); no error text for this case read from any source. Does not cover the unknown-set-number case (an unset set number never reaches this branch) -- see proto.error.unknown_set."
+  },
+  "proto.type.item_header": {
+    "value": "n/f/i",
+    "status": "documented",
+    "claim": "A typed record opens with a header of three numbers: its position, the display format, and the item number.",
+    "sources": [
+      {
+        "source": "curso-1994",
+        "locator": "PDF page 99 (printed page 113), fixed-pitch printout, '6/6/2'",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "map.AN.display_padding": {
+    "value": "zero-pad to 8 digits",
+    "status": "inferred",
+    "claim": "The accession number prints padded with leading zeros to eight digits, though the specification calls it a seven-digit number.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "AN= 09089306; TYPE 09143165/5",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "format-b-1990",
+        "locator": "element 1: Exact 7, 'CRIS AN is same as DIALOG AN'",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      }
+    ],
+    "conflicts": "Format B says AN is exactly 7 digits and the same as DIALOG's; every Blue Sheet example shows 8 digits with a leading zero"
+  },
+  "map.PO.displays_PF_PI": {
+    "value": [
+      "PF",
+      "PI"
+    ],
+    "status": "documented",
+    "claim": "The performing institution's name prints under the DIALOG label PO=, drawing on two underlying fields.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "elements 7 and 13: 'PO (displays PF,PI)'",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      }
+    ]
+  },
+  "map.PC.composite": {
+    "value": {
+      "columns": [
+        "RP",
+        "AC",
+        "CM",
+        "FS",
+        "CT"
+      ],
+      "rowRule": "nth value of each"
+    },
+    "status": "documented",
+    "claim": "Five classification codes print together in one column-aligned block under the DIALOG label PC=.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "footnote 10; sample grid",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "decision": "row rule inferred from the sample's grid and equal array lengths in the data; surplus values rendered unaligned, never dropped"
+  },
+  "map.GC.composite": {
+    "value": {
+      "columns": [
+        "PA",
+        "JC"
+      ]
+    },
+    "status": "documented",
+    "claim": "Two classification codes -- program area and joint council -- print together under the DIALOG label GC=.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "footnote 8",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.SC.percent_from_SN": {
+    "value": true,
+    "status": "documented",
+    "claim": "A subcommodity classification's percentage comes from a companion field absent from the February 1990 specification.",
+    "sources": [
+      {
+        "source": "nara-cris-packet",
+        "locator": "FY 1991 validation statement, p.28: SN 'Percentage that refers to the previous SC field tag'",
+        "sourceDate": "1995-06-12",
+        "observedSystem": "NARA"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "footnote 12",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "map.PP.display_from_PX": {
+    "value": true,
+    "status": "documented",
+    "claim": "The progress-period dates that print come from the record's own printed-form field, not from a separately parsed date pair.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "footnote 11; sample 'PROGRESS: 8901 TO 8912'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "render.format5.layout": {
+    "value": "Blue Sheet sample record, CRIS-only lines",
+    "status": "documented",
+    "claim": "A full record prints as a fixed sequence of labeled fields and blocks, following the one surviving sample record.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-page",
+        "locator": "SAMPLE RECORD table",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "decision": "HNRIMS lines omitted for CRIS-only records (inferred); absent optional fields omit their labels (chosen); one INVEST line per IN (chosen); SP= (Sponsor Code) is also HNRIMS-only per footnote 3 on the field table and is folded out of the PN/AS/DS line along with AT=, ID=, NC=, N1=, and the HNRIMS SUPPLEMENTARY DATA block. Leading spaces were measured on 2026-09-09 directly against the raw SAMPLE RECORD HTML (fixtures/SOURCES.md, fixtures/bluesheet-sample-1998.txt), not against render5()'s own output: the grid header and its four rows indent 8 spaces; the 'GENERAL' line has 49 leading spaces; the 'PRIMARY CLASSIFICATION ... CLASSIFICATION' line has 14; the four SPECIAL CLASSIFICATION rows (XHMR, S2540, S2550, S3110) indent 9 spaces, with the code and label rendered as one field (`${code}   ${label}`) padded to 50 columns so the percent lands at column 59 on every row regardless of code length -- that scheme reproduces the XHMR row exactly, which pad(code,8) + pad(label,42) does not; the PROGRESS line indents 'PROGRESS:' 2 spaces, matching the OBJECTIVES/APPROACH/KEYWORDS label lines. AN= and the two header lines are the only exact leading-space matches by construction (their <td> cells hold a bare literal space with no artifact to strip). Still unreproduced, and left that way because the greedy-fill/single-space render.headings.join algorithm genuinely cannot produce them: the sample's PH=/GH= lines separate the first code/label pair with a stray non-&nbsp; byte (0xA6) and double the space before every later pair, and PH='s word-wrap breaks at different points than this reconstruction's greedy fill."
+  },
+  "render.text.justify": {
+    "value": {
+      "width": 65,
+      "algorithm": "greedy fill, full-justify all but last line"
+    },
+    "status": "inferred",
+    "claim": "Paragraph text -- objectives, approach, keywords, publications, progress -- is filled and stretched to a fixed line width.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-page",
+        "locator": "OBJECTIVES block spacing",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "algorithm chosen; width measured over the OB, AP, DE and PR cells directly from the raw SAMPLE RECORD HTML (fixtures/SOURCES.md), decoding &nbsp; to a plain space and removing exactly render5()'s own added indent for each row (1 leading space for continuation rows and for /PR's rows, 2 for the label row of a textBlock() call): every full-justified continuation line comes out to 65 characters; the widest line of all is the APPROACH label row at 66. Trial, 2026-09-09: reran render5.ts's own justify(text, width, stretch) algorithm in isolation against the sample's TI text and its OB/AP/PR narrative (reconstructed by collapsing each sample line's words to a single-spaced blob, since the visible multi-space runs in most sample lines are the full-justify stretching itself, then re-wrapping with the algorithm under test). At width 65, called directly for TI (not width - 1), TI's break reproduces the sample's exactly ('...DESIGNED TO' / 'MODIFY LIPID METABOLISM'). Every OB/AP/PR continuation line (28 of 30 checked rows, all of PR's 24 and all but the first row of OB and AP) also reproduces exactly at width 65. The two rows that do not match are the OBJECTIVES: and APPROACH: label rows themselves (63 and 66 measured characters respectively, not 65). Two causes fit that observation and neither is established: the sample may leave label rows unstretched (its OBJECTIVES: row is 63 characters, short of any width), or textBlock() glues the label into the word list it full-justifies so the label's trailing space is stretched like an inter-word gap. Either way the mismatch is unrelated to the width value, is present at any width, and is out of scope here since OB/AP/DE/PB/PR are not exercised by either given test (fixtures/bluesheet-sample-1998.txt marks them '# not-exercised'). Given the near-total reproduction and the TI break holding exactly, width 65 is adopted and TI's call is decoupled from width - 1 to width, called directly."
+  },
+  "render.headings.join": {
+    "value": "; ",
+    "status": "inferred",
+    "claim": "When a classification field carries more than one heading, the headings print joined by a semicolon and a space.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-page",
+        "locator": "PRIMARY HEADINGS line",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "terminal.pacing": {
+    "value": {
+      "bps": 1200,
+      "cps": 120
+    },
+    "status": "chosen",
+    "claim": "Printed output arrives at 120 characters per second, a speed documented for DIALOG access in 1984-1988; no source records the speed of a File 60 session.",
+    "sources": [
+      {
+        "source": "agricola-guide-1984",
+        "locator": "printed p. 28, section D, Online Communication: 30 or 120 characters per second as the common terminal speeds",
+        "sourceDate": "1984",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "alin-1988",
+        "locator": "ALIN v.14 no.3 (March 1988), printed p. 12, Karl Schneider, \"Saving Search Money\": \"1200 baud or 120 bytes/sec\" in a DIALOG print-cost model; \"2400 baud access to DIALOG is now or will soon be available\". Checked against the page image 2026-09-10.",
+        "sourceDate": "1988",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "Statement of absence: the speed of any 1990-1994 File 60 session was not found by a search of this project's sources, a search of the 89 ALIN OCR files, and one web search, on 2026-09-10. The sources cited here state speeds at which DIALOG was reached in and around the anchor period; none of them is a record of a File 60 session, and the anchor-period sources it consulted are printouts, which record no timing. 120 characters per second is chosen from that documented range, not measured from any session. src/terminal/sink.ts reads cps from this value and emits printed characters at that rate. The ALIN v.15 no.1 (1989) dial-in figure (1200 or 2400 baud) was checked against the page image on 2026-09-10 and is the access speed of ALF, NAL's bulletin board, not of DIALOG; it is not cited here. The prompt stays live during output: src/terminal/sink.ts never disables the input while a line paces out at this rate, and a line entered before the output finishes is taken up once it does."
+  },
+  "terminal.line_editing": {
+    "value": "native single-line editing: character insert, backspace, left and right, paste; no history",
+    "status": "chosen",
+    "claim": "Typing uses the browser's own text editing: insert, backspace, arrows, paste. Enter submits the line. This is not a simulation of a period terminal's editing.",
+    "note": "What a 1990 searcher could edit before return is not recorded in any source held; the textarea covers insert, backspace, arrows and paste. The textarea's native editing is the input model, not a simulation of a documented DIALOG editing rule. Enter submission is the app's, not the textarea's own behaviour, and the visible caret is drawn by the app (index.html's caret-color:transparent and the .cursor span); the editing itself is the browser's."
+  },
+  "terminal.wrap": {
+    "value": {
+      "width": 80,
+      "hangingIndent": 18
+    },
+    "status": "chosen",
+    "claim": "A long set line wraps in the browser rather than running off the edge; no source documents how DIALOG itself wrapped long lines.",
+    "note": "wrapping of long set lines is not documented"
+  },
+  "terminal.scrollback": {
+    "value": "the browser's own scrollbar; no custom scroll chrome",
+    "status": "chosen",
+    "claim": "The session stays on screen and can be scrolled back; a 1990s terminal did not keep it.",
+    "note": "DIALOG sent a character stream. On a printing terminal, output was printed and could not be scrolled back; on a screen it scrolled off the top unless the searcher's own communications program buffered it, which no source in the corpus records."
+  },
+  "index.format": {
+    "value": "one JSON file per phrase-indexed field, offsets.json for record spans",
+    "status": "chosen",
+    "claim": "Search terms are looked up in files built for this reconstruction; how DIALOG itself indexed File 60 internally is not known.",
+    "note": "DIALOG's own internal index structures are unknown to us; this is a search accelerator built for this reconstruction, not a claim about how DIALOG indexed File 60"
+  },
+  "inspect.mode": {
+    "value": "click-to-inspect panel: What was printed, How DIALOG names it, The bytes in the NARA file, Where the file came from, Why it prints this way",
+    "status": "chosen",
+    "claim": "Clicking a printed line opens a panel explaining how that line was produced, back to its position in the archival file.",
+    "note": "Inspect mode is modern scholarly apparatus with no DIALOG-period precedent. The panel's cards are named for a reader: the record's Format B bytes and its archival container are one card, \"The bytes in the NARA file\"; the rest are \"What was printed\", \"How DIALOG names it\", \"Where the file came from\" (tape provenance) and \"Why it prints this way\" (transformation evidence). The panel can be hidden behind a toggle at the aside's edge; hiding it changes nothing in the session -- it is a display choice over the same character stream."
+  },
+  "terminal.keyboard_inspect": {
+    "value": "stamped spans are tabbable; Enter/Space opens inspect; Escape returns focus to the prompt; Alt+I inspects the most recent typed record line",
+    "status": "chosen",
+    "claim": "The inspect panel can also be reached from the keyboard: Tab to a line and press Enter, or press Alt+I for the line typed most recently.",
+    "note": "Keyboard-only operation for a mouse-only affordance (click-to-inspect) that DIALOG itself never had, so there is no DIALOG-period rule this could be inferred from."
+  },
+  "terminal.restart": {
+    "value": "a button (and Alt+R) discards the session's sets and open file, empties the printout and inspect panel, and returns to an empty prompt",
+    "status": "chosen",
+    "claim": "A button restarts the session; in the period a searcher logged off and dialed in again.",
+    "note": "DIALOG had no clear command; ending a session and starting another meant LOGOFF, then dialing in again. Restart is implemented as app wiring (src/app/main.ts constructs a fresh DialogSession and calls DomSink.reset()), not a DIALOG-layer concept, and it prints nothing into the character stream -- no LOGOFF accounting block (not implemented) and no new BEGIN banner, since neither corresponds to any DIALOG output this control actually causes."
+  },
+  "nara.tape.fy1994_media": {
+    "value": "two 1/2-inch open reel, 9-track, 6250 bpi, EBCDIC, non-labeled; NARA copy 3480 cartridge, EBCDIC, blocked 5040, OS standard labels",
+    "status": "inferred",
+    "claim": "The physical tape chain for this file is inferred from NARA's record of a neighboring year's tape, not documented for this file itself.",
+    "sources": [
+      {
+        "source": "nara-cris-packet",
+        "locator": "FY 1991 validation statement, p.28",
+        "sourceDate": "1995-06-12",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "FY 1994 has no per-file validation statement of its own; these are the FY 1991 statement's media facts (already cited by nara.conversion.control_bytes), applied to FY 1994 by inference -- see src/inspect/panel.ts's FY1994_TAPE comment"
+  },
+  "nara.tape.fy1994_accession": {
+    "value": null,
+    "status": "chosen",
+    "claim": "The transfer record under which NARA received this file is not known; nothing on screen states one.",
+    "note": "NAID 1204533 (fixtures/ACCEPTANCE.md) identifies the digitized text NARA now serves, not the transfer accession under which the physical FY 1994 tape was received. The FY 1991 validation statement's own accession is NN3-164-93-001 (CRIS Format B specification, February 1990, source note) -- the nearest documented instance, and it is not established whether FY 1994's accession is the same one. Statement of absence: not found by this project's method in the sources it consulted; would be resolved by the NARA Catalog's RG 164 series/accession record for the FY 1994 transfer, not yet located."
+  },
+  "nara.file.header_record": {
+    "value": "<< 000060950718",
+    "status": "documented",
+    "claim": "The file opens with a single header line recorded outside any project record.",
+    "sources": [
+      {
+        "source": "cris-fy94-export",
+        "locator": "line 1",
+        "sourceDate": "1994",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "the file's first line, preceding any '$$' record; scanRecords opens no record on it and reports its text separately"
+  },
+  "nara.file.trailer_record": {
+    "value": ">> 003384620000034090",
+    "status": "documented",
+    "claim": "The file closes with a single trailer line giving the total line and record counts, recorded outside any project record.",
+    "sources": [
+      {
+        "source": "cris-fy94-export",
+        "locator": "line 3384622 (the file's last line)",
+        "sourceDate": "1994",
+        "observedSystem": "NARA"
+      }
+    ],
+    "note": "the trailer's own two counts, 3384620 (data lines between header and trailer) and 34090 (records), match scanRecords' full-corpus scan; scanRecords closes the record open before this line and excludes the line itself from that span. The value is a direct byte read of the corpus at line 3384622, which shows the two 9-digit counts concatenated with no separating space rather than a space between them."
+  },
+  "capability.notice": {
+    "value": "one modern line beneath the prompt, shown only after EXPAND, PAGE, DISPLAY SETS, LOGOFF, SORT, PRINT, KWIC, or TYPE by accession number",
+    "status": "chosen",
+    "claim": "A note below the prompt says when a real DIALOG command is not reconstructed; DIALOG printed no such note.",
+    "note": "A command DIALOG documented for File 60 but not implemented here is recognized by the parser (returns { cmd: \"unsupported\" }, src/dialog/parser.ts) instead of being treated the same as a typo. The session (src/dialog/session.ts) prints nothing for it into the character stream; the app (src/app/main.ts) shows the one-line notice outside the stream, so it never reaches scrollback, a copied selection, or the copy trailer."
+  },
+  "index.word.tokens": {
+    "value": "split on spaces and on punctuation other than the hyphen; digits are tokens; keys are uppercased",
+    "status": "inferred",
+    "claim": "A search term is split at spaces and punctuation other than the hyphen; digits count as terms; everything is matched in capitals.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "page 206, 'Word-Indexed Search Terms' and 'Punctuation' (lines 21683-21742)",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "the 2001 book states what a word-indexed search term may contain (any single word, number, or alphanumeric expression) and that punctuation inside one must be replaced with a proximity operator to search it; this reconstruction reads that as punctuation not being part of the indexed token and drops it at split time, rather than indexing the punctuation character itself, which is the alternative it does not adopt."
+  },
+  "index.word.stopwords": {
+    "value": [
+      "AN",
+      "BY",
+      "FROM",
+      "THE",
+      "WITH",
+      "AND",
+      "FOR",
+      "OF",
+      "TO"
+    ],
+    "status": "documented",
+    "claim": "Nine common words (an, by, for, from, of, the, to, with, and) are never indexed as search terms.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "page 206, the nine Dialog stop words (lines 21687-21709)",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "the 2001 book documents this list for DIALOG generally, not for File 60 in 1994 specifically; that it held for the 1994 export is inferred, not itself documented for that year."
+  },
+  "index.word.hyphen": {
+    "value": "indexed whole and as its parts",
+    "status": "chosen",
+    "claim": "A hyphenated word is indexed as one term and as each of its parts, so a search can match either.",
+    "decision": "indexed whole (e.g. GENE-TRANSFER) and as its parts (GENE, TRANSFER); the alternative, whole only, is not adopted. No source held states which DIALOG itself did."
+  },
+  "index.word.shards": {
+    "value": "one file per first character: A-Z, 0-9, and _ for anything else",
+    "status": "chosen",
+    "claim": "The word lists are split into files by first letter so a search loads only the part it needs; DIALOG's own index shape is not known."
+  },
+  "map.TX.composite": {
+    "value": {
+      "columns": [
+        "AP",
+        "OB",
+        "PR"
+      ],
+      "documented": [
+        "AP",
+        "NR",
+        "OB",
+        "PR"
+      ]
+    },
+    "status": "documented",
+    "claim": "The TX search field merges three fields' text on this corpus; the Blue Sheet documents a fourth this corpus never carries.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "footnote 6",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "the Blue Sheet's footnote 6 documents /TX as the union of /AP, /NR, /OB and /PR. /NR is the HNRIMS narrative tag NA; its FY 1994 count in this corpus is 0 (measured, index-builder.ts's word-index build), so on this corpus /TX is built as AP + OB + PR. The missing /NR component is a consequence of the corpus, not a choice made here."
+  },
+  "index.sh.phrase_only": {
+    "value": "SH= built as a phrase index only",
+    "status": "inferred",
+    "claim": "Subject headings are searched as whole phrases only; one source calls two of their fields word-searchable, a reading not adopted here.",
+    "sources": [
+      {
+        "source": "format-b-1990",
+        "locator": "elements 46 and 47 (PH, GH): 'Word and Phrase', SH= 'searches literal only'",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
+      }
+    ],
+    "conflicts": "Format B's own element table calls PH and GH 'Word and Phrase' under SH=, while its entry for SH= itself says the field 'searches literal only', i.e. phrase-indexed. The phrase-only reading is what this build implements; the disagreement is recorded here rather than resolved silently."
+  },
+  "terminal.width_rule": {
+    "value": "1px line at column 80, hidden below 82ch",
+    "status": "chosen",
+    "claim": "A thin vertical line marks the 80-column edge of the printout; the terminals drew no such line. It is hidden when the window is narrower than the printout.",
+    "sources": [],
+    "note": "The documented terminals were width-limited (terminal.width, 80 columns) and a modern browser window is wider, so the printout's right edge is marked with the same neutral rule colour the panels use. index.html .printout{border-right} and the @container query on .terminal-pane enact it; no colour or CRT claim is made. Chosen: a modern convenience with no historical counterpart."
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+data/*
+!data/README.md
+public/corpus/
+.wrangler/
+.env
+.env.*
+.dev.vars*
+.DS_Store
+__pycache__/

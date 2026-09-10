@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>File 60 reconstruction</title>
+<style>
+  /* Tokens. Every value here is either documented (see registry/evidence.json)
+     or labeled
+     a modern choice in this file's comments; none is a claim about how a
+     DIALOG terminal looked. Ground and ink are plain neutral values with no
+     claim about a medium: what survives is photocopies, which is what was
+     reproducible, not what a searcher looked at. One
+     theme; no dark-mode variant. */
+  :root{
+    --ground:#ffffff;
+    --ink:#111111;
+    --muted:#6b6b6b;
+    --rule:#d9d9d9;
+    --bar-bg:#1c1a17; --bar-fg:#f2ede4;
+    --panel-bg:#f4f4f4; --card-bg:#fff;
+    --ring:#3a6ea5; --tint:#eaf1f8;   /* modern apparatus only; no colour in the corpus belongs to DIALOG */
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* chosen: no web fonts; fixed pitch is documented, the specific typeface is not */
+    --sans: system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  /* chosen: 1.5 loosens the ~6 lines-per-inch ratio measured on the 200 dpi
+     renders of ERIC ED374805 for screen reading; the ratio is measured, this
+     departure is not a claim about the printouts. */
+  body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.5 var(--mono);display:flex;flex-direction:column}
+  #bar{flex:0 0 auto;background:var(--bar-bg);color:var(--bar-fg);font:12px/1.4 var(--sans);padding:6px 12px;display:flex;gap:.6em;align-items:baseline}
+  #bar a{color:inherit}
+  /* Flex, not grid -- a grid track's size is not reliably animatable
+     across browsers, while a flex item's own width is a plain, well-supported transition
+     (see the aside rule's own width transition below). */
+  .layout{flex:1;display:flex;min-height:0}
+  .terminal-pane{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;min-height:0;padding:12px;overflow:hidden}
+  .pane-label{flex:0 0 auto;font:11px var(--sans);text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:6px}
+  #terminal{flex:1;display:flex;flex-direction:column;min-height:0}
+  /* terminal.width_rule (chosen): a one-pixel line at the printout's 80ch edge marks where
+     the documented terminal width ended; the terminals sent no such line. .terminal-pane is
+     a size container so the rule can be dropped when the pane is too narrow to show all 80
+     columns (82ch: the printout plus its own scrollbar). */
+  .terminal-pane{container-type:inline-size}
+  .printout{position:relative;flex:1;overflow:auto;margin:0;white-space:pre;max-width:80ch;border-right:1px solid var(--rule)}
+  @container (max-width: 82ch){.printout{border-right:0}}
+  .printout span.inspected{background:var(--tint);box-shadow:inset 0 0 0 1px var(--ring)}
+  .chip{position:absolute;font:10px var(--sans);background:var(--ring);color:#fff;padding:1px 5px 2px;border-radius:3px;pointer-events:none;user-select:none;white-space:nowrap}
+  .promptline{position:relative;display:flex;align-items:baseline;flex:0 0 auto;margin-top:4px}
+  .promptline .prompt{white-space:pre}
+  .promptline textarea{flex:1;font:inherit;color:inherit;background:transparent;border:0;outline:0;resize:none;caret-color:transparent;padding:0}
+  /* cursor.form: blinking underline, taken from the 1984 broadcast of a DIALOG
+     search on an IBM PC. The underline is that PC program's, not
+     DIALOG's (registry terminal.cursorForm). The textarea's own caret is
+     hidden above; this span is the caret the reader sees. */
+  .cursor{position:absolute;bottom:2px;width:1ch;height:2px;background:var(--ink);animation:blink 1s step-end infinite}
+  @media (prefers-reduced-motion: reduce){.cursor{animation:none}}
+  @keyframes blink{50%{opacity:0}}
+  .live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  /* No horizontal scroll anywhere in the aside. overflow-wrap is an
+     inherited property, so declaring it once here reaches every descendant -- the statement
+     panel's dl/dd and every inspect card -- without a separate rule on each. min-width:0
+     lets the aside actually shrink to the collapsed rail width below (a flex item's default
+     min-width is auto, which floors it at its content's width and defeats the transition). */
+  aside{background:var(--panel-bg);display:flex;flex-direction:column;overflow:hidden;overflow-x:hidden;overflow-wrap:anywhere;min-width:0;font:12px/1.4 var(--sans);flex:0 0 460px;width:460px;transition:width .15s ease}
+  /* Collapsed, the aside is a 28px rail carrying the toggle and a
+     vertical label; its own content is hidden, not just visually -- removed from layout so
+     it cannot be tabbed to or scrolled to while collapsed. */
+  aside.collapsed{width:28px;flex-basis:28px}
+  aside.collapsed #statement, aside.collapsed #inspect{display:none}
+  @media (prefers-reduced-motion: reduce){aside{transition:none}}
+  .panel-head{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--rule)}
+  #panel-toggle{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:1px solid var(--rule);border-radius:4px;background:var(--card-bg);color:var(--ink);cursor:pointer}
+  #panel-toggle:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+  #panel-toggle .icon{display:block}
+  aside.collapsed #panel-toggle .icon-hide, aside:not(.collapsed) #panel-toggle .icon-show{display:none}
+  .rail-label{display:none;writing-mode:vertical-rl;text-orientation:mixed;font:11px var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:4px auto 0}
+  aside.collapsed .rail-label{display:block}
+  #statement{padding:12px;border-bottom:1px solid var(--rule);font-size:12px;line-height:1.5;min-width:0}
+  #statement h2{margin:0 0 6px;font-size:13px}
+  #statement p{margin:0 0 8px}
+  #statement ul{margin:0 0 8px;padding-left:1.2em}
+  #statement li{margin-bottom:4px}
+  #statement details{margin-top:4px;color:var(--muted);font-size:11px}
+  #statement details dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
+  #statement details dt{font-weight:600}
+  #statement details dd{margin:0;word-break:break-all}
+  /* The SHA-256 shows truncated by default, with a "show full" toggle --
+     a checkbox+label pair, not a nested <details> (which would shift the corpus statement's
+     own split-based provenance parsing), visually hidden the same way sink.ts hides its
+     aria-live region (.live above), so it stays in the tab order and works with no script. */
+  .hash-toggle{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .hash-toggle-label{cursor:pointer;color:var(--ring);text-decoration:underline;margin-left:4px}
+  .hash-full{display:none}
+  .hash-toggle:checked ~ .hash-full{display:inline}
+  .hash-toggle:checked ~ .hash-short{display:none}
+  .hash-toggle:focus-visible ~ .hash-toggle-label{outline:2px solid var(--ring)}
+  #inspect{padding:12px;overflow:auto;min-width:0}
+  .card{background:var(--card-bg);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;margin-bottom:10px;min-width:0}
+  .card h3{margin:0 0 6px;font-size:12px;display:flex;align-items:center;gap:6px}
+  .card ul{margin:0;padding-left:1.2em}
+  .card li{margin-bottom:2px}
+  .card pre{font-family:var(--mono);white-space:pre-wrap;margin:0}
+  .card p.lead{margin:0 0 6px;color:var(--muted)}
+  .card .keyref{color:var(--muted);font-weight:400;font-size:10px}
+  /* A source-kind gloss, muted, beneath its first citation on "Why it
+     prints this way" -- see src/inspect/panel.ts. */
+  .card .gloss{color:var(--muted);font-size:11px;margin-top:2px}
+  p.modern{color:var(--muted);font-style:italic;font-size:11px}
+  /* status pills: one class per Status union member (src/registry/index.ts) */
+  .pill{display:inline-block;font:9.5px var(--sans);text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:8px;color:#fff}
+  .pill-documented{background:#3f7d4f}
+  .pill-inferred{background:#b8863b}
+  .pill-chosen{background:#7a5ea8}
+</style></head>
+<body>
+<header id="bar"></header>
+<div class="layout">
+  <div class="terminal-pane">
+    <div class="pane-label">DIALOG File 60 &middot; session &middot; Alt+I inspects the last typed record &middot; Alt+R restarts the session &middot; Alt+S toggles printout/screen display</div>
+    <main id="terminal"></main>
+    <p id="notice" class="modern"></p>
+  </div>
+  <aside id="panel">
+    <div class="panel-head">
+      <!-- Icon-only toggle: the accessible name is aria-label (set by main.ts to "Hide inspect
+           panel" / "Show inspect panel"), the state is aria-expanded, and both chevrons are inline
+           SVG (no icon font, no external request) marked aria-hidden so the name is read once.
+           CSS below shows the chevron that points the way the panel will move. -->
+      <button type="button" id="panel-toggle" aria-expanded="true" aria-controls="panel" aria-label="Hide inspect panel" title="Hide inspect panel">
+        <svg class="icon icon-hide" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="icon icon-show" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="rail-label" aria-hidden="true">Inspect</span>
+    </div>
+    <div id="statement"></div>
+    <div id="inspect"><p>Click a typed record line, or Tab to one and press Enter, to inspect it.</p></div>
+  </aside>
+</div>
+<script type="module" src="/src/app/main.ts"></script></body></html>

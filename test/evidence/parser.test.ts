@@ -1,0 +1,132 @@
+import { parse } from "../../src/dialog/parser";
+
+test("BEGIN forms", () => {
+  expect(parse("b 60")).toEqual({ cmd: "begin", file: 60 });
+  expect(parse("BEGIN 60")).toEqual({ cmd: "begin", file: 60 });
+  expect(parse("begin60")).toEqual({ cmd: "begin", file: 60 });
+});
+
+test("SELECT prefix term keeps internal double spaces and uppercases the echo", () => {
+  expect(parse("s in=hammerschlag  f a")).toEqual({
+    cmd: "select", echo: "IN=HAMMERSCHLAG  F A",
+    expr: { kind: "term", field: "IN", term: "hammerschlag  f a" },
+  });
+});
+
+test("SELECT set AND term", () => {
+  expect(parse("s s1 and cy=beltsville")).toEqual({
+    cmd: "select", echo: "S1 AND CY=BELTSVILLE",
+    expr: { kind: "and", left: { kind: "set", id: 1 }, right: { kind: "term", field: "CY", term: "beltsville" } },
+  });
+});
+
+test("TYPE set/format/items", () => {
+  expect(parse("t s2/5/1")).toEqual({ cmd: "type", set: 2, format: "5", items: [1] });
+  expect(parse("TYPE S2/5/1-3")).toEqual({ cmd: "type", set: 2, format: "5", items: [1, 2, 3] });
+  expect(parse("t s2/in,ob/2,4")).toEqual({ cmd: "type", set: 2, format: "IN,OB", items: [2, 4] });
+});
+
+test("unsupported input is total", () => {
+  expect(parse("s peach?/ti")).toEqual({ cmd: "unknown", text: "s peach?/ti" });
+  expect(parse("")).toEqual({ cmd: "unknown", text: "" });
+});
+
+test("a reversed TYPE item range is unknown, not an empty item list", () => {
+  expect(parse("t s2/5/3-1")).toEqual({ cmd: "unknown", text: "t s2/5/3-1" });
+});
+
+test("out-of-slice SELECT syntax is unknown, not a fabricated phrase term", () => {
+  expect(parse("s in=smith?")).toEqual({ cmd: "unknown", text: "s in=smith?" });
+  expect(parse("s in=hammerschlag/ti")).toEqual({ cmd: "unknown", text: "s in=hammerschlag/ti" });
+  expect(parse("s cy=beltsville or cy=greenbelt")).toEqual({ cmd: "unknown", text: "s cy=beltsville or cy=greenbelt" });
+  expect(parse("s cy=beltsville not cy=greenbelt")).toEqual({ cmd: "unknown", text: "s cy=beltsville not cy=greenbelt" });
+  expect(parse("s in=x and")).toEqual({ cmd: "unknown", text: "s in=x and" });
+});
+
+// A word term followed by a suffix: everything up to the last "/" is the search word, the
+// codes after it are the suffix list. Not a boolean AND of two operands -- the whole operand
+// is one word node.
+test("SELECT term/suffix parses to a word node, not a phrase term", () => {
+  expect(parse("s peach/ti")).toEqual({
+    cmd: "select", echo: "PEACH/TI",
+    expr: { kind: "word", codes: ["/TI"], term: "peach" },
+  });
+  expect(parse("s peach/ti,de")).toEqual({
+    cmd: "select", echo: "PEACH/TI,DE",
+    expr: { kind: "word", codes: ["/TI", "/DE"], term: "peach" },
+  });
+});
+
+// Right truncation on the word part of a suffixed operand is still out of this milestone's
+// slice, the same guard RESERVED_IN_TERM_VALUE applies to a plain PREFIX=value.
+test("a suffixed operand with a reserved character in its word part is unknown", () => {
+  expect(parse("s peach?/ti")).toEqual({ cmd: "unknown", text: "s peach?/ti" });
+});
+
+// The suffix word part excludes "=" and a second "/": an operand shaped like PREFIX=value
+// (an "=" before the slash) is never read as a word/suffix, and a `/subfile` limit
+// (/CRIS /HNRIMS /ICAR /CZARIS) or any other trailing "/CODE" on a PREFIX=value's value falls
+// to RESERVED_IN_TERM_VALUE, the same as before this parser had a word/suffix grammar at all.
+test("a PREFIX=value with a subfile suffix or another suffix-shaped tail is unknown, not a fabricated word or phrase term", () => {
+  expect(parse("s cy=beltsville/cris")).toEqual({ cmd: "unknown", text: "s cy=beltsville/cris" });
+  expect(parse("s in=smith/ti")).toEqual({ cmd: "unknown", text: "s in=smith/ti" });
+});
+
+test("a word part with a second slash matches neither branch and is unknown", () => {
+  expect(parse("s peach/ti/de")).toEqual({ cmd: "unknown", text: "s peach/ti/de" });
+});
+
+test("a hyphenated word with one suffix parses to a word node", () => {
+  expect(parse("s x-ray/ti")).toEqual({
+    cmd: "select", echo: "X-RAY/TI",
+    expr: { kind: "word", codes: ["/TI"], term: "x-ray" },
+  });
+});
+
+test("digits after a slash are not suffix codes: unknown, not a fabricated word term", () => {
+  expect(parse("s 9/10")).toEqual({ cmd: "unknown", text: "s 9/10" });
+});
+
+test("a parenthesized group containing AND is outside this milestone: unknown, not a fabricated term", () => {
+  expect(parse("s (cy=beltsville and in=smith)")).toEqual({ cmd: "unknown", text: "s (cy=beltsville and in=smith)" });
+});
+
+// A capability-notice stub. Each of these is a documented File 60 command but outside this
+// milestone's slice; the parser recognizes the command word and returns
+// { cmd: "unsupported" } instead of treating it the same as a typo.
+test("capability-notice command words parse to unsupported, not unknown", () => {
+  expect(parse("e in=snook j t")).toEqual({ cmd: "unsupported", command: "EXPAND", rest: "IN=SNOOK J T" });
+  expect(parse("expand in=snook")).toEqual({ cmd: "unsupported", command: "EXPAND", rest: "IN=SNOOK" });
+  expect(parse("p")).toEqual({ cmd: "unsupported", command: "PAGE", rest: "" });
+  expect(parse("page")).toEqual({ cmd: "unsupported", command: "PAGE", rest: "" });
+  expect(parse("ds")).toEqual({ cmd: "unsupported", command: "DISPLAY SETS", rest: "" });
+  expect(parse("ds 1-3")).toEqual({ cmd: "unsupported", command: "DISPLAY SETS", rest: "1-3" });
+  expect(parse("display sets s1-s2")).toEqual({ cmd: "unsupported", command: "DISPLAY SETS", rest: "S1-S2" });
+  expect(parse("logoff")).toEqual({ cmd: "unsupported", command: "LOGOFF", rest: "" });
+  expect(parse("sort s1/ti")).toEqual({ cmd: "unsupported", command: "SORT", rest: "S1/TI" });
+  expect(parse("print s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
+  expect(parse("pr s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
+  expect(parse("kwic s1/ti")).toEqual({ cmd: "unsupported", command: "KWIC", rest: "S1/TI" });
+});
+
+test("TYPE by accession number parses to unsupported, distinct from TYPE set/format/items", () => {
+  expect(parse("t 09143165/5")).toEqual({ cmd: "unsupported", command: "TYPE (by accession number)", rest: "09143165/5" });
+  expect(parse("type 09143165/5")).toEqual({ cmd: "unsupported", command: "TYPE (by accession number)", rest: "09143165/5" });
+});
+
+// offendingToken (session.ts) blames the whole unparsed remainder for a
+// recognized command word, not just the word itself -- pinned here as the parser's contract:
+// a malformed TYPE-by-accession-shaped input (no slash) does not match either TYPE form and
+// stays unknown, carrying the full original text so the session can still name it fully.
+test("a malformed TYPE that matches neither TYPE form is unknown, carrying the full text", () => {
+  expect(parse("t 5")).toEqual({ cmd: "unknown", text: "t 5" });
+});
+
+// A set TYPE with its item range missing has the same shape as an accession TYPE
+// (number, slash, format) but a set number is at most 3 digits and an accession number 7 or
+// 8; the accession form must not claim it.
+test("a set-number TYPE missing its items is unknown, not an accession-number TYPE", () => {
+  expect(parse("t 1/5")).toEqual({ cmd: "unknown", text: "t 1/5" });
+  expect(parse("t s1/5")).toEqual({ cmd: "unknown", text: "t s1/5" });
+  expect(parse("t 9049442/5").cmd).toBe("unsupported");
+});

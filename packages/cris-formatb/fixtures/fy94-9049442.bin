@@ -1,0 +1,122 @@
+$$                                                                              
+AN 9049442                                                                      
+PD 860516                                                                       
+PS TERMINATED                                                                   
+AS ARS                                                                          
+DS 1275                                                                         
+PN 1275-21000-008-00D                                                           
+IC 006521                                                                       
+PI BELTSVILLE AGR RES CENTER                                                    
+CY BELTSVILLE                                                                   
+ST MARYLAND                                                                     
+ZP 20705                                                                        
+RE 1                                                                            
+OC 008009                                                                       
+PF AGRICULTURAL RESEARCH SERVICE                                                
+PT INHOUSE                                                                      
+IN HAMMERSCHLAG  F A                                                            
+IN OWENS  L D                                                                   
+TI GENE TRANSFER AND TISSUE CULTURE TECHNOLOGIES FOR IMPROVEMENT OF PEAC        
+   H, SOYBEAN, AND TOBACCO                                                      
+SD 870801                                                                       
+SX 01 AUG 87                                                                    
+TD 920730                                                                       
+TX 30 JUL 92                                                                    
+FY 1992                                                                         
+UP 930420                                                                       
+PP 9207                                                                         
+PX 8708 TO 9207                                                                 
+BT 080%                                                                         
+AT 020%                                                                         
+DT 000%                                                                         
+AC A4900                                                                        
+   ¬A5000                                                                       
+   ¬A4900                                                                       
+   ¬A4900                                                                       
+CM C1000                                                                        
+   ¬C1000                                                                       
+   ¬C2300                                                                       
+   ¬C2600                                                                       
+FS F0513                                                                        
+   ¬F0312                                                                       
+   ¬F0312                                                                       
+   ¬F0312                                                                       
+RP R304                                                                         
+   ¬R304                                                                        
+   ¬R307                                                                        
+   ¬R307                                                                        
+CT 042%                                                                         
+   ¬028%                                                                        
+   ¬015%                                                                        
+   ¬015%                                                                        
+PA P3.13                                                                        
+   ¬P3.13                                                                       
+   ¬P3.06                                                                       
+   ¬P3.11                                                                       
+JC J2A                                                                          
+   ¬J2A                                                                         
+   ¬J2A                                                                         
+   ¬J2A                                                                         
+SC S1015  Peaches                                                              
+   ¬S2610  Flue-Cured Tobacco                                                  
+SN 070%                                                                         
+   ¬015%                                                                        
+SF CRIS                                                                         
+OB To develop tissue culture and gene transfer techniques to improve dis        
+   ease resistance and morphogenesis in peach, soybean, and tobacco and         
+   to determine the role of ABA in root morphogenesis of tissue-cultured        
+    plants.                                                                     
+AP 1) Investigations with peach, soybean, and tobacco will focus on tran        
+   sfer- ring genes via Agrobacterium-mediated gene transfer and electro        
+   poration. DNA to be transferred will carry an antibiotic resistance m        
+   arker to permit selection of transformed cells prior to regeneration         
+   and either phytohor- mone-specifying genes calculated to overcome our        
+    inability to regenerate peach and soybean plants from cell cultures         
+   that confer resistance to several bacterial pathogens. 2) Investigati        
+   ons with peach will also include testing the response of peach regene        
+   rants in vitro and under greenhouse conditions to several peach patho        
+   gens as well as evaluating the field performance of peach plants deri        
+   ved from tissue cultures. Immunofluorescence, GC/MS and electron micr        
+   oscopy techniques will be used to study the role of ABA in root forma        
+   tion of in vitro propagated peach shoots. Beltsville, MD; BG 006, Roo        
+   m 1, BL-1; RD-35; 06/10/91. Scientists: F. A. Hammerschlag and L. D.         
+   Owens.                                                                       
+DE GENE-TRANSFER TISSUE-CULTURE PEACHES SOYBEANS TOBACCO PLANT-IMPROVEME        
+   NT TREE-IMPROVEMENT CROP-PRODUCTION PLANT-GENETICS GENETIC-ENGINEERIN        
+   G PLANT-DISEASE-RESISTANCE MORPHOGENESIS ROOTS ROOT-DEVELOPMENT AGROB        
+   ACTERIUM ANTIBIOTIC-RESISTANCE MARKERS                                       
+PR Field studies of tissue-cultured (TC), own-rooted peach cultivars ind        
+   icated thatTC trees produced significantly more fruit compared with b        
+   ud-grafted trees 2 and 3 years after planting in the field. These stu        
+   dies should be of interest to scientists and peach growers since they        
+    demonstrate the feasibility of using TC-propagation to produce own-r        
+   ooted peach trees. Through in vitro selection and screening for somac        
+   lonal variants, peach plants have been obtained with stable increased        
+    levels of resistance to Xanthomonas campestris pv. pruni and Pseudom        
+   onas syringae pv. syringae. These studies should be of interest to ot        
+   her scientists concerned with improving woody crop species. An in vit        
+   ro screening system for evaluating peach germplasm for root-knot nema        
+   tode resistance was developed that shortens the screening period from        
+    3 years to 5 weeks. This system can be used to evaluate seedlings an        
+   d peach plants derived from tissue culture and genetic engineering st        
+   udies. An Agrobacterium-mediated gene transfer system for peach has b        
+   een developed for peach which has been used to introduce the cytokini        
+   n gene into peach and will be used as the basis for future gene trans        
+   fer studies. A gene vector pGT100 was constructed for use with the su        
+   pervirulent Agrobacterium tumefaciens helper strain EHA101. pGT100/EH        
+   A101 proved highly efficient in transferring genes to tobacco and soy        
+   bean. These studies may lead to improved methods for scientists to tr        
+   ansfer genes to these difficult to transform crops.                          
+PH R304   Biological Efficiency-Fruit, Vegetables                              
+PH R307   Biological Efficiency-Field Crops                                    
+PH A4900  Biology of Plants and Animals                                        
+PH A5000  Biological Efficiency of Plants, Animals                             
+PH C1000  Deciduous and Small Fruits and Nuts                                  
+PH C2300  Soybeans                                                             
+PH C2600  Tobacco                                                              
+PH F0513  Genetics-Other                                                       
+PH F0312  Biology-Molecular-Plant                                              
+GH P3.13  Fruit                                                                
+GH P3.06  Soybeans                                                             
+GH P3.11  Tobacco                                                              
+GH J2A    Plant Production                                                     

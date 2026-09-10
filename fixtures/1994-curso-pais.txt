@@ -1,0 +1,11 @@
+?b 49
+
+File  49:Pais Int.  1976-1994/Apr
+       (c) 1994 Public Affairs Information Service
+
+      Set  Items  Description
+      ---  -----  -----------
+?ss technolog?(W)transfer?/ti
+      S1    4322  TECHNOLOG?/TI
+      S2    1330  TRANSFER?/TI
+      S3     252  TECHNOLOG?(W)TRANSFER?/TI

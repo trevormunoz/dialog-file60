@@ -1,0 +1,156 @@
+# Expected format 5 render of AN 9049442 (RG164.CRIS.FY94.txt, lines 83052-83173),
+# generated 2026-09-09 from render5()'s own current output against the archival bytes
+# (packages/cris-formatb/fixtures/fy94-9049442.bin), then checked line by line against
+# fixtures/bluesheet-sample-1998.txt and fixtures/SOURCES.md's measurements of it. Unlike
+# that fixture, this one is not an independent transcription of a different source record --
+# it is the renderer's own output, committed so a change to render5.ts's literals or
+# algorithm is caught (test/archival/render5-9049442.test.ts), not so the renderer can be
+# checked against ground truth line by line the way the Blue Sheet sample fixture is.
+#
+# Two comment conventions:
+#   - "# regression-only: \"<line>\" -- <reason>": this specific rendered line has no
+#     construction the Blue Sheet sample confirms as correct -- either the sample never
+#     exercises the code path that produced it, or the sample's own measurement (SOURCES.md)
+#     found this construction to diverge from the real system. The line is pinned here only
+#     to catch a future change, not asserted as validated output.
+#   - a plain line: this rendered line's construction (template, wrap width, column
+#     positions) is the one fixtures/bluesheet-sample-1998.txt and fixtures/SOURCES.md
+#     measured and confirmed against a real DIALOG printout, even though the specific words
+#     differ (this is a different record).
+#
+# Regression-only lines, with the reason:
+#   - " PROJ TYPE: INHOUSE" (no REGIONAL PROJ NO segment): the sample's PT line always
+#     carries RG/RN (render5.ts:65's `has(rec, "RG")` branch is true in every sample
+#     measurement); this record has no RG, so its PT line exercises the branch the sample
+#     never confirms.
+#   - the five PRIMARY HEADINGS lines and two GENERAL HEADINGS lines: fixtures/SOURCES.md
+#     records five "# unreproduced" findings against the sample's own PH/GH lines -- the
+#     sample's real output uses a stray 0xA6 byte before the first label, doubled spaces
+#     before later labels, and different hard-wrap points that render.headings.join's
+#     single-space join and this milestone's greedy-fill algorithm do not reproduce. Every
+#     PH/GH line this renderer produces for any record carries that same known divergence.
+#   - the OBJECTIVES: and APPROACH: label lines (each block's first rendered line): SOURCES.md
+#     documents that textBlock() glues the label into the same word list justify() stretches,
+#     so the sample's OBJECTIVES:/APPROACH: label rows measure 63/66 characters, not width 65
+#     -- a mismatch left unfixed as out of scope for this milestone. Every continuation line
+#     of an OB/AP block (this record's second-and-later rendered lines for OB/AP) is not
+#     marked: SOURCES.md confirms those reproduce the sample's measured width exactly.
+#   - the KEYWORDS: label line: textBlock() glues DE's label the same way as OB's and AP's;
+#     SOURCES.md's width measurement covered OB/AP/DE/PR cells jointly but named only the
+#     OBJECTIVES:/APPROACH: mismatch explicitly. Marked here on the same structural reasoning
+#     rather than assumed correct without a KEYWORDS:-specific measurement.
+#
+# Not marked, and why: the identity block, the PN/PT/START/INVEST/PF/PI/CY-ST-ZP lines, the
+# title wrap (TI, justified at width 65 with stretch:false, matching the sample's TI break
+# exactly per SOURCES.md), the classification grid (indent and columns corrected to the
+# sample's measured 8-space/column-59 positions), the SPECIAL CLASSIFICATION AND HEADINGS
+# block (corrected to the sample's 9-space/50-column form), BASIC/APPLIED/DEVELOPMENTAL, every
+# OB/AP/DE continuation line, the whole PROGRESS block (the PROGRESS: line is a literal
+# template, not textBlock(), and SOURCES.md confirms all 24 of the sample's PR continuation
+# lines reproduce at width 65 exactly), and CRIS SUPPLEMENTARY DATA/PROJECT STATUS/SUBFILE
+# all use constructions fixtures/bluesheet-sample-1998.txt and SOURCES.md confirm against the
+# real 1998 printout. Two of those unmarked lines are a narrower claim than the rest: the
+# PN= line and the SUBFILE line reproduce only the sample's CRIS-only reconstruction of
+# each -- SOURCES.md records that the sample's real PN=/AS=/DS=/SP= line and its SF= line
+# each carry a trailing segment attributable to HNRIMS membership, dropped from that
+# reconstruction. "Confirmed against the printout" for these two lines means the column
+# and label construction the sample and this render share, not the sample's whole line.
+ DIALOG(R)File  60:CRIS/USDA
+ (c) format only 1998 The Dialog Corporation plc
+
+ 09049442
+ PROJ NO: 1275-21000-008-00D   AGENCY : ARS 1275
+# regression-only: " PROJ TYPE: INHOUSE" -- no RG/RN on this record; the sample's PT line never exercises the no-REGIONAL branch
+ START: 01 AUG 87  TERM: 30 JUL 92              FY: 1992
+ INVEST: HAMMERSCHLAG  F A
+ INVEST: OWENS  L D
+ AGRICULTURAL RESEARCH SERVICE
+ BELTSVILLE AGR RES CENTER
+ BELTSVILLE MARYLAND 20705
+
+  GENE TRANSFER AND TISSUE CULTURE TECHNOLOGIES FOR IMPROVEMENT OF
+  PEACH, SOYBEAN, AND TOBACCO
+
+                                                 GENERAL
+              PRIMARY CLASSIFICATION         CLASSIFICATION
+
+        RPA   ACTVTY  CMMDTY  SCNCE   PRCNT    PRGM   JTC
+        R304  A4900   C1000   F0513   042%     P3.13  J2A
+        R304  A5000   C1000   F0312   028%     P3.13  J2A
+        R307  A4900   C2300   F0312   015%     P3.06  J2A
+        R307  A4900   C2600   F0312   015%     P3.11  J2A
+
+# regression-only: " PRIMARY HEADINGS: R304 Biological Efficiency-Fruit, Vegetables;" -- PH/GH wrap is a known divergence from the sample (fixtures/SOURCES.md's five PH/GH "# unreproduced" findings)
+# regression-only: " R307 Biological Efficiency-Field Crops; A4900 Biology of Plants" -- continuation of the PRIMARY HEADINGS wrap above
+# regression-only: " and Animals; A5000 Biological Efficiency of Plants, Animals;" -- continuation of the PRIMARY HEADINGS wrap above
+# regression-only: " C1000 Deciduous and Small Fruits and Nuts; C2300 Soybeans; C2600" -- continuation of the PRIMARY HEADINGS wrap above
+# regression-only: " Tobacco; F0513 Genetics-Other; F0312 Biology-Molecular-Plant" -- continuation of the PRIMARY HEADINGS wrap above
+
+# regression-only: " GENERAL HEADINGS: P3.13 Fruit; P3.06 Soybeans; P3.11 Tobacco; J2A" -- same known PH/GH divergence as above
+# regression-only: " Plant Production" -- continuation of the GENERAL HEADINGS wrap above
+
+                     SPECIAL CLASSIFICATION AND HEADINGS
+         S1015   Peaches                                   070%
+         S2610   Flue-Cured Tobacco                        015%
+
+      BASIC 080%    APPLIED 020%    DEVELOPMENTAL 000%
+
+# regression-only: "  OBJECTIVES:   To   develop   tissue  culture  and  gene  transfer" -- textBlock()'s label-gluing mismatch (SOURCES.md: OBJECTIVES:/APPROACH: label rows measure 63/66 chars, not width 65)
+ techniques  to  improve  disease  resistance and morphogenesis in
+ peach,  soybean,  and tobacco and to determine the role of ABA in
+ root morphogenesis of tissue-cultured plants.
+
+# regression-only: "  APPROACH: 1) Investigations with peach, soybean, and tobacco will" -- same textBlock() label-gluing mismatch as OBJECTIVES: above
+ focus  on  transfer-  ring  genes via Agrobacterium-mediated gene
+ transfer and electroporation. DNA to be transferred will carry an
+ antibiotic  resistance  marker to permit selection of transformed
+ cells  prior to regeneration and either phytohor- mone-specifying
+ genes  calculated  to  overcome our inability to regenerate peach
+ and  soybean  plants from cell cultures that confer resistance to
+ several  bacterial  pathogens.  2) Investigations with peach will
+ also  include  testing the response of peach regenerants in vitro
+ and  under  greenhouse  conditions  to several peach pathogens as
+ well  as evaluating the field performance of peach plants derived
+ from  tissue  cultures.  Immunofluorescence,  GC/MS  and electron
+ microscopy  techniques  will  be used to study the role of ABA in
+ root  formation  of in vitro propagated peach shoots. Beltsville,
+ MD;  BG  006,  Room  1,  BL-1; RD-35; 06/10/91. Scientists: F. A.
+ Hammerschlag and L. D. Owens.
+
+# regression-only: "  KEYWORDS:  GENE-TRANSFER  TISSUE-CULTURE PEACHES SOYBEANS TOBACCO" -- same textBlock() label-gluing structure as OBJECTIVES:/APPROACH:, not separately measured for DE
+ PLANT-IMPROVEMENT TREE-IMPROVEMENT CROP-PRODUCTION PLANT-GENETICS
+ GENETIC-ENGINEERING  PLANT-DISEASE-RESISTANCE MORPHOGENESIS ROOTS
+ ROOT-DEVELOPMENT AGROBACTERIUM ANTIBIOTIC-RESISTANCE MARKERS
+
+  PROGRESS: 8708 TO 9207
+ Field studies of tissue-cultured (TC), own-rooted peach cultivars
+ indicated thatTC trees produced significantly more fruit compared
+ with bud-grafted trees 2 and 3 years after planting in the field.
+ These  studies  should  be  of  interest  to scientists and peach
+ growers   since   they   demonstrate  the  feasibility  of  using
+ TC-propagation  to  produce  own-rooted  peach  trees. Through in
+ vitro  selection  and  screening  for  somaclonal variants, peach
+ plants  have  been  obtained  with  stable  increased  levels  of
+ resistance  to  Xanthomonas  campestris pv. pruni and Pseudomonas
+ syringae  pv.  syringae.  These  studies should be of interest to
+ other  scientists concerned with improving woody crop species. An
+ in  vitro  screening  system  for  evaluating peach germplasm for
+ root-knot  nematode  resistance  was  developed that shortens the
+ screening period from 3 years to 5 weeks. This system can be used
+ to  evaluate  seedlings  and  peach  plants  derived  from tissue
+ culture      and      genetic     engineering     studies.     An
+ Agrobacterium-mediated  gene  transfer  system for peach has been
+ developed  for  peach  which  has  been  used  to  introduce  the
+ cytokinin  gene  into  peach  and  will  be used as the basis for
+ future   gene   transfer   studies.  A  gene  vector  pGT100  was
+ constructed   for   use   with  the  supervirulent  Agrobacterium
+ tumefaciens  helper  strain  EHA101.  pGT100/EHA101 proved highly
+ efficient  in  transferring  genes  to tobacco and soybean. These
+ studies  may  lead to improved methods for scientists to transfer
+ genes to these difficult to transform crops.
+
+ CRIS SUPPLEMENTARY DATA:  INST CODE:  006521;  ORG CODE:  008009;
+ REG:  1;   PROCESS  DATE:   860516;   PROGRESS  UPDATE:   930420;
+ PROJECT STATUS:  TERMINATED
+
+ SUBFILE: CRIS
