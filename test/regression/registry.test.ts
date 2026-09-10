@@ -251,3 +251,46 @@ test("an entry with a null value carries a claim, whatever its status", () => {
   }
   expect(checked).toBeGreaterThan(5); // a broken scan must fail loudly, not pass on an empty set
 });
+
+// The 28 February 1978 EPA session is the only File 60 session transcript held, and it is
+// pre-anchor. It is added as a source on keys whose claim it actually bears on, never as a
+// new behavior. It is a typeset reproduction: content is evidence, column positions are not.
+const EPA_SOURCE = "epa-session-1978";
+const citesEpa = (key: string) => (registry.get(key).sources ?? []).some(s => s.source === EPA_SOURCE);
+
+test("the 1978 EPA session is cited by the keys it bears on", () => {
+  for (const key of ["proto.begin.banner", "proto.begin.set_header", "dialog.file60.title", "proto.prompt"]) {
+    expect(citesEpa(key), `${key} does not cite the 1978 EPA session`).toBe(true);
+  }
+  const epaSources = registry.keys()
+    .flatMap(k => (registry.get(k).sources ?? []).map(s => ({ k, s })))
+    .filter(({ s }) => s.source === EPA_SOURCE);
+  for (const { k, s } of epaSources) {
+    expect(s.sourceDate, `${k}: the 1978 session's sourceDate is the session date`).toBe("1978-02-28");
+    expect(s.observedSystem, `${k}: the 1978 session was observed on File 60`).toBe("File 60");
+    expect(s.locator, `${k}: a typeset reproduction cannot ground a column position`).not.toMatch(/column/i);
+  }
+});
+
+// The banner's date-range form was recorded as unknown; 1978 shows one for File 60 itself.
+test("proto.begin.banner records the 1978 date-range form and keeps 1990-1994 unknown", () => {
+  const e = registry.get("proto.begin.banner");
+  expect(e.status).toBe("inferred");
+  expect(e.note).toMatch(/75-MAR78/);
+  expect(e.note).toMatch(/not recorded for 1990-1994/);
+});
+
+// The 1978 set header carries an operator legend the 1984 and 1994 forms do not.
+test("proto.begin.set_header keeps the 1978 variant as a recorded conflict, not as its value", () => {
+  const e = registry.get("proto.begin.set_header");
+  expect(e.value).toEqual(["      Set  Items  Description", "      ---  -----  -----------"]);
+  expect(e.conflicts).toMatch(/\(\+=OR;\*=AND;-=NOT\)/);
+});
+
+// The typeset "? BEGIN 60" shows a space the fixed-pitch facsimiles do not; the compositor's
+// spacing is not evidence, so this is a conflict, not a value change.
+test("proto.prompt.spacing keeps its measured no-space value and records the 1978 typeset space", () => {
+  const e = registry.get("proto.prompt.spacing");
+  expect(e.value).toBe("");
+  expect(e.conflicts).toMatch(/typeset/);
+});

@@ -33,8 +33,15 @@
         "locator": "line 565",
         "sourceDate": "1984",
         "observedSystem": "File 60"
+      },
+      {
+        "source": "epa-session-1978",
+        "locator": "p. 184, banner title 'USDA/CRIS'; the chapter heading spells it the same way",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
       }
-    ]
+    ],
+    "conflicts": "the 1978 banner names the file 'USDA/CRIS'; the 1984 catalog and the 1998 Blue Sheet name it 'CRIS/USDA - Current Research'. The 1990-1994 form is not recorded."
   },
   "nara.conversion.line_form": {
     "value": "82-byte lines, 80 columns + CRLF",
@@ -778,6 +785,12 @@
         "locator": "Entering Commands",
         "sourceDate": "2001-07-09",
         "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "epa-session-1978",
+        "locator": "pp. 184-185, every command line begins with a question mark",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
       }
     ]
   },
@@ -817,7 +830,8 @@
         "observedSystem": "DIALOG general"
       }
     ],
-    "note": "No space between '?' and the typed command in the 1978/1981 printing-terminal facsimiles, the 1988 magazine figures, or the 1994 printouts; the 1984 cursor sits immediately after '?', confirming the space, where it appears elsewhere, is the searcher's typing or a compositor's."
+    "note": "No space between '?' and the typed command in the 1978/1981 printing-terminal facsimiles, the 1988 magazine figures, or the 1994 printouts; the 1984 cursor sits immediately after '?', confirming the space, where it appears elsewhere, is the searcher's typing or a compositor's.",
+    "conflicts": "the 1978 handbook prints a space after the prompt; that source is a typeset reproduction whose spacing is the compositor's, not DIALOG's (its own LOG.md records 'Printed16/' as a spacing artifact on the same pages), so the fixed-pitch facsimiles of 1978-81, 1988 and 1994 are followed instead."
   },
   "proto.begin.banner": {
     "value": {
@@ -826,7 +840,7 @@
     },
     "status": "inferred",
     "claim": "Starting the session prints a banner naming the file number and its title; File 60's own date-range text is not known.",
-    "note": "shape documented (1984, 1988, 2001); File 60's date-range string unknown",
+    "note": "shape documented (1978, 1984, 1988, 2001); File 60's own date-range string is documented for 1978 as '75-MAR78' and is not recorded for 1990-1994",
     "sources": [
       {
         "source": "curso-1994",
@@ -838,6 +852,12 @@
         "source": "bluesheet-1998-page",
         "locator": "SAMPLE RECORD row 1, 'DIALOG(R)File  60:CRIS/USDA'",
         "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "epa-session-1978",
+        "locator": "p. 184, '? BEGIN 60' answered 'File60:USDA/CRIS  75-MAR78'",
+        "sourceDate": "1978-02-28",
         "observedSystem": "File 60"
       }
     ],
@@ -868,9 +888,16 @@
         "locator": "page 99 (printed 113), fixed-pitch printout after '?b 49'",
         "sourceDate": "1994",
         "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "epa-session-1978",
+        "locator": "p. 184, 'Set  Items  Description  (+=OR;*=AND;-=NOT)' and its dashed rule",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
       }
     ],
-    "decision": "The value is a direct pixel measurement of the page 99/printed 113 fixed-pitch printout (400 dpi render, character ink bounding boxes calibrated against the 'File  49:' line's known column-7 field). Measured: Set at column 7, Items at column 12, Description at column 19 -- a 6-space indent with double-space separators, consistent with render.setline.columns' setCol 7 / descCol 19. See fixtures/SOURCES.md. This value is measured from the page 99/printed 113 source only; the 1984 video frame (14:57) and page 114 (printed 131) are corroborating for the header's shape (a 'Set / Items / Description' block with a dashed rule beneath it appears at both) and were not independently re-measured for column spacing -- page 114 in particular is a degraded photocopy mixing typefaces, not a clean column source."
+    "decision": "The value is a direct pixel measurement of the page 99/printed 113 fixed-pitch printout (400 dpi render, character ink bounding boxes calibrated against the 'File  49:' line's known column-7 field). Measured: Set at column 7, Items at column 12, Description at column 19 -- a 6-space indent with double-space separators, consistent with render.setline.columns' setCol 7 / descCol 19. See fixtures/SOURCES.md. This value is measured from the page 99/printed 113 source only; the 1984 video frame (14:57) and page 114 (printed 131) are corroborating for the header's shape (a 'Set / Items / Description' block with a dashed rule beneath it appears at both) and were not independently re-measured for column spacing -- page 114 in particular is a degraded photocopy mixing typefaces, not a clean column source.",
+    "conflicts": "the 1978 File 60 header carries an operator legend, 'Set  Items  Description  (+=OR;*=AND;-=NOT)', with a dashed rule the width of that longer heading; the 1984, 1988 and 1994 forms carry neither. The printed value follows the 1994 measurement; the 1978 form is recorded as a documented change in form before the anchor period."
   },
   "proto.select.per_term_postings": {
     "value": true,
