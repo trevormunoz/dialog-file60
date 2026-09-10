@@ -17,30 +17,38 @@ from pathlib import Path
 if "CRIS_ACQUISITION" not in os.environ:
     sys.exit("set CRIS_ACQUISITION to the acquisition directory; see the docstring")
 ACQ = Path(os.environ["CRIS_ACQUISITION"])
-_warcs = sorted(ACQ.glob("output/collections/*/archive/*.warc.gz"))
-if len(_warcs) != 1:
-    sys.exit(f"expected exactly one .warc.gz under {ACQ}/output/collections/*/archive/, found {len(_warcs)}")
-WARC = _warcs[0]
+WARCS = sorted(ACQ.glob("output/collections/*/archive/*.warc.gz"))
+if not WARCS:
+    sys.exit(f"no .warc.gz under {ACQ}/output/collections/*/archive/")
 FIXITY = ACQ / "validation/payload-fixity.json"
 OUT = Path(__file__).resolve().parent.parent / "data"
 
-def main(name: str) -> None:
-    fix = {p["filename"]: p for p in json.load(FIXITY.open())["payloads"]}
-    want = fix[name]
-    data = gzip.open(WARC, "rb").read()
+def find_payload(warc: Path, name: str) -> bytes | None:
+    """The response record whose target URI ends in /<name>, or None if this WARC lacks it."""
+    data = gzip.open(warc, "rb").read()
     pos = 0
-    payload = None
-    while payload is None:
+    while True:
         i = data.find(b"WARC/1.", pos)
         if i < 0:
-            sys.exit(f"{name} not found in WARC")
+            return None
         j = data.find(b"\r\n\r\n", i)
         hdr = data[i:j].decode("latin-1")
         length = int(re.search(r"Content-Length: (\d+)", hdr).group(1))
         body = data[j + 4 : j + 4 + length]
         pos = j + 4 + length
         if "WARC-Type: response" in hdr and hdr.split("WARC-Target-URI: ")[1].split()[0].endswith("/" + name):
-            payload = body[body.find(b"\r\n\r\n") + 4 :]
+            return body[body.find(b"\r\n\r\n") + 4 :]
+
+def main(name: str) -> None:
+    fix = {p["filename"]: p for p in json.load(FIXITY.open())["payloads"]}
+    want = fix[name]
+    payload = None
+    for warc in WARCS:  # a capture may span several WARC files; the member is in one of them
+        payload = find_payload(warc, name)
+        if payload is not None:
+            break
+    if payload is None:
+        sys.exit(f"{name} not found in any of {len(WARCS)} WARC files")
     sha = hashlib.sha256(payload).hexdigest()
     if sha != want["sha256"] or len(payload) != want["captured_bytes"]:
         sys.exit(f"fixity mismatch: {sha} {len(payload)} vs {want}")
