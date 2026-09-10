@@ -23,6 +23,14 @@ const stubRecord: LogicalRecord = {
     { tag: "IN", values: [{ raw: "HAMMERSCHLAG  F A", line: 83060, offset: (83060 - 1) * 82 }], lineStart: 83060, lineEnd: 83060, offset: (83060 - 1) * 82, length: 82 },
     { tag: "TI", values: [{ raw: "SOIL EROSION STUDY", line: 83061, offset: (83061 - 1) * 82 }], lineStart: 83061, lineEnd: 83061, offset: (83061 - 1) * 82, length: 82 },
     { tag: "AB", values: [{ raw: LONG_RAW, line: 83070, offset: (83070 - 1) * 82 }], lineStart: 83070, lineEnd: 83070, offset: (83070 - 1) * 82, length: 82 },
+    {
+      tag: "SC",
+      values: [
+        { raw: "S1015", code: "S1015", line: 83080, offset: (83080 - 1) * 82 },
+        { raw: "S2610", code: "S2610", line: 83081, offset: (83081 - 1) * 82, continuation: true },
+      ],
+      lineStart: 83080, lineEnd: 83081, offset: (83080 - 1) * 82, length: 164,
+    },
   ],
 };
 const engine = { record: async (_ordinal: number) => stubRecord } as unknown as RetrievalEngine;
@@ -410,6 +418,26 @@ test("opening inspect calls onExpand, on a click and on Alt+I, without touching 
   document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "i", altKey: true, bubbles: true, cancelable: true }));
   await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
   expect(expandCount).toBe(3);
+});
+
+// record.ts drops the 0xAC byte itself from the value's text before the panel ever sees it
+// (phraseKey and the index must never see it); the panel needs a separate signal to know a
+// value was opened by one, so it can still show the reader the byte the file actually holds.
+test("the bytes card shows the continuation byte on a value that a 0xAC opened", async () => {
+  const root = document.createElement("div");
+  const printout = document.createElement("pre");
+  const span = document.createElement("span");
+  span.dataset.ordinal = "0"; span.dataset.tags = "SC"; span.dataset.keys = "map.IN"; span.dataset.valueIndex = "1";
+  span.tabIndex = 0;
+  span.textContent = "  S2610\n";
+  printout.appendChild(span);
+  disposers.push(mountInspect(root, printout, engine, source));
+
+  span.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+
+  const card = [...root.querySelectorAll(".card")].find(c => c.querySelector("h3")?.childNodes[0]?.textContent === "The bytes in the NARA file")!;
+  expect(card.textContent).toContain("[AC]");
 });
 
 test("mountInspect works with no onExpand callback given", async () => {

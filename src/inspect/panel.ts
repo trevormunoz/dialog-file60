@@ -33,7 +33,7 @@ export const FY1994_TAPE: TapeProvenance = {
 
 export interface InspectView {
   historical: string[]; dialog: { code: string; value: string }[];
-  source: { tag: string; raw: string; line: number; offset: number }[];
+  source: { tag: string; raw: string; line: number; offset: number; continuation?: boolean }[];
   archival: { file: string; naid: string; lines: string; offset: number; length: number; profile: string; sha256: string };
   tape: TapeProvenance;
   /** `sources[].source` carries the registry's citation key alongside the
@@ -81,7 +81,7 @@ function pickValues(rec: LogicalRecord, tag: string, valueIndex: number | undefi
  * row) instead of every value the tag carries. */
 export function describeLine(rec: LogicalRecord, sources: { tag: string; valueIndex?: number }[], keys: string[], tape: TapeProvenance, sourceFile: SourceFile): InspectView {
   const source = sources.flatMap(({ tag, valueIndex }) =>
-    pickValues(rec, tag, valueIndex).map(v => ({ tag, raw: v.raw, line: v.line, offset: v.offset })));
+    pickValues(rec, tag, valueIndex).map(v => ({ tag, raw: v.raw, line: v.line, offset: v.offset, continuation: v.continuation })));
   const tags = [...new Set(sources.map(s => s.tag))];
   const dialog = tags.map(t => {
     const m = MAP[t];
@@ -222,6 +222,11 @@ async function openInspect(root: HTMLElement, printout: HTMLElement, engine: Ret
       // resolve an external stylesheet against elements a test builds by hand.
       const pre = document.createElement("pre");
       pre.style.whiteSpace = "pre-wrap"; pre.style.overflowWrap = "anywhere"; pre.style.margin = "0";
+      if (s.continuation) {
+        registry.get("formatb.encoding.continuation_0xAC"); // cited here, where the panel shows the byte a value was opened by
+        const marker = document.createElement("b"); marker.textContent = "[AC]";
+        pre.append(marker, " ");
+      }
       pre.append(`${s.tag} `, bytesNode(s.raw), `  —  line ${s.line.toLocaleString()}, byte ${s.offset.toLocaleString()} of ${view.archival.file}`);
       return pre;
     }),

@@ -2,7 +2,7 @@ import { LINE_BYTES, DATA_START, DATA_END, latin1 } from "./index";
 import type { RecordSpan } from "./offsets";
 import { PROFILES, type Profile } from "./profiles";
 
-export interface SourceValue { raw: string; code?: string; label?: string; line: number; offset: number; }
+export interface SourceValue { raw: string; code?: string; label?: string; line: number; offset: number; continuation?: true; }
 export interface SourceField { tag: string; values: SourceValue[]; lineStart: number; lineEnd: number; offset: number; length: number; }
 export interface LogicalRecord {
   file: string; firstLine: number; lastLine: number; offset: number; length: number; an: string; fields: SourceField[];
@@ -51,7 +51,7 @@ export function parseRecord(bytes: Uint8Array, span: RecordSpan, file: string, p
     } else if (cur) {
       cur.lineEnd = line; cur.length = (line - cur.lineStart + 1) * LINE_BYTES;
       if (data[0] === p.continuationByte) {
-        cur.values.push({ raw: latin1(data.subarray(1)), line, offset: (line - 1) * LINE_BYTES });
+        cur.values.push({ raw: latin1(data.subarray(1)), line, offset: (line - 1) * LINE_BYTES, continuation: true });
       } else {
         const last = cur.values[cur.values.length - 1]!;
         last.raw += latin1(data); // no character inserted: "dis" + "ease"

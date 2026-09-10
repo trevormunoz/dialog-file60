@@ -33,6 +33,14 @@ test("SC values split into code and label at 0xA0 0x02", () => {
   expect(field(rec, "SN")!.values.map(v => v.raw)).toEqual(["070%", "015%"]);
 });
 
+test("a value opened by a 0xAC continuation is marked, and its raw text excludes the byte", () => {
+  const sc = fields(rec, "SC").flatMap(f => f.values);
+  expect(sc[0]!.continuation).toBeUndefined();
+  expect(sc[1]!.continuation).toBe(true);
+  expect(sc[1]!.raw.startsWith("¬")).toBe(false);
+  expect(sc[1]!.code).toBe("S2610");
+});
+
 test("PH lines carry code and label too", () => {
   expect(fields(rec, "PH")[0]!.values[0]).toMatchObject({ code: "R304", label: "Biological Efficiency-Fruit, Vegetables" });
 });

@@ -69,7 +69,7 @@
         "observedSystem": "NARA"
       }
     ],
-    "note": "0xAC/0xA0/0x02 are taken to be EBCDIC-to-ASCII conversion products; code page unknown"
+    "note": "0xAC/0xA0/0x02 are taken to be EBCDIC-to-ASCII conversion products; code page unknown. All three now render as visible glyphs in the inspect panel's bytes card."
   },
   "formatb.encoding.continuation_0xAC": {
     "value": "0xAC at column 4 starts a new value",
@@ -82,7 +82,8 @@
         "sourceDate": "1994",
         "observedSystem": "Format B"
       }
-    ]
+    ],
+    "note": "The byte is not part of the value's text; parseRecord drops it and marks the value it opened as a continuation instead. The inspect panel shows it as [AC] on those values."
   },
   "formatb.encoding.separator_0xA0_0x02": {
     "value": "code, 0xA0 0x02, label",
