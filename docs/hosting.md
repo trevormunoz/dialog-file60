@@ -14,18 +14,18 @@ one environment variable to change later (`FILE60_CORPUS_BASE_URL`), should
 the traffic profile change; no Worker sits in front of the bucket.
 
 **Layout**, under the `v1/` prefix (`v1` is the derived-artifact version;
-it is bumped whenever the loader changes, so `immutable` caching is never a
-stale-content race):
+it is bumped whenever the loader changes the bytes of an object already
+uploaded, so `immutable` caching is never a stale-content race; objects
+that are only added, such as the 23 phrase indexes added on 2026-09-10 when
+the loader grew from 6 phrase prefixes to 29, go under the same prefix):
 
 ```
 v1/RG164.CRIS.FY94.txt   277,539,004 bytes, byte-identical to data/RG164.CRIS.FY94.txt
 v1/offsets.json              933,038 bytes
-v1/index/AN.json             602,533 bytes
-v1/index/CY.json             204,370 bytes
-v1/index/DS.json             197,223 bytes
-v1/index/IN.json             825,444 bytes
-v1/index/SF.json             193,462 bytes
-v1/index/ST.json             194,715 bytes
+v1/index/<PREFIX>.json       one per phrase prefix, 29 in all (every documented
+                             prefix but SP, which has no values in this corpus);
+                             AN 602,533, CY 204,370, DS 197,223, IN 825,444,
+                             SF 193,462, ST 194,715 bytes
 v1/word/<CODE>/terms.json           one per code, for the nine codes in indexes.md
 v1/word/<CODE>/<A-Z,0-9,_>.json     the shards; 342 word-index objects in all,
                                     100,510,856 bytes, the same bytes as on disk
