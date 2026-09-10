@@ -2,6 +2,22 @@ import type { Offsets } from "../loader/corpus-format";
 
 const escapeHtml = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/**
+ * The four dt/dd pairs both the statement panel's Integrity details and the paper-mode
+ * sheet's header carry: corpus file, SHA-256, software version, registry hash. The panel
+ * and the sheet show the SHA-256 cell differently -- a truncated hash behind a checkbox
+ * reveal on the panel, the full hash plainly on the sheet -- so that cell's markup is
+ * passed in rather than built here.
+ */
+function integrityRows(offsets: Offsets, opts: { hashCell: string }): string {
+  return [
+    `<dt>Corpus file</dt><dd>${escapeHtml(offsets.file)}</dd>`,
+    `<dt>SHA-256</dt><dd>${opts.hashCell}</dd>`,
+    `<dt>Software version</dt><dd>${escapeHtml(__APP_VERSION__)}</dd>`,
+    `<dt>Registry hash</dt><dd>${escapeHtml(__REGISTRY_HASH__)}</dd>`,
+  ].join("\n");
+}
+
 // The bar (main.ts) carries this same heading as plain text beside the statement panel's own
 // <h2>. One constant, so the two copies cannot drift apart.
 export const BAR_HEADING = "A reconstruction, not a recorded session";
@@ -76,17 +92,16 @@ export function reconstructionProse(offsets: Offsets, registryUrl: string): stri
       `it was inferred or chosen.</p>`,
     `<details><summary>Integrity</summary>`,
     `<dl>`,
-    `<dt>Corpus file</dt><dd>${escapeHtml(offsets.file)}</dd>`,
     // Truncated to 12 characters with a checkbox+label reveal for the rest -- see
     // index.html's .hash-toggle rules; the full hash stays in the markup either way. The
     // checkbox precedes both hash forms so a sibling selector can gate each one.
-    `<dt>SHA-256</dt><dd>` +
-      `<input type="checkbox" id="hash-full-toggle" class="hash-toggle">` +
-      `<label for="hash-full-toggle" class="hash-toggle-label">show full</label>` +
-      `<code class="hash-short">${escapeHtml(offsets.sha256.slice(0, 12))}</code>` +
-      `<code class="hash-full">${escapeHtml(offsets.sha256)}</code></dd>`,
-    `<dt>Software version</dt><dd>${escapeHtml(__APP_VERSION__)}</dd>`,
-    `<dt>Registry hash</dt><dd>${escapeHtml(__REGISTRY_HASH__)}</dd>`,
+    integrityRows(offsets, {
+      hashCell:
+        `<input type="checkbox" id="hash-full-toggle" class="hash-toggle">` +
+        `<label for="hash-full-toggle" class="hash-toggle-label">show full</label>` +
+        `<code class="hash-short">${escapeHtml(offsets.sha256.slice(0, 12))}</code>` +
+        `<code class="hash-full">${escapeHtml(offsets.sha256)}</code>`,
+    }),
     `</dl>`,
     `</details>`,
   ].join("\n");
@@ -105,10 +120,7 @@ export function sheetHeaderFragment(offsets: Offsets): string {
   return [
     headerFragment(),
     `<dl>`,
-    `<dt>Corpus file</dt><dd>${escapeHtml(offsets.file)}</dd>`,
-    `<dt>SHA-256</dt><dd><code>${escapeHtml(offsets.sha256)}</code></dd>`,
-    `<dt>Software version</dt><dd>${escapeHtml(__APP_VERSION__)}</dd>`,
-    `<dt>Registry hash</dt><dd>${escapeHtml(__REGISTRY_HASH__)}</dd>`,
+    integrityRows(offsets, { hashCell: `<code>${escapeHtml(offsets.sha256)}</code>` }),
     `</dl>`,
   ].join("\n");
 }

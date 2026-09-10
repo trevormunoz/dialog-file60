@@ -7,6 +7,7 @@
 // environment wiring in vitest.config.ts before covering DomSink's actual contract.
 import { readFileSync } from "node:fs";
 import { DomSink, type Scheduler } from "../../src/terminal/sink";
+import { PaperPause } from "../../src/terminal/display-mode";
 import { DialogSession } from "../../src/dialog/session";
 import { RetrievalEngine, type RangeReader } from "../../src/retrieval/engine";
 import { registry } from "../../src/registry";
@@ -440,6 +441,24 @@ describe("paper mode", () => {
     expect(document.documentElement.classList.contains("pending")).toBe(false);
     restyle(f.sink.printout);
     expect(getComputedStyle(f.sink.printout).visibility).not.toBe("hidden");
+  });
+
+  test("a pause superseded by a leave and a new enter is not ended early by the first pause's stale timer", () => {
+    const clock = new FakeClock();
+    const pause = new PaperPause(clock.schedule);
+    const ends: number[] = [];
+    pause.enter({}, () => ends.push(clock.now)); // t=0: schedules an end at t=600
+    clock.now = 200;
+    pause.leave(() => ends.push(clock.now)); // t=200: ends immediately, but the t=600 timer is still pending
+    clock.now = 400;
+    pause.enter({}, () => ends.push(clock.now)); // t=400: schedules a new end at t=1000
+    expect(clock.step()).toBe(true); // the stale t=600 callback runs and must do nothing
+    expect(clock.now).toBe(600);
+    expect(document.documentElement.classList.contains("pending")).toBe(true);
+    expect(clock.step()).toBe(true); // the t=1000 callback ends the second pause
+    expect(clock.now).toBe(1000);
+    expect(document.documentElement.classList.contains("pending")).toBe(false);
+    expect(ends).toEqual([200, 1000]);
   });
 
   test("no pause under reduced motion", () => {

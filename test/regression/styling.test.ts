@@ -171,6 +171,13 @@ test("the print block hides the same chrome the paper block hides and lays out t
     expect(html).toContain(`:root.paper ${rule}`);
     expect(printBlock).toContain(rule);
   }
+  expect(html).toContain(":root.paper #bar{justify-content:center;background:transparent;color:var(--ink);border-bottom:0}");
+  expect(printBlock).toContain("#bar{justify-content:center;background:transparent;color:var(--ink);border-bottom:0}");
+  expect(html).toContain(":root.paper .promptline{width:80ch;max-width:100%}");
+  expect(printBlock).toContain(".promptline{width:80ch}");
   expect(printBlock).toMatch(/#sheet\{width:calc\(80ch \+ 6\.5rem\)/);
   expect(printBlock).toMatch(/\.printout\{border-right:0;width:80ch\}/);
+  // A printed page carries no display-mode control; the paper screen keeps it.
+  expect(printBlock).toContain("#display-mode{display:none}");
+  expect(html).not.toMatch(/:root\.paper #display-mode\{display:none\}/);
 });

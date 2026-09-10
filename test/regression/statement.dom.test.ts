@@ -70,7 +70,10 @@ test("the sheet header shows the corpus SHA-256 and the registry hash", () => {
 
 // headerFragment is the one export reconstructionProse and sheetHeaderFragment both build
 // on, so the heading and framing paragraph read identically in the panel and on the sheet.
-test("the panel and the sheet header render the same heading and statement paragraph", () => {
+// The corpus-file, software-version, and registry-hash cells come from the one integrityRows
+// helper both fragments call, so they must match too -- only the SHA-256 cell is allowed to
+// differ, since the panel truncates it behind a checkbox reveal and the sheet shows it plain.
+test("the panel and the sheet header render the same heading, statement paragraph, and integrity cells", () => {
   const panel = document.createElement("div");
   panel.innerHTML = reconstructionProse(offsets, registryUrl);
   const sheet = document.createElement("div");
@@ -78,6 +81,16 @@ test("the panel and the sheet header render the same heading and statement parag
   expect(sheet.querySelector("h2")!.textContent).toBe(panel.querySelector("h2")!.textContent);
   expect(sheet.querySelector("p")!.textContent).toBe(panel.querySelector("p")!.textContent);
   expect(sheetHeaderFragment(offsets)).toContain(headerFragment());
+  const cellsOf = (root: HTMLElement) => {
+    const dts = [...root.querySelectorAll("dt")];
+    const dds = [...root.querySelectorAll("dd")];
+    return Object.fromEntries(dts.map((dt, i) => [dt.textContent, dds[i]!.innerHTML]));
+  };
+  const panelCells = cellsOf(panel);
+  const sheetCells = cellsOf(sheet);
+  for (const label of ["Corpus file", "Software version", "Registry hash"]) {
+    expect(sheetCells[label]).toBe(panelCells[label]);
+  }
 });
 
 // The sheet header lives inside #sheet in every mode (statement.ts builds no DOM of its own,

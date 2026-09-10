@@ -1063,7 +1063,7 @@
         "observedSystem": "DIALOG general"
       }
     ],
-    "note": "The sheet refuses paper colour, striping, perforations and page marks because the surviving printouts are photocopies that destroy stock and ribbon colour; the strip is drawn because tractor feed is documented on every in-period page while the paper is not; no surviving line reaches 80 columns (longest measured 71), so the 80-column measure is the app's inferred width, not a count; the 1978 and 1981 ONTAP manuals are printing-terminal facsimiles at 40 columns and pre-anchor."
+    "note": "The sheet refuses paper colour, striping, perforations and page marks because the surviving printouts are photocopies that destroy stock and ribbon colour; the strip is drawn because tractor feed is documented on every in-period page while the paper is not; no line measured on the four 1993-94 facsimiles reaches 80 columns (the longest is 71), so the 80-column measure is the app's inferred width, not a count; the 1978 and 1981 ONTAP manuals are printing-terminal facsimiles at 40 columns and pre-anchor."
   },
   "terminal.paper_input_weight": {
     "value": "on the paper sheet, typed command lines render bold; output does not",

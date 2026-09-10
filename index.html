@@ -169,7 +169,9 @@
      rules paper mode applies, not a separate feature. Selector-for-selector the same hides
      and the same sheet layout as the :root.paper rules above. */
   @media print{
+    #bar{justify-content:center;background:transparent;color:var(--ink);border-bottom:0}
     #bar > *:not(#display-mode){display:none}
+    #display-mode{display:none}
     aside{display:none}
     .pane-label{display:none}
     #notice{display:none}
@@ -178,6 +180,7 @@
     #sheet{width:calc(80ch + 6.5rem);background:var(--ground);color:var(--ink);position:relative;padding:2.25rem 1.75rem 2rem 4.75rem;background-image:repeating-linear-gradient(to bottom, transparent 0 .55rem, var(--sprocket) .55rem 1.05rem, transparent 1.05rem 1.6rem);background-size:.6rem 1.6rem;background-repeat:repeat-y;background-position:1.15rem 0}
     #sheet::before{content:"";position:absolute;top:0;bottom:0;left:2.9rem;border-left:1px solid var(--sprocket)}
     .printout{border-right:0;width:80ch}
+    .promptline{width:80ch}
     [data-echo]{font-weight:700}
     #sheet-header{display:block;width:80ch}
   }

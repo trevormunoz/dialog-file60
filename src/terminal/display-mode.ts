@@ -1,7 +1,5 @@
 // Display mode: the type, the injected scheduler it shares with paced output, and paper
-// mode's own class toggling and pause. Split out of sink.ts to keep that file under 300 lines
-// (design note: "if sink.ts crosses it, the mode handling splits into
-// src/terminal/display-mode.ts").
+// mode's own class toggling and pause. Split out of sink.ts to keep that file under 300 lines.
 
 /** "printout" (the default) keeps
  * every line and lets the pane scroll -- a printing terminal's paper; "screen" keeps only the
@@ -27,23 +25,30 @@ export const PAPER_DELAY_MS = 600;
  * running immediately (the same queue a second Enter during a drain already uses). */
 export class PaperPause {
   pending = false;
+  private generation = 0;
   constructor(private schedule: Scheduler) {}
   /** Adds the `paper` class. A restored mode (main.ts applying a stored mode on load) or
    * reduced motion shows the sheet at once; a live switch adds `pending` and calls `onEnd`
    * once the scheduled pause completes -- the pause marks the act of switching, not the page
-   * loading. */
+   * loading. The generation counter is bumped so a pause superseded by a later enter or leave
+   * cannot fire its callback after the fact. */
   enter(opts: { restored?: boolean }, onEnd: () => void): void {
+    const generation = ++this.generation;
     const root = document.documentElement;
     root.classList.add("paper");
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (opts.restored || reduced) { this.end(onEnd); return; }
     this.pending = true;
     root.classList.add("pending");
-    this.schedule(() => { this.end(onEnd); }, PAPER_DELAY_MS);
+    this.schedule(() => {
+      if (generation !== this.generation) return;
+      this.end(onEnd);
+    }, PAPER_DELAY_MS);
   }
   /** Removes the `paper` class immediately, with no pause, and releases anything still queued
    * behind a pause that had not finished. */
   leave(onEnd: () => void): void {
+    this.generation++;
     document.documentElement.classList.remove("paper");
     this.end(onEnd);
   }
