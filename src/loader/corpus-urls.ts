@@ -43,3 +43,10 @@ export const wordDir = (code: string): string => code.replace(/[/=]/g, "");
 export const wordTermsUrl = (code: string, env: UrlEnv): string => `${corpusBase(env)}word/${wordDir(code)}/terms.json`;
 export const wordShardUrl = (code: string, shard: string, env: UrlEnv): string =>
   `${corpusBase(env)}word/${wordDir(code)}/${shard}.json`;
+
+/** The merged Basic Index term list -- the union of /TX, /TI, /DE and /PB, one entry per term
+ * with the true union count of its postings across the four codes -- built once by the loader
+ * (src/loader/index-builder.ts) instead of recomputed in the browser by loading every shard of
+ * all four codes for a bare EXPAND. */
+export const MERGED_WORD_DIR = "_merged";
+export const mergedWordTermsUrl = (env: UrlEnv): string => `${corpusBase(env)}word/${MERGED_WORD_DIR}/terms.json`;

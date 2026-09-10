@@ -31,6 +31,12 @@ its postings count, sorted by byte order of the uppercased key) and
 `public/corpus/word/<CODE>/<SHARD>.json` (that shard's terms, each mapped
 to its postings array).
 
+**Merged Basic Index** (`public/corpus/word/_merged/terms.json`). A bare
+EXPAND with no suffix browses the union of `/TX`, `/TI`, `/DE` and `/PB`,
+each term paired with the true union count of its postings across the four
+codes. The loader builds this file once, so the browser never loads every
+shard of all four codes for that browse.
+
 **Measured** (2026-09-10, `pnpm load` against the full 277,539,004-byte
 corpus, 34,090 records):
 
@@ -54,9 +60,8 @@ tokens AP 106,628; DE 64,918; OB 80,842; PB 144,939; PF 1,326; PI 1,680; PR
 166,045; TI 25,856; union of all eight tags 353,644. The loader's own
 per-code counts run lower than the independent check's per-tag counts (stop
 words dropped) and `/TX`'s count is higher than any one of its three
-component tags (it is
-their union) -- the check confirms magnitude, not equality, and both runs
-agree records = 34,090.
+component tags (it is their union) -- the check confirms magnitude, not
+equality, and both runs agree records = 34,090.
 
 **Report.** `public/corpus/report.json` (not uploaded, see
 [Hosting](hosting.md)) carries `wordTerms` and `wordPostings`, the per-code

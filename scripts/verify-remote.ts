@@ -21,7 +21,7 @@ import { createHash } from "node:crypto";
 import { checkFixity, type Fixity } from "../src/loader/fixity";
 import { PHRASE_FIELDS } from "../src/loader/corpus-format";
 import { WORD_CODES, shardOf } from "../src/loader/words";
-import { wordDir } from "../src/loader/corpus-urls";
+import { wordDir, MERGED_WORD_DIR } from "../src/loader/corpus-urls";
 import { registry } from "../src/registry";
 
 const CORPUS_FILE = "RG164.CRIS.FY94.txt";
@@ -37,6 +37,7 @@ export interface RemoteReport {
   rangeMatchesFixtureBytes: boolean;
   indexes: { code: string; status: number; bytes: number }[];
   words: { code: string; shard: string; termsBytes: number; shardBytes: number }[];
+  mergedTermsBytes: number;
 }
 
 export interface VerifyOpts {
@@ -108,6 +109,16 @@ export async function verifyRemote(baseUrl: string, opts: VerifyOpts = {}): Prom
     words.push({ code, shard, termsBytes: termsBytes.length, shardBytes: shardBytes.length });
   }
 
+  // The prebuilt merged Basic Index term list (src/loader/index-builder.ts's mergedTerms),
+  // the file a bare EXPAND now reads instead of every shard of all four merged codes.
+  const mergedTermsUrl = `${base}word/${MERGED_WORD_DIR}/terms.json`;
+  const mergedTermsRes = await f(mergedTermsUrl);
+  if (!mergedTermsRes.ok) {
+    throw new Error(`${mergedTermsUrl.slice(base.length)}: HTTP ${mergedTermsRes.status} ${mergedTermsRes.statusText}`);
+  }
+  const mergedTermsBytes = new Uint8Array(await mergedTermsRes.arrayBuffer());
+  if (mergedTermsBytes.length === 0) throw new Error(`${mergedTermsUrl.slice(base.length)}: empty body`);
+
   return {
     baseUrl: base,
     corpusBytes: bytes.length,
@@ -117,6 +128,7 @@ export async function verifyRemote(baseUrl: string, opts: VerifyOpts = {}): Prom
     rangeMatchesFixtureBytes,
     indexes,
     words,
+    mergedTermsBytes: mergedTermsBytes.length,
   };
 }
 
@@ -138,6 +150,7 @@ if (process.argv[1]?.endsWith("verify-remote.ts")) {
     report.words.map(w =>
       `word/${wordDir(w.code)}/terms.json ${w.termsBytes} bytes, ` +
       `word/${wordDir(w.code)}/${w.shard}.json ${w.shardBytes} bytes`,
-    ).join("\n"),
+    ).join("\n") + "\n" +
+    `word/${MERGED_WORD_DIR}/terms.json ${report.mergedTermsBytes} bytes`,
   );
 }

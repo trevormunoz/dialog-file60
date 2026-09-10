@@ -15,6 +15,10 @@ const COMPOSITE = ["RP", "AC", "CM", "FS", "CT"] as const;
 const GC = ["PA", "JC"] as const;
 const SC_SN = ["SC", "SN"] as const;
 
+// The four word codes the Basic Index (EXPAND with no prefix) merges -- src/retrieval/engine.ts
+// termList("*") and termOrdinals("*") union these same four.
+const MERGED_WORD_CODES = ["/TX", "/TI", "/DE", "/PB"] as const;
+
 const mismatched = (rec: LogicalRecord, tags: readonly string[]): boolean =>
   new Set(tags.map(t => fields(rec, t).flatMap(f => f.values).length)).size > 1;
 
@@ -74,5 +78,21 @@ export function buildIndexes(bytes: Uint8Array, file: string) {
     report.wordTerms[code] = pairs.length;
     report.wordPostings[code] = pairs.reduce((sum, [, n]) => sum + n, 0);
   }
-  return { offsets, indexes, words, report, structure };
+  // The merged Basic Index term list: every term any of the four codes carries, paired with
+  // the true union count of its postings across all four -- the same figure a SELECT on the
+  // term's E-number retrieves, built once here rather than recomputed in the browser.
+  const mergedPostings = new Map<string, Set<number>>();
+  for (const code of MERGED_WORD_CODES) {
+    for (const shard of Object.values(words[code]!.shards)) {
+      for (const [term, postings] of Object.entries(shard)) {
+        const set = mergedPostings.get(term) ?? new Set<number>();
+        for (const o of postings) set.add(o);
+        mergedPostings.set(term, set);
+      }
+    }
+  }
+  const mergedTerms: [string, number][] = [...mergedPostings.entries()]
+    .map(([term, set]): [string, number] => [term, set.size])
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return { offsets, indexes, words, report, structure, mergedTerms };
 }

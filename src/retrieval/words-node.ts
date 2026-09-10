@@ -4,7 +4,7 @@
 // externalizes it, printing a warning on every `pnpm build` -- the same reason FsRangeReader
 // is kept out of ./reader in ./reader-node. In its own Node-only module the browser graph
 // contains no node: specifier at all; the browser never imports this file.
-import { wordDir } from "../loader/corpus-urls";
+import { wordDir, MERGED_WORD_DIR } from "../loader/corpus-urls";
 import type { WordIndexSource } from "./words";
 
 /** Node: the word-index shard and terms files, read from disk under `root` (public/corpus in
@@ -21,5 +21,8 @@ export class FsWordIndex implements WordIndexSource {
   }
   terms(code: string): Promise<[string, number][]> {
     return this.read(`${this.root}/word/${wordDir(code)}/terms.json`) as Promise<[string, number][]>;
+  }
+  mergedTerms(): Promise<[string, number][]> {
+    return this.read(`${this.root}/word/${MERGED_WORD_DIR}/terms.json`) as Promise<[string, number][]>;
   }
 }

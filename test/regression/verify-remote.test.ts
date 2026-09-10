@@ -4,7 +4,7 @@ import { verifyRemote } from "../../scripts/verify-remote";
 import { registry } from "../../src/registry";
 import type { Fixity } from "../../src/loader/fixity";
 import { WORD_CODES } from "../../src/loader/words";
-import { wordDir } from "../../src/loader/corpus-urls";
+import { wordDir, MERGED_WORD_DIR } from "../../src/loader/corpus-urls";
 import { PHRASE_FIELDS } from "../../src/loader/corpus-format";
 
 // verifyRemote is the deploy-time check that the public copy of the
@@ -58,6 +58,7 @@ const okIndexes = Object.fromEntries([
   ["https://corpus.example/v1/offsets.json", '{"file":"RG164.CRIS.FY94.txt","sha256":"x","records":[]}'],
   ...INDEX_CODES.map(c => [`https://corpus.example/v1/index/${c}.json`, `{"code":"${c}","terms":{}}`]),
   ...wordUrls,
+  [`https://corpus.example/v1/word/${MERGED_WORD_DIR}/terms.json`, '[["A",1]]'],
 ]);
 
 test("a matching object passes and reports the corpus size, the 206 and every index", async () => {
@@ -79,6 +80,18 @@ test("a matching object passes and reports the corpus size, the 206 and every in
     expect(w.termsBytes, w.code).toBeGreaterThan(0);
     expect(w.shardBytes, w.code).toBeGreaterThan(0);
   }
+  expect(report.mergedTermsBytes).toBeGreaterThan(0);
+});
+
+test("a missing merged terms file fails with the URL and the status", async () => {
+  const missing = { ...okIndexes };
+  delete missing[`https://corpus.example/v1/word/${MERGED_WORD_DIR}/terms.json`];
+  await expect(verifyRemote("https://corpus.example/v1/", {
+    fetchImpl: stubFetch(synthetic, missing),
+    expected: syntheticFixity,
+    fixture: FIXTURE,
+    fixtureOffset: FIXTURE_OFFSET,
+  })).rejects.toThrow(new RegExp(`word/${MERGED_WORD_DIR}/terms\\.json: HTTP 404`));
 });
 
 test("a missing word terms.json fails with the URL and the status", async () => {

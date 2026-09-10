@@ -2,7 +2,7 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { buildIndexes } from "./index-builder";
 import { checkFixity, type Fixity } from "./fixity";
 import { registry } from "../registry";
-import { wordDir } from "./corpus-urls";
+import { wordDir, MERGED_WORD_DIR } from "./corpus-urls";
 
 // Node-only entry point (`pnpm load`); never imported by src/app/main.ts or any browser code.
 const file = "RG164.CRIS.FY94.txt";
@@ -12,7 +12,7 @@ const bytes = new Uint8Array(readFileSync(`data/${file}`));
 // should stop the loader with a message naming both the expected and actual values, not
 // silently produce a wrong index.
 checkFixity(bytes, registry.get("nara.file.fy1994_fixity").value as Fixity);
-const { offsets, indexes, words, report } = buildIndexes(bytes, file);
+const { offsets, indexes, words, report, mergedTerms } = buildIndexes(bytes, file);
 mkdirSync("public/corpus/index", { recursive: true });
 writeFileSync("public/corpus/offsets.json", JSON.stringify(offsets));
 for (const [code, idx] of Object.entries(indexes)) writeFileSync(`public/corpus/index/${code}.json`, JSON.stringify(idx));
@@ -27,6 +27,9 @@ for (const [code, w] of Object.entries(words)) {
   // of a non-alphanumeric-leading term gets {} instead of a 404.
   if (!("_" in w.shards)) writeFileSync(`${dir}/_.json`, JSON.stringify({}));
 }
+const mergedDir = `public/corpus/word/${MERGED_WORD_DIR}`;
+mkdirSync(mergedDir, { recursive: true });
+writeFileSync(`${mergedDir}/terms.json`, JSON.stringify(mergedTerms));
 writeFileSync("public/corpus/report.json", JSON.stringify(report, null, 1));
 console.log(
   `records ${offsets.records.length}; composite mismatches ${report.compositeMismatches.length}; ` +

@@ -139,6 +139,25 @@ test.skipIf(skip)("word indexes: non-empty terms, strictly-ascending unique post
   }
 }, 120_000);
 
+// The merged Basic Index term list (src/loader/index-builder.ts's mergedTerms, written by
+// `pnpm load` to public/corpus/word/_merged/terms.json) is checked two ways: the file the
+// loader wrote to disk exists, and one sampled term's count on disk equals a union of the
+// four codes' own postings computed here, independently of buildIndexes' own union logic.
+test.skipIf(skip)("merged Basic Index terms file exists on disk and a sampled term's count is the true union of the four codes' postings", () => {
+  const { words } = corpus();
+  expect(existsSync("public/corpus/word/_merged/terms.json")).toBe(true);
+  const onDisk: [string, number][] = JSON.parse(readFileSync("public/corpus/word/_merged/terms.json", "utf8"));
+  expect(onDisk.length).toBeGreaterThan(0);
+  const [term, count] = onDisk[Math.floor(onDisk.length / 2)]!;
+  const union = new Set<number>();
+  for (const code of ["/TX", "/TI", "/DE", "/PB"] as const) {
+    for (const shard of Object.values(words[code]!.shards)) {
+      for (const p of shard[term] ?? []) union.add(p);
+    }
+  }
+  expect(count).toBe(union.size);
+}, 120_000);
+
 // Every documented phrase prefix but SP now has a built index (round-3 finding: the
 // remaining prefixes for fields the corpus carries). SP's Format B tag is HNRIMS-only and has
 // a measured count of 0 on this corpus, so it stays the one documented prefix with no index.
