@@ -1,9 +1,10 @@
 --- RECONSTRUCTION, NOT A RECORDED SESSION ---
 DIALOG File 60 rules, anchored c. 1990-1994, applied to the FY 1994 Format B export held by NARA.
 corpus RG164.CRIS.FY94.txt sha256 437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a
-software dialog-file60 0.1.0; registry 1721bb055079
+software dialog-file60 0.1.0; registry cfe9cc864136
 ---
 ?b 60
+          03may94 10:00:00 User013140
 
 File  60:CRIS/USDA - Current Research
 
@@ -21,4 +22,3 @@ File  60:CRIS/USDA - Current Research
  (c) format only 1998 The Dialog Corporation plc
 
  09049442
- PROJ NO: 1275-21000-008-00D   AGENCY : ARS 1275
