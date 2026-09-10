@@ -1,6 +1,100 @@
 $$                                                                              
 AN 9000001                                                                      
+PD 900320                                                                       
+AS FS                                                                           
+DS PNW                                                                          
+PN PNW-1601                                                                     
+IC 005005                                                                       
+PI PACIFIC NW FOREST & RGE EX ST                                                
+CY WENATCHEE                                                                    
+ST WASHINGTON                                                                   
+ZP 98801                                                                        
+RE 4                                                                            
+PT INHOUSE                                                                      
+IN EDGERTON  P J                                                                
+TI MANAGEMENT STRATEGIES FOR UPPER SLOPE MIXED CONIFER FORESTS OF THE IN        
+   TERIOR PACIFIC NORTHWEST                                                     
+SD 850501                                                                       
+SX 01 MAY 85                                                                    
+TD 900105                                                                       
+TX 05 JAN 90                                                                    
+FY 1985                                                                         
+UP 850503                                                                       
+PP 8512                                                                         
+PX 8501 TO 8512                                                                 
+BT 100%                                                                         
+AT 000%                                                                         
+DT 000%                                                                         
+AC A4300                                                                        
+CM C0600                                                                        
+FS F0212                                                                        
+RP R107                                                                         
+CT 100%                                                                         
+PA P2.05                                                                        
+JC J1B                                                                          
 SC XFRS   Forestry Related                                                     
-    100%                                                                       
+     100%                                                                      
    ¬S0613  Other Western Conifers                                              
-    100%                                                                       
+     100%                                                                      
+SF CRIS                                                                         
+OB To provide ecologically-based guidelines for the development of refor        
+   estation and vegetation management prescriptions that enhance timber,        
+    range, wildlife, and watershed values in harvested upper slope mixed        
+    conifer forests of the interior Pacific Northwest.                          
+AP Problem 1 - Land managers need additional information on responses of        
+    out-planted conifer seedlings to environmental factors on newly harv        
+   ested sites to develop more effective reforestation prescriptions. St        
+   udies will characterize reforestation environments and determine how         
+   outplanted seedlings of major conifer species respond to specific sit        
+   e factors in terms of survival, growth, and physiological functioning        
+   . Problem 2 - A knowledge of factors which influence site productivit        
+   y and post-harvest successional trends and treatment alternatives is         
+   needed to develop vegetation management prescriptions for achieving m        
+   anagement objectives. Studies will describe vegetation development, n        
+   utrient distribution and residue decomposition on postharvest sites;         
+   specific vegetation management alternatives such as seeding and ungul        
+   ate grazing will be evaluated.                                               
+DE FORESTRY FOREST-MANAGEMENT MIXED-CONIFERS REFORESTATION ENVIRONMENTAL        
+   -FACTORS SITE-PRODUCTIVITY FOREST-VEGETATION SEEDLING-GROWTH SEEDLING        
+   -SURVIVAL FOREST-SUCCESSION MICROCLIMATE NUTRIENT-CYCLE GRAZING TIMBE        
+   R-HARVESTING WILDLIFE RANGES FOREST-WATERSHEDS SEEDLINGS                     
+PR As timber harvests progress into upper slope forests, managers encoun        
+   ter site conditions that limit the establishment and growth of tree s        
+   eedlings and other preferred vegetation. These conditions may be acce        
+   ntuated by harvest methods and other silvicultural practices. Researc        
+   h underway focuses on characterizing regeneration environments, provi        
+   ding a predictive understanding of successional trends, and determini        
+   ng the effects of selected factors on the physiological functioning,         
+   establishment and growth of outplanted tree seedlings. Harvest-induce        
+   d changes in the forest environment are being measured at several loc        
+   ations in subalpine fir, lodgepole pine, and Pacific silver fir-hemlo        
+   ck forests. The importance of this information was underscored by the        
+    results of a laboratory study showing that low soil temperature redu        
+   ced shoot growth and root elongation of Douglas-fir seedlings and is         
+   likely an important factor contributing to poor survival of seedlings        
+    outplanted at high elevation sites. Laboratory and field studies wit        
+   h other important upper slope conifers are planned. University cooper        
+   ators are completing related studies that will provide information on        
+    nutrient capital distribution and residue decomposition processes in        
+    upper slope forests. Information on vegetation dynamics of harvested        
+    sites is needed to develop vegetation management alternatives.              
+PB LOPUSHINSKY, W. and KAUFMANN, M.R. 1984. Effects of cold soil on wate        
+   r relations and spring growth of Douglas-fir seedlings. Forest Scienc        
+   e 30(3): 628-634. LITTLE, S.N. and KLOCK, G.O. 1985. The influence of        
+    residue removal and prescribed fire on distributions of forest nutri        
+   ents. Res. Pap. PNW-338. Portland, OR: HELVEY, J.D., TIEDEMANN, A.R.         
+   and ANDERSON, T.D. 1985. Plant nutrient losses by soil erosion and ma        
+   ss movement after wildfire. Journal of Soil and Water Conservation 40        
+   (1): 168-173. GEIST, J.M. and EDGERTON, P.J. 1984. Fourwing saltbush         
+   establishment in the Keating uniform shrub garden--first year results        
+   . Res. Note PNW-416. Portland, OR: U.S. Department of Agriculture, Fo        
+   rest Service GEIST, J.M. and EDGERTON, P.J. 1984. Performance tests o        
+   f fourwing saltbush transplants in eastern Oregon. Gen. Tech. Rep. IN        
+   T-172. Ogden, UT., U.S. Department of Agriculture, Forest Service, In        
+   termountain Forest & Range Experiment Sta.                                   
+PH R107   Watershed Protection and Management                                  
+   ¬A4300  Resource Development and Management                                 
+   ¬C0600  Trees, Forests and Forest Products                                  
+   ¬F0212  Biology-Environmental, Systematic-Plant                             
+GH P2.05  Forest Watersheds, Soils, Pollution                                  
+   ¬J1B    Forest, Range, Wildlife                                             

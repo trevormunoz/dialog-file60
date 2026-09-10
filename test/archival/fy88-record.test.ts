@@ -2,11 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { scanRecords, parseRecord, fields } from "@barcstory/cris-formatb";
 
 // Unlike fixture-bytes.test.ts, this does not check a fixed byte offset against
-// packages/cris-formatb/fixtures/fy88-9000001.bin: that fixture is a synthetic reconstruction
-// of AN 9000001's SC field (see fixtures/SOURCES.md), not a corpus slice, because
-// RG310.CRIS.FY88.txt was not available on the machine that wrote it. Once the real file is
-// present, scanRecords locates AN 9000001 itself, so this test needs no offset recorded up
-// front and can be re-pointed at a real fixture slice later without changing.
+// packages/cris-formatb/fixtures/fy88-9000001.bin (see fixtures/SOURCES.md). It locates
+// AN 9000001 by scanning the real file itself, so it needs no offset recorded up front and
+// does not change if the corpus is re-extracted or the fixture is re-cut.
 const FILE = "data/RG310.CRIS.FY88.txt";
 const exists = existsSync(FILE);
 

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { scanRecords, parseRecord, fields } from "@barcstory/cris-formatb";
 
-// The real RG310.CRIS.FY88.txt is not present on this machine; this fixture is a synthetic
-// reconstruction of AN 9000001's SC field from the byte-level transcription in the plan
-// (spec section 6.1), not a slice cut from the corpus with dd. See fixtures/SOURCES.md.
+// A real slice of AN 9000001, cut from RG310.CRIS.FY88.txt with dd (see fixtures/SOURCES.md).
+// Kept as a fast, corpus-free regression check alongside test/archival/fy88-record.test.ts,
+// which re-derives the same values by scanning the real file directly.
 const bytes = new Uint8Array(readFileSync(new URL("../../packages/cris-formatb/fixtures/fy88-9000001.bin", import.meta.url)));
 const { spans: [span] } = scanRecords(bytes, 1);
 
