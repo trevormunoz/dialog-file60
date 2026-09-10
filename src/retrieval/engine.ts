@@ -22,8 +22,18 @@ export type SearchExpression =
   | { kind: "and"; left: SearchExpression; right: SearchExpression }
   | { kind: "or"; left: SearchExpression; right: SearchExpression }
   | { kind: "not"; left: SearchExpression; right: SearchExpression }
-  | { kind: "word"; codes: string[]; term: string };
+  | { kind: "word"; codes: string[]; term: string }
+  /** An EXPAND ref (E3) or ref range (E3:E5) named as a SELECT operand. `ordinals` starts
+   * empty as parsed -- DialogSession resolves it against the open EXPAND display before
+   * search() ever sees the node, so search() itself learns nothing about what an E-number is,
+   * only a pre-resolved ordinal list. `echo` is the token as typed, uppercased. */
+  | { kind: "refs"; ordinals: number[]; echo: string };
 export interface SearchResult { perTerm: { display: string; postings: number }[]; ordinals: number[]; }
+
+/** Byte order of the uppercased keys -- the same collation EXPAND's browse list uses
+ * (proto.expand.collation). Duplicated here as one line rather than imported from the dialog
+ * layer, so retrieval keeps no dependency on dialog. */
+const collate = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /** SELECT named a set number with no set open in the session yet (e.g. `S S7` with no S7).
  * Carries the offending id, not a message string, so the caller builds its own printed token
@@ -50,6 +60,13 @@ export class UnknownSuffix extends Error {
   constructor(readonly code: string) { super(`unknown suffix ${code}`); }
 }
 
+/** SELECT named an EXPAND ref (E3 or E3:E5) with no EXPAND open, or naming a row outside the
+ * page currently displayed. `echo` is the token as typed -- the caller prints it bare (`? E3`),
+ * unlike UnknownField, which appends "=" and a value neither ref case has. */
+export class UnknownRef extends Error {
+  constructor(readonly echo: string) { super(`unknown ref ${echo}`); }
+}
+
 const intersect = (a: number[], b: number[]): number[] => { const s = new Set(b); return a.filter(x => s.has(x)); };
 const union = (a: number[], b: number[]): number[] => [...new Set([...a, ...b])];
 const difference = (a: number[], b: number[]): number[] => { const s = new Set(b); return a.filter(x => !s.has(x)); };
@@ -58,6 +75,12 @@ export class RetrievalEngine {
   /** Word-index shards already fetched, keyed `${code}:${shard}`. A word SELECT loads only
    * the shards it names, and only once: prepare() checks this map before calling wordSource. */
   private shards = new Map<string, Record<string, number[]>>();
+  /** Sorted [term, postings.length] lists for a phrase field, cached per code since the
+   * indexes never change during a session -- termList()'s phrase branch. */
+  private phraseTerms = new Map<string, [string, number][]>();
+  /** The merged Basic Index browse list (BASIC_INDEX), built once and reused by every bare
+   * EXPAND. */
+  private basicIndexTerms: [string, number][] | null = null;
 
   constructor(
     private offsets: Offsets,
@@ -92,12 +115,59 @@ export class RetrievalEngine {
     }
   }
 
-  /** Every term the given suffix code carries, paired with its postings count -- used by
-   * the EXPAND browse list (not used by search()). */
+  /** Every term the given field or suffix carries, paired with its postings count -- used by
+   * the EXPAND browse list (not used by search()). BASIC_INDEX ("*") merges the /TX, /TI, /DE
+   * and /PB word-term lists (proto.expand.display's note); a word suffix code reads its
+   * prebuilt terms.json; a phrase field code (e.g. "IN", "CY") is derived from the loaded
+   * phrase index and sorted here, once, then cached. */
   async termList(code: string): Promise<[string, number][]> {
-    if (!WORD_CODES.includes(code)) throw new UnknownSuffix(code);
-    if (!this.wordSource) throw new Error(`no word index source configured for ${code}`);
-    return this.wordSource.terms(code);
+    if (code === "*") {
+      if (this.basicIndexTerms) return this.basicIndexTerms;
+      const merged = new Map<string, number>();
+      for (const c of ["/TX", "/TI", "/DE", "/PB"]) {
+        for (const [term, count] of await this.termList(c)) merged.set(term, Math.max(merged.get(term) ?? 0, count));
+      }
+      const out = [...merged.entries()].sort((a, b) => collate(a[0], b[0]));
+      this.basicIndexTerms = out;
+      return out;
+    }
+    if (code.startsWith("/") || code === "PO=") {
+      if (!WORD_CODES.includes(code)) throw new UnknownSuffix(code);
+      if (!this.wordSource) throw new Error(`no word index source configured for ${code}`);
+      return this.wordSource.terms(code);
+    }
+    const cached = this.phraseTerms.get(code);
+    if (cached) return cached;
+    const idx = this.indexes[code];
+    if (!idx) throw new UnknownField(code, "");
+    const out = Object.entries(idx.terms).map(([t, o]) => [t, o.length] as [string, number]).sort((a, b) => collate(a[0], b[0]));
+    this.phraseTerms.set(code, out);
+    return out;
+  }
+
+  /** The postings for one already-known (code, term) pair -- what a SELECT on an EXPAND ref
+   * resolves to. Loads a word shard on demand, same as prepare(); a phrase field reads its
+   * already-loaded index directly; BASIC_INDEX unions the same four codes termList() merges,
+   * using each code's real postings rather than termList()'s cheaper max-count approximation. */
+  async termOrdinals(code: string, term: string): Promise<number[]> {
+    if (code === "*") {
+      const parts = await Promise.all(["/TX", "/TI", "/DE", "/PB"].map(c => this.termOrdinals(c, term)));
+      return [...new Set(parts.flat())].sort((a, b) => a - b);
+    }
+    if (code.startsWith("/") || code === "PO=") {
+      if (!WORD_CODES.includes(code)) throw new UnknownSuffix(code);
+      const key = phraseKey(term);
+      const shard = shardOf(key);
+      const cacheKey = `${code}:${shard}`;
+      if (!this.shards.has(cacheKey)) {
+        if (!this.wordSource) throw new Error(`no word index source configured for ${code}`);
+        this.shards.set(cacheKey, await this.wordSource.shard(code, shard));
+      }
+      return this.shards.get(cacheKey)![key] ?? [];
+    }
+    const idx = this.indexes[code];
+    if (!idx) throw new UnknownField(code, term);
+    return idx.terms[phraseKey(term)] ?? [];
   }
 
   search(expr: SearchExpression, sets: Map<number, number[]>): SearchResult {
@@ -131,6 +201,12 @@ export class RetrievalEngine {
           const display = `${key}${e.codes[0]}${e.codes.slice(1).map(c => `,${c.slice(1)}`).join("")}`;
           perTerm.push({ display, postings: unique.length });
           return unique;
+        }
+        case "refs": {
+          // e.ordinals is already resolved (DialogSession.resolveRefs, before prepare()/
+          // search() run) -- this case reads it, never an E-number itself.
+          perTerm.push({ display: e.echo, postings: e.ordinals.length });
+          return e.ordinals;
         }
       }
     };

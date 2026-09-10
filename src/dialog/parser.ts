@@ -123,6 +123,11 @@ export function parseExpression(src: string): SearchExpression | null {
  * character does not parse, as in Plan 1: this parser must never fold syntax it does not
  * evaluate into a phrase and print a fabricated set line for it. */
 function parseOperand(tok: string): SearchExpression | null {
+  // An EXPAND ref, E3, or ref range, E3:E5. `ordinals` starts empty -- DialogSession resolves
+  // it against the open EXPAND display before the expression reaches the retrieval engine
+  // (see SearchExpression's "refs" variant in retrieval/engine.ts).
+  const ref = /^e\d+(?::e\d+)?$/i.exec(tok);
+  if (ref) return { kind: "refs", ordinals: [], echo: tok.toUpperCase() };
   const set = /^s(\d+)$/i.exec(tok);
   if (set) return { kind: "set", id: Number(set[1]) };
   const suffixed = SUFFIXED.exec(tok);
@@ -146,8 +151,6 @@ function parseOperand(tok: string): SearchExpression | null {
  * not parse as EXPAND with rest "able" -- the capture is only ever a separate word or words.
  */
 const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [
-  { pattern: /^(?:expand|e)(?:\s+(.*))?$/i, command: "EXPAND" },
-  { pattern: /^(?:page|p)(?:\s+(.*))?$/i, command: "PAGE" },
   { pattern: /^(?:display\s+sets|ds)(?:\s+(.*))?$/i, command: "DISPLAY SETS" },
   { pattern: /^logoff(?:\s+(.*))?$/i, command: "LOGOFF" },
   { pattern: /^sort(?:\s+(.*))?$/i, command: "SORT" },
@@ -176,6 +179,8 @@ export function parse(line: string): DialogCommand {
   if ((m = /^(?:t|type)\s+(\d{7,8})\/([A-Za-z0-9,]+)$/i.exec(t))) {
     return { cmd: "unsupported", command: "TYPE (by accession number)", rest: `${m[1]}/${m[2]!.toUpperCase()}` };
   }
+  if ((m = /^(?:e|expand)\s+(.+)$/i.exec(t))) return { cmd: "expand", term: m[1]!.trim() };
+  if ((m = /^(?:p|page)(-)?$/i.exec(t))) return { cmd: "page", back: m[1] === "-" };
   for (const { pattern, command } of CAPABILITY_WORDS) {
     if ((m = pattern.exec(t))) return { cmd: "unsupported", command, rest: (m[1] ?? "").toUpperCase() };
   }

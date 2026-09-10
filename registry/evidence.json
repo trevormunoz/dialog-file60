@@ -1565,7 +1565,91 @@
         "observedSystem": "DIALOG general"
       }
     ],
-    "decision": "recorded, not printed. The OCR renders the leading characters ambiguously (»>) and the page image has not been checked; spec 7.10's simulated form (a question mark plus the offending token) is still what the session prints. Printing this text is an open decision.",
+    "decision": "recorded, not printed. The OCR renders the leading characters ambiguously (\u00bb>) and the page image has not been checked; spec 7.10's simulated form (a question mark plus the offending token) is still what the session prints. Printing this text is an open decision.",
     "note": "this is the only error text found in any source held; spec 7.10's statement that none had been read is superseded for this one case"
+  },
+  "proto.expand.display": {
+    "value": {
+      "refCol": 1,
+      "itemsEnd": 11,
+      "termCol": 13
+    },
+    "status": "inferred",
+    "claim": "EXPAND prints a ref number, an items count, and an index term in three fixed columns.",
+    "sources": [
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 4, EXPAND example",
+        "sourceDate": "1988-04",
+        "observedSystem": "File 60"
+      }
+    ],
+    "decision": "the column positions are inferred from DATABASE magazine's own re-typeset figure 4, not read directly from a DIALOG-issued transcript; the twelve-row window and the E-numbering are documented in the 2001 chapter (see proto.expand.window and proto.expand.enumbers), and are only stated here as a note.",
+    "note": "the unprefixed EXPAND browse (no PREFIX=) is served here from the merged, re-sorted union of the /TX, /TI, /DE and /PB word-term lists, an inference: the Blue Sheet's own Basic Index is /AP /DE /NR /OB /PB /PR /TI /TX, and /AP, /OB and /PR already sit inside /TX on this corpus."
+  },
+  "proto.expand.window": {
+    "value": {
+      "above": 2,
+      "rows": 12
+    },
+    "status": "documented",
+    "claim": "EXPAND shows twelve index terms at a time, with the term you entered usually third on the list.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "EXPAND, \"usually third on the list\"",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "database-magazine-1988",
+        "locator": "figure 4, the entered term at E3",
+        "sourceDate": "1988-04",
+        "observedSystem": "File 60"
+      }
+    ],
+    "decision": "spec section 13 listed the window shape as unknown; the 2001 chapter settles it (a twelve-line page, the entered term usually third), and 1988 figure 4 brackets the placement at E3 rather than merely later. The entered term is listed whether or not it has any items."
+  },
+  "proto.expand.collation": {
+    "value": "byte order of the uppercased keys",
+    "status": "chosen",
+    "claim": "The EXPAND list sorts terms in plain character order; no source records DIALOG's own index collation.",
+    "note": "Statement of absence: DIALOG's collation for File 60 was not found by reading the EXPAND sections of the 1998 Blue Sheet, the 1988 DATABASE figures, the 1994 Curso pages, and the 2001 book, on 2026-09-10."
+  },
+  "proto.expand.page": {
+    "value": {
+      "forward": "PAGE or P",
+      "backward": "PAGE- or P-",
+      "moreLine": "Enter P or PAGE for more"
+    },
+    "status": "documented",
+    "claim": "PAGE shows the next twelve terms; PAGE- returns to the page before it and un-stars the originally entered term.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "EXPAND, \"Entering a PAGE command will display the next 12 entries\" and \"the original EXPAND entry is no longer asterisked\"",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "the \"Enter P or PAGE for more\" line prints only when a further page of terms exists."
+  },
+  "proto.expand.enumbers": {
+    "value": {
+      "first": 1,
+      "last": 50,
+      "resetsTo": 1
+    },
+    "status": "documented",
+    "claim": "Each EXPAND row gets a ref number E1 through E50; past E50 the numbering starts over at E1, and a ref number can be used in SELECT until the next EXPAND with a term.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "EXPAND, \"A sequence of E numbers runs from E1 to E50 ... the next 12 sequential entries will appear, with the numbering reset to E1\"",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "decision": "a new EXPAND naming a term erases the previous list and its ref numbers (2001: \"erases the previous list\"); PAGE and PAGE- keep the same list and continue the same E-number sequence."
   }
 }

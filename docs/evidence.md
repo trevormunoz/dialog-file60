@@ -62,6 +62,9 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.begin.set_header
 - proto.begin.set_reset
 - proto.error.unmatched_parens
+- proto.expand.enumbers
+- proto.expand.page
+- proto.expand.window
 - proto.prompt
 - proto.prompt.spacing
 - proto.select.boolean
@@ -84,6 +87,7 @@ rests on. This is the full registry, grouped by status, produced by
 - nara.conversion.control_bytes
 - nara.tape.fy1994_media
 - proto.begin.banner
+- proto.expand.display
 - proto.select.suffix
 - render.headings.join
 - render.text.justify
@@ -108,6 +112,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.error.unknown_field
 - proto.error.unknown_set
 - proto.error.unknown_suffix
+- proto.expand.collation
 - render.record.order
 - terminal.backgroundColor
 - terminal.display_mode

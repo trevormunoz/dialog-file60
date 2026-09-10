@@ -3,7 +3,8 @@ import type { DialogCommand } from "./ast";
 import { parse } from "./parser";
 import { line, type OutputLine } from "./stream";
 import { registry } from "../registry";
-import { UnknownSet, UnknownField, UnknownSuffix, type RetrievalEngine, type SearchExpression } from "../retrieval/engine";
+import { UnknownSet, UnknownField, UnknownSuffix, UnknownRef, type RetrievalEngine, type SearchExpression } from "../retrieval/engine";
+import { expandWindow, expandPage, expandLines, BASIC_INDEX, PAGE_ROWS, MAX_REF, type ExpandState } from "./expand";
 
 const cols = registry.get("render.setline.columns").value as { setCol: number; itemsEnd: number; descCol: number };
 const header = registry.get("proto.begin.set_header").value as string[];
@@ -61,9 +62,17 @@ function offendingToken(text: string): string {
   return (t.split(/\s+/)[0] ?? "").toUpperCase();
 }
 
+/** Wraps an E-number back into DIALOG's 1..MAX_REF sequence -- used to compute PAGE-'s ref
+ * numbers, since it moves the window without reusing an already-computed ExpandState.nextRef. */
+const wrapRef = (n: number): number => ((n - 1) % MAX_REF + MAX_REF) % MAX_REF + 1;
+
 export class DialogSession {
   sets: SearchSet[] = [];
   currentFile: number | null = null;
+  /** The currently open EXPAND display, if any -- BEGIN clears it, a new `EXPAND <term>`
+   * replaces it ("erases the previous list", 2001), and SELECT resolves E-number operands
+   * against it. */
+  expand: ExpandState | null = null;
   /** The most recent capability notice: a command the
    * parser recognizes as documented for File 60 but outside this milestone's slice. `null`
    * when the most recent command was not one of those -- an ordinary command clears a stale
@@ -79,11 +88,36 @@ export class DialogSession {
     return this.run(cmd);
   }
 
+  /** Replaces every "refs" node's empty ordinals with the postings the ref(s) it names
+   * resolve to, walking and/or/not the same way engine.prepare() does. Throws UnknownRef
+   * (printed `? <echo>`) when no EXPAND is open, or when a ref names a row outside the page
+   * currently displayed -- an E-number is only ever selectable against the display that
+   * showed it. */
+  private async resolveRefs(expr: SearchExpression): Promise<SearchExpression> {
+    switch (expr.kind) {
+      case "and": case "or": case "not":
+        return { ...expr, left: await this.resolveRefs(expr.left), right: await this.resolveRefs(expr.right) };
+      case "refs": {
+        const m = /^E(\d+)(?::E(\d+))?$/.exec(expr.echo)!;
+        const a = Number(m[1]), b = m[2] ? Number(m[2]) : a;
+        if (!this.expand) throw new UnknownRef(expr.echo);
+        let ordinals: number[] = [];
+        for (let n = a; n <= b; n++) {
+          const row = this.expand.rows.find(r => r.ref === n);
+          if (!row) throw new UnknownRef(expr.echo);
+          ordinals = ordinals.concat(await this.engine.termOrdinals(this.expand.code, row.term));
+        }
+        return { ...expr, ordinals: [...new Set(ordinals)].sort((x, y) => x - y) };
+      }
+      default: return expr;
+    }
+  }
+
   private async run(cmd: DialogCommand): Promise<OutputLine[]> {
     switch (cmd.cmd) {
       case "begin": {
         if (cmd.file !== 60) return [line(`? ${cmd.file}`, { registryKeys: ["proto.error.bad_file"] })];
-        this.currentFile = 60; this.sets = [];
+        this.currentFile = 60; this.sets = []; this.expand = null;
         // dialog.file60.title (documented) carries the actual title text this line prints;
         // proto.begin.banner (inferred) carries only the banner's own structure -- both are
         // real provenance for this one line, cited together.
@@ -95,17 +129,22 @@ export class DialogSession {
         // offendingToken applies from raw text, applied here to the parsed command instead,
         // since this branch has no raw input text to re-derive it from.
         if (this.currentFile === null) return [line(`? ${firstAndOperand(cmd.echo)}`, { registryKeys: ["proto.error.bad_file"] })];
-        let result;
+        let result; let expr: SearchExpression;
         try {
+          // Resolve any E-number operand (SELECT E3, E3:E5) against the open EXPAND display
+          // first, so the retrieval engine only ever sees a "refs" node whose ordinals are
+          // already the postings that ref names -- it never learns what an E-number is.
+          expr = await this.resolveRefs(cmd.expr);
           // prepare() loads any word-index shards this expression needs (a no-op for an
           // expression with no word operand); search() itself stays synchronous and only
           // ever reads what prepare() already cached.
-          await this.engine.prepare(cmd.expr);
-          result = this.engine.search(cmd.expr, new Map(this.sets.map(s => [s.id, s.ordinals])));
+          await this.engine.prepare(expr);
+          result = this.engine.search(expr, new Map(this.sets.map(s => [s.id, s.ordinals])));
         }
         catch (e) {
           if (e instanceof UnknownSet) return [line(`? S${e.id}`, { registryKeys: ["proto.error.unknown_set"] })];
           if (e instanceof UnknownSuffix) return [line(`? ${e.code}`, { registryKeys: ["proto.error.unknown_suffix"] })];
+          if (e instanceof UnknownRef) return [line(`? ${e.echo}`, { registryKeys: ["proto.error.unknown_field"] })];
           if (e instanceof UnknownField) {
             // A prefix the 1998 Blue Sheet documents but this build has no index for
             // (e.g. FY=) is a real File 60 search this milestone has not implemented, not a
@@ -118,14 +157,14 @@ export class DialogSession {
           throw e;
         }
         const id = this.sets.length + 1;
-        const set: SearchSet = { id, echo: cmd.echo, expr: cmd.expr, perTerm: result.perTerm, ordinals: result.ordinals };
+        const set: SearchSet = { id, echo: cmd.echo, expr, perTerm: result.perTerm, ordinals: result.ordinals };
         this.sets.push(set);
         const out: OutputLine[] = [];
         // render.setline.columns (the fixed setCol/itemsEnd/descCol
         // positions setLine() reads) shapes every set line's spacing, not just the parts
         // proto.select.per_term_postings/proto.select.setline name -- cited alongside them so
         // the inspect panel reaches it from the set line itself.
-        if (result.perTerm.length > 1 || cmd.expr.kind !== "term")
+        if (result.perTerm.length > 1 || expr.kind !== "term")
           for (const t of result.perTerm) out.push(line(setLine(null, t.postings, t.display), { registryKeys: ["proto.select.per_term_postings", "render.setline.columns", "index.phrase.uppercase"] }));
         out.push(line(setLine(id, result.ordinals.length, cmd.echo), { registryKeys: ["proto.select.setline", "render.setline.columns", "render.record.order"] }));
         return out;
@@ -146,6 +185,50 @@ export class DialogSession {
           for (const l of this.render(rec, cmd.format)) out.push({ ...l, provenance: { ...l.provenance, recordOrdinal: ordinal } });
         }
         return out;
+      }
+      case "expand": {
+        if (this.currentFile === null) return [line(`? ${cmd.term.trim().toUpperCase()}`, { registryKeys: ["proto.error.bad_file"] })];
+        const m = /^([A-Za-z]{2})=(.*)$/.exec(cmd.term);
+        const code = m ? m[1]!.toUpperCase() : BASIC_INDEX;
+        const enteredRaw = (m ? m[2]! : cmd.term).trim();
+        const entered = enteredRaw === "" ? null : enteredRaw.toUpperCase();
+        let terms: [string, number][];
+        try { terms = await this.engine.termList(code); }
+        catch (e) {
+          if (e instanceof UnknownSuffix) return [line(`? ${e.code}`, { registryKeys: ["proto.error.unknown_suffix"] })];
+          if (e instanceof UnknownField) {
+            // A documented prefix this build has no index for (see SELECT's own UnknownField
+            // branch above) routes to the same capability-notice channel, not the simulated
+            // typo error.
+            if (e.documented) { this.lastNotice = { command: `${e.field.toUpperCase()}= (search prefix)` }; return []; }
+            return [line(`? ${e.field.toUpperCase()}=${entered ?? ""}`, { registryKeys: ["proto.error.unknown_field"] })];
+          }
+          throw e;
+        }
+        const w = entered !== null ? expandWindow(terms, entered) : { start: 0, enteredAt: null, absent: false };
+        this.expand = expandPage({ terms, start: w.start, firstRef: 1, entered, enteredAt: w.enteredAt, absent: w.absent, code });
+        return expandLines(this.expand).map(t => line(t, { registryKeys: ["proto.expand.display", "proto.expand.window", "proto.expand.page", "proto.expand.enumbers"] }));
+      }
+      case "page": {
+        // PAGE- moves back two windows from the state's own `start` (already the position
+        // just past the page shown, so one PAGE_ROWS back reaches the start of that page, and
+        // a second reaches the page before it); a plain PAGE continues forward from `start`
+        // as it stands (proto.expand.page: "the next 12 entries"). expandPage still gets the
+        // original entered/enteredAt/absent so an absent entered term stays in the browsed
+        // list at its inserted position on every later page (2001: "the original EXPAND entry
+        // is no longer asterisked" says the row is still there, just unstarred) -- the star is
+        // cleared afterward, not by passing entered: null into expandPage, which would drop an
+        // absent term's inserted row entirely instead of only un-starring it.
+        if (!this.expand) return [line(`? ${cmd.back ? "PAGE-" : "PAGE"}`, { registryKeys: ["proto.error.unknown_command"] })];
+        const { terms, code, entered, enteredAt, absent } = this.expand;
+        const start = cmd.back ? Math.max(0, this.expand.start - 2 * PAGE_ROWS) : this.expand.start;
+        const firstRef = cmd.back ? wrapRef(this.expand.nextRef - 2 * PAGE_ROWS) : this.expand.nextRef;
+        // paged.entered stays the original entered term (not null): a later PAGE or PAGE- must
+        // still see it, so an absent term's inserted row keeps its position across every
+        // further page of the same EXPAND browse, not just the first PAGE call.
+        const paged = expandPage({ terms, start, firstRef, entered, enteredAt, absent, code });
+        this.expand = { ...paged, rows: paged.rows.map(r => ({ ...r, starred: false })) };
+        return expandLines(this.expand).map(t => line(t, { registryKeys: ["proto.expand.page", "proto.expand.enumbers"] }));
       }
       case "unsupported": {
         // The terminal prints nothing for this. this.lastNotice (set in submit(), above) is

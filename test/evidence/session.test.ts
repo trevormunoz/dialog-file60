@@ -152,9 +152,10 @@ test("a SELECT before any BEGIN also names an offending token, never a bare ?", 
 // milestone's slice prints nothing into the character stream -- the session tracks it
 // separately (lastNotice), for the app to show outside the stream.
 describe("capability notices", () => {
+  // EXPAND is implemented (test/evidence/expand.test.ts, test/regression/expand-window.test.ts)
+  // and no longer belongs on this list.
   test("a recognized-but-unimplemented command prints nothing into the stream", async () => {
     const s = mk(); await s.submit("b 60");
-    expect(await s.submit("e in=snook")).toEqual([]);
     expect(await s.submit("logoff")).toEqual([]);
     expect(await s.submit("t 09143165/5")).toEqual([]);
   });
