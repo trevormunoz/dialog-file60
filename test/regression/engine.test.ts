@@ -100,6 +100,21 @@ test("a word term combines with a phrase term under the documented order", async
   expect(wordEngine.search(expr, new Map()).ordinals).toEqual([0]);
 });
 
+test("/DF resolves to /DE's shard at query time, so a /DE SELECT after a /DF prepare() needs no reload", async () => {
+  const df = parseExpression("peach/df")!;
+  expect(df).toEqual({ kind: "word", codes: ["/DF"], term: "peach" });
+  await wordEngine.prepare(df);
+  const dfResult = wordEngine.search(df, new Map());
+  expect(dfResult.ordinals).toEqual([2]);
+  expect(dfResult.perTerm).toEqual([{ display: "PEACH/DF", postings: 1 }]);
+
+  const de = parseExpression("peach/de")!;
+  expect(() => wordEngine.search(de, new Map())).not.toThrow();
+  const deResult = wordEngine.search(de, new Map());
+  expect(deResult.ordinals).toEqual([2]);
+  expect(deResult.perTerm).toEqual([{ display: "PEACH/DE", postings: 1 }]);
+});
+
 test("search() throws when a word expression is evaluated without a prior prepare()", () => {
   const expr = parseExpression("peach/ti")!;
   const unprepared = new RetrievalEngine(offsets, indexes, reader, "fy1991plus", new MemoryWordIndex(words));

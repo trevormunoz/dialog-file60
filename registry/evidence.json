@@ -458,7 +458,7 @@
         "observedSystem": "File 60"
       }
     ],
-    "note": "display code for the DE text block; the justification of its text is a separate rule, render.text.justify"
+    "note": "display code for the DE text block; the justification of its text is a separate rule, render.text.justify. /DF resolves to /DE's index at query time (src/retrieval/engine.ts); the loader builds only /DE."
   },
   "map.PR": {
     "value": {

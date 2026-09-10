@@ -35,12 +35,20 @@ export function shardOf(term: string): string {
  * DIALOG suffix code -> the Format B tags whose text it indexes.
  * /TX is the Blue Sheet's union /AP + /NR + /OB + /PR (footnote 6); its /NR component is the
  * HNRIMS narrative tag NA, whose FY 1994 count is 0, so on this corpus /TX is AP + OB + PR.
- * /DF is an alias of /DE in the Blue Sheet. PO= is word and phrase over PI and PF (Format B elements
- * 7 and 13); the phrase half is built by the phrase indexer, this map is the word half.
- * SP= is HNRIMS-only (FY 1994 count 0) and is not built.
+ * /DF is an alias of /DE in the Blue Sheet; src/retrieval/engine.ts resolves it to /DE's index
+ * at query time, so no separate /DF entry is built here. PO= is word and phrase over PI and PF
+ * (Format B elements 7 and 13); the phrase half is built by the phrase indexer, this map is the
+ * word half. SP= is HNRIMS-only (FY 1994 count 0) and is not built.
  */
 export const WORD_FIELDS: Readonly<Record<string, readonly string[]>> = {
-  "/TI": ["TI"], "/OB": ["OB"], "/AP": ["AP"], "/DE": ["DE"], "/DF": ["DE"],
+  "/TI": ["TI"], "/OB": ["OB"], "/AP": ["AP"], "/DE": ["DE"],
   "/PR": ["PR"], "/PB": ["PB"], "/TX": ["AP", "OB", "PR"], "PO=": ["PF", "PI"],
 };
 export const WORD_CODES: readonly string[] = Object.keys(WORD_FIELDS);
+
+/** Suffix codes that are not built as their own index but resolve to another code's index at
+ * query time. /DF is the Blue Sheet's documented alias of /DE. */
+export const WORD_ALIASES: Readonly<Record<string, string>> = { "/DF": "/DE" };
+/** Resolves an alias code to the code whose index actually carries it; any other code passes
+ * through unchanged. */
+export const resolveWordCode = (code: string): string => WORD_ALIASES[code] ?? code;

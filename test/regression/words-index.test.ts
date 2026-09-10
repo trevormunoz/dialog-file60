@@ -1,4 +1,4 @@
-import { tokenize, shardOf, STOP_WORDS, WORD_FIELDS } from "../../src/loader/words";
+import { tokenize, shardOf, STOP_WORDS, WORD_FIELDS, WORD_CODES, WORD_ALIASES, resolveWordCode } from "../../src/loader/words";
 
 // spec 6.4's worked examples, each stated there with its expected result.
 test("spec 6.4's tokenizer examples", () => {
@@ -25,8 +25,13 @@ test("a token is sharded by its first character, everything else to the catch-al
 });
 
 test("the word fields are the ones the corpus carries, and /TX is the documented union", () => {
-  expect(Object.keys(WORD_FIELDS).sort()).toEqual(["/AP", "/DE", "/DF", "/OB", "/PB", "/PR", "/TI", "/TX", "PO="]);
+  expect(Object.keys(WORD_FIELDS).sort()).toEqual(["/AP", "/DE", "/OB", "/PB", "/PR", "/TI", "/TX", "PO="]);
   expect(WORD_FIELDS["/TX"]).toEqual(["AP", "OB", "PR"]);
-  expect(WORD_FIELDS["/DF"]).toEqual(WORD_FIELDS["/DE"]);
   expect(WORD_FIELDS["PO="]).toEqual(["PF", "PI"]);
+});
+
+test("/DF is a query-time alias of /DE, not a built word field", () => {
+  expect(WORD_ALIASES["/DF"]).toBe("/DE");
+  expect(resolveWordCode("/DF")).toBe("/DE");
+  expect(WORD_CODES).not.toContain("/DF");
 });

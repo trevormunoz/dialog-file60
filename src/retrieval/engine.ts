@@ -2,7 +2,7 @@ import { parseRecord, lineToOffset, LINE_BYTES, type LogicalRecord, type Profile
 import type { Offsets, Index } from "../loader/corpus-format";
 import { DOCUMENTED_PHRASE_PREFIXES } from "../loader/corpus-format";
 import { phraseKey } from "../loader/phrase";
-import { WORD_CODES, shardOf } from "../loader/words";
+import { WORD_CODES, shardOf, resolveWordCode } from "../loader/words";
 import type { WordIndexSource } from "./words";
 import { registry } from "../registry";
 export type { RangeReader } from "./reader";
@@ -102,11 +102,12 @@ export class RetrievalEngine {
       case "word": {
         const shard = shardOf(phraseKey(expr.term));
         for (const code of expr.codes) {
-          if (!WORD_CODES.includes(code)) throw new UnknownSuffix(code);
-          const key = `${code}:${shard}`;
+          const resolved = resolveWordCode(code);
+          if (!WORD_CODES.includes(resolved)) throw new UnknownSuffix(code);
+          const key = `${resolved}:${shard}`;
           if (!this.shards.has(key)) {
-            if (!this.wordSource) throw new Error(`no word index source configured for ${code}`);
-            this.shards.set(key, await this.wordSource.shard(code, shard));
+            if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
+            this.shards.set(key, await this.wordSource.shard(resolved, shard));
           }
         }
         return;
@@ -132,9 +133,10 @@ export class RetrievalEngine {
       return out;
     }
     if (code.startsWith("/") || code === "PO=") {
-      if (!WORD_CODES.includes(code)) throw new UnknownSuffix(code);
-      if (!this.wordSource) throw new Error(`no word index source configured for ${code}`);
-      return this.wordSource.terms(code);
+      const resolved = resolveWordCode(code);
+      if (!WORD_CODES.includes(resolved)) throw new UnknownSuffix(code);
+      if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
+      return this.wordSource.terms(resolved);
     }
     const cached = this.phraseTerms.get(code);
     if (cached) return cached;
@@ -155,13 +157,14 @@ export class RetrievalEngine {
       return [...new Set(parts.flat())].sort((a, b) => a - b);
     }
     if (code.startsWith("/") || code === "PO=") {
-      if (!WORD_CODES.includes(code)) throw new UnknownSuffix(code);
+      const resolved = resolveWordCode(code);
+      if (!WORD_CODES.includes(resolved)) throw new UnknownSuffix(code);
       const key = phraseKey(term);
       const shard = shardOf(key);
-      const cacheKey = `${code}:${shard}`;
+      const cacheKey = `${resolved}:${shard}`;
       if (!this.shards.has(cacheKey)) {
-        if (!this.wordSource) throw new Error(`no word index source configured for ${code}`);
-        this.shards.set(cacheKey, await this.wordSource.shard(code, shard));
+        if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
+        this.shards.set(cacheKey, await this.wordSource.shard(resolved, shard));
       }
       return this.shards.get(cacheKey)![key] ?? [];
     }
@@ -193,8 +196,9 @@ export class RetrievalEngine {
           const key = phraseKey(e.term); // uppercase, trailing pad stripped (same rule as a phrase term)
           const shard = shardOf(key);
           const ords = e.codes.flatMap(c => {
-            const cached = this.shards.get(`${c}:${shard}`);
-            if (!cached) throw new Error(`prepare() was not called for ${c}:${shard}`);
+            const resolved = resolveWordCode(c);
+            const cached = this.shards.get(`${resolved}:${shard}`);
+            if (!cached) throw new Error(`prepare() was not called for ${resolved}:${shard}`);
             return cached[key] ?? [];
           });
           const unique = [...new Set(ords)].sort((a, b) => a - b);

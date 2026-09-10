@@ -1,8 +1,10 @@
 # Word indexes
 
 `pnpm load` builds a word index for every DIALOG suffix code the corpus
-supports a free-text search over: `/TI /OB /AP /DE /DF /PR /PB /TX PO=`.
-`/DF` is an alias of `/DE`; `PO=` is the word half of the Performing
+supports a free-text search over: `/TI /OB /AP /DE /PR /PB /TX PO=`.
+`/DF` is the Blue Sheet's documented alias of `/DE`; the engine resolves it
+to `/DE`'s index at query time (`src/retrieval/engine.ts`), so no `/DF`
+directory is built. `PO=` is the word half of the Performing
 Organization fields (PF, PI) -- the phrase half is the phrase index. `/TX`
 is the Blue Sheet's documented union of `/AP`, `/NR`, `/OB` and `/PR`
 (footnote 6); this corpus's HNRIMS narrative tag (`/NR`'s source) has a
@@ -38,12 +40,11 @@ code   distinct terms   on-disk bytes (code directory)
 /OB          57,726           8,156,089
 /AP          77,359          12,626,616
 /DE          26,642           7,012,021
-/DF          26,642           7,012,021
 /PR         121,805          19,661,310
 /PB         116,488           9,902,275
 /TX         171,907          33,073,403
 PO=           2,638           1,019,013
-total                       100,510,856
+total                        93,498,835
 ```
 
 Independent magnitude check (a separate script tokenizing each word-indexed
@@ -52,8 +53,8 @@ suffix codes): `records 34090`, word-field text bytes `86,808,306`, distinct
 tokens AP 106,628; DE 64,918; OB 80,842; PB 144,939; PF 1,326; PI 1,680; PR
 166,045; TI 25,856; union of all eight tags 353,644. The loader's own
 per-code counts run lower than the independent check's per-tag counts (stop
-words dropped, and `/DE` and `/DF` are the same field counted twice) and
-`/TX`'s count is higher than any one of its three component tags (it is
+words dropped) and `/TX`'s count is higher than any one of its three
+component tags (it is
 their union) -- the check confirms magnitude, not equality, and both runs
 agree records = 34,090.
 
