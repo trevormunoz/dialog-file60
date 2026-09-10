@@ -62,10 +62,11 @@ extraction script, rather than skipping silently. Set
 
 ## Status
 
-Implemented: `BEGIN`; `SELECT` with the six phrase prefixes this corpus
-carries (CY, IN, DS, ST, SF, AN); `AND`; word-suffix search over
-`/TI /OB /AP /DE /DF /PR /PB /TX PO=`; `TYPE` format 5; `LOGOFF` and its
-accounting block; and the inspect and statement panels.
+Implemented: `BEGIN`; `SELECT` with `AND`, `OR` and `NOT`, the documented
+phrase prefixes this corpus carries, and word-suffix search over
+`/TI /OB /AP /DE /DF /PR /PB /TX PO=`; `SELECT STEPS`; `EXPAND` and `PAGE`;
+`DISPLAY SETS`; `TYPE` format 5; `LOGOFF` and its accounting block; and the
+inspect and statement panels.
 
 Everything else DIALOG documented for File 60 is listed in
 [docs/not-implemented.md](docs/not-implemented.md), with what the

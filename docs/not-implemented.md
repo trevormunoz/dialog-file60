@@ -11,7 +11,10 @@ guard as a suffix, never tested against the SF field), SET DETAIL ON (the
 File column it adds to DISPLAY SETS' table is not printed), TYPE format 6
 and user-defined formats from display codes (only format 5 is implemented;
 every other format number or code list prints the item header followed by
-`? /{format}`, and no record text), the 1984 and 1988 fixtures, variant
+`? /{format}`, and no record text), RANK (the relevance-ranking display over
+a set), COMBINE (documented for File 60 in the 1978 EPA session; the set
+algebra it exposes is not reconstructed as its own command, only through
+SELECT's AND/OR/NOT), the 1984 and 1988 fixtures, variant
 indexes, a database-owner copyright line after the banner
 (`proto.begin.copyright_line`, status `chosen` -- a different File's
 in-period BEGIN transcript shows one; File 60's is not held, so none is
@@ -74,7 +77,10 @@ block's shape; the 1998 Blue Sheet's rate card prices it -- combining the
 two is inferred, since no single held source gives both for the same year.
 No rate card from 1990-1994 is held: a statement of absence, not found in
 `dataset-cards/research/cris-dialog/sources/` by the review of 2026-09-09.
-Pricing never bills anything and can be switched off.
+Pricing never bills anything and can be switched off. A real DIALOG
+accounting block's Descriptors and Prints lines -- added when a session
+displayed thesaurus descriptors or used PRINT -- are not implemented; only
+the connect-time and TYPE-format lines print.
 
 The 1998 Blue Sheet documents 30 Additional Index (phrase-indexed) prefixes
 for File 60. Version 1 builds a phrase index for every one of them except
@@ -86,3 +92,11 @@ SP=USDA-CSRS` prints nothing into the character stream and shows "DIALOG
 documented `SP= (search prefix)` for File 60; this reconstruction does not
 implement it yet." beneath the prompt. A field the Blue Sheet does not
 document at all (e.g. `S ZZ=X`) still gets the simulated typo error.
+
+OneSearch, DIALOG's cross-file search product, is not reconstructed: this
+repository opens one file, 60, and nothing else. Of the six annual CRIS/USDA
+data files the National Archives holds (FY 1988 to FY 1994), only FY 1994's
+is loaded into the running app; FY 1988's measured encoding facts back a
+typed corpus profile (see [Word indexes](indexes.md)) but its own records are
+not served. The other four years, FY 1989 to FY 1992, have no profile and no
+loaded data.
