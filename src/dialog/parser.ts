@@ -1,10 +1,12 @@
 import type { DialogCommand } from "./ast";
 import type { SearchExpression } from "../retrieval/engine";
+import { BASIC_INDEX } from "./expand";
 import { registry } from "../registry";
 
 registry.get("proto.select.echo_case"); // the echoed SELECT expression is uppercased
 registry.get("proto.select.suffix"); // the word/CODE[,CODE...] suffix grammar SUFFIXED below implements
 registry.get("proto.select.precedence"); // the parentheses-then-NOT-then-AND-then-OR order parseExpression below implements
+registry.get("proto.select.truncation"); // the single-trailing-? rule TRUNCATED below implements
 
 const unknown = (text: string): DialogCommand => ({ cmd: "unknown", text });
 
@@ -49,6 +51,14 @@ const RESERVED_IN_TERM_VALUE = /[?/()]/;
 // refused later by RetrievalEngine.prepare (UnknownSuffix). See registry entry
 // proto.select.suffix for the suffix grammar's source.
 const SUFFIXED = /^([^=/?()]+)\/([A-Za-z]{2}(?:,[A-Za-z]{2})*)$/;
+
+// A truncated word term, with or without a suffix list: `oyster?`, `technolog?/ti`,
+// `technolog?/ti,de`. The stem is everything before the single trailing "?", and must itself
+// carry none of "= / ? ( )" -- `techno?logy` (internal), `technolog??` (bounded) and
+// `technolog? ?` (spaced) all fail this and fall through to { cmd: "unknown" }, which is what
+// this reconstruction owes them: no held source documents those forms for File 60 (see the
+// statement of absence in registry key proto.select.truncation).
+const TRUNCATED = /^([^=/?()]+)\?(?:\/([A-Za-z]{2}(?:,[A-Za-z]{2})*))?$/;
 
 /**
  * Split a SELECT expression on the operator words and parentheses only, keeping every other
@@ -130,6 +140,18 @@ function parseOperand(tok: string): SearchExpression | null {
   if (ref) return { kind: "refs", ordinals: [], echo: tok.toUpperCase() };
   const set = /^s(\d+)$/i.exec(tok);
   if (set) return { kind: "set", id: Number(set[1]) };
+  // Tested before SUFFIXED, so `technolog?/ti` is not first read as a suffixed word whose
+  // word part carries a reserved character (see TRUNCATED's comment above).
+  const truncatedMatch = TRUNCATED.exec(tok);
+  if (truncatedMatch) {
+    const [, stemText, suffixList] = truncatedMatch;
+    return {
+      kind: "trunc",
+      codes: suffixList ? suffixList.toUpperCase().split(",").map(c => `/${c}`) : [BASIC_INDEX],
+      stem: stemText!.toUpperCase(),
+      echo: tok.toUpperCase(),
+    };
+  }
   const suffixed = SUFFIXED.exec(tok);
   if (suffixed) {
     return RESERVED_IN_TERM_VALUE.test(suffixed[1]!)

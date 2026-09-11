@@ -63,6 +63,14 @@ greenbelt = [r for r in recs if "GREENBELT" in values(r, b"CY")]
 belt_or_green_ans = sorted(set(an(r) for r in belt) | set(an(r) for r in greenbelt))
 maryland_ans = set(an(r) for r in recs if "MARYLAND" in values(r, b"ST"))
 belt_not_maryland_ans = sorted(an(r) for r in belt if an(r) not in maryland_ans)
+# Right truncation (word?): ti_technolog checks a suffixed truncation (S TECHNOLOG?/TI)
+# against a tokenizer written fresh for this script (tokenize_ti above), the same
+# independence rule ti_peach already follows; cy_beltsvill_trunc checks a bare-stem phrase
+# truncation (S CY=BELTSVILL?, which this task does not parse over CY, but
+# RetrievalEngine.prefixPostings("CY", "BELTSVILL") is asserted against directly) with a plain
+# str.startswith over the raw CY values, no tokenizer involved.
+ti_technolog = [r for r in recs if any(t.startswith("TECHNOLOG") for t in tokenize_ti(" ".join(values(r, b"TI"))))]
+cy_beltsvill_trunc = [r for r in recs if any(v.startswith("BELTSVILL") for v in values(r, b"CY"))]
 print(json.dumps({
     "records": len(recs),
     "cy_beltsville": {"count": len(belt), "an": sorted(an(r) for r in belt)},
@@ -72,4 +80,6 @@ print(json.dumps({
     "cy_beltsville_or_greenbelt": {"count": len(belt_or_green_ans), "an": belt_or_green_ans},
     "cy_greenbelt": {"count": len(greenbelt), "an": sorted(an(r) for r in greenbelt)},
     "cy_beltsville_not_st_maryland": {"count": len(belt_not_maryland_ans), "an": belt_not_maryland_ans},
+    "ti_technolog": {"count": len(ti_technolog), "an": sorted(an(r) for r in ti_technolog)},
+    "cy_beltsvill_trunc": {"count": len(cy_beltsvill_trunc), "an": sorted(an(r) for r in cy_beltsvill_trunc)},
 }, indent=1))

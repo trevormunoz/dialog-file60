@@ -27,7 +27,11 @@ test("TYPE set/format/items", () => {
 });
 
 test("unsupported input is total", () => {
-  expect(parse("s peach?/ti")).toEqual({ cmd: "unknown", text: "s peach?/ti" });
+  // The bounded truncation form ("??") is still refused (proto.select.truncation's statement
+  // of absence; see test/regression/truncation.test.ts) -- a single trailing "?" is now a
+  // truncation (TRUNCATED below), so this example moved off "peach?/ti" to a form that stays
+  // out of this milestone's slice.
+  expect(parse("s peach??/ti")).toEqual({ cmd: "unknown", text: "s peach??/ti" });
   expect(parse("")).toEqual({ cmd: "unknown", text: "" });
 });
 
@@ -69,10 +73,12 @@ test("SELECT term/suffix parses to a word node, not a phrase term", () => {
   });
 });
 
-// Right truncation on the word part of a suffixed operand is still out of this milestone's
-// slice, the same guard RESERVED_IN_TERM_VALUE applies to a plain PREFIX=value.
-test("a suffixed operand with a reserved character in its word part is unknown", () => {
-  expect(parse("s peach?/ti")).toEqual({ cmd: "unknown", text: "s peach?/ti" });
+// A trailing "?" on the word part of a suffixed operand is now truncation (TRUNCATED,
+// tested in test/regression/truncation.test.ts), not this catch-all -- SUFFIXED's own word-
+// part character class already excludes "= / ? ( )", the same guard a plain PREFIX=value's
+// value carries, so any other reserved character there still falls through to unknown.
+test("a suffixed operand with a reserved character other than truncation's trailing ? is unknown", () => {
+  expect(parse("s peach(x)/ti")).toEqual({ cmd: "unknown", text: "s peach(x)/ti" });
 });
 
 // The suffix word part excludes "=" and a second "/": an operand shaped like PREFIX=value

@@ -79,6 +79,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.select.per_term_postings
 - proto.select.precedence
 - proto.select.setline
+- proto.select.truncation
 - proto.selectsteps.processing
 - proto.selectsteps.sets
 - proto.type.item_header

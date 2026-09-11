@@ -174,6 +174,23 @@ data/RG164.CRIS.FY94.txt` against the corpus after adding it: the first seven fi
 byte-for-byte unchanged; `cy_greenbelt` count 0, an empty AN list -- the same absence already
 noted for `cy_beltsville_or_greenbelt`, now checkable on its own.
 
+Added a ninth and tenth field for right truncation (`word?`): `ti_technolog` (count and AN
+list for TI text containing a token starting with TECHNOLOG, checking `S TECHNOLOG?/TI`'s word-
+index prefix scan against `tokenize_ti`, the same independent tokenizer `ti_peach` already
+uses -- no code shared with `src/loader/words.ts` or `RetrievalEngine.prefixPostings`) and
+`cy_beltsvill_trunc` (count and AN list for CY values starting with BELTSVILL, a plain
+`str.startswith` over the raw values, checking `RetrievalEngine.prefixPostings("CY",
+"BELTSVILL")` directly -- this task does not parse `CY=BELTSVILL?` itself, only the bare-
+stem/word-suffix forms, so there is no SELECT to run through `DialogSession` for the phrase
+case). Re-ran `python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus
+after adding them: the first eight fields are byte-for-byte unchanged; `ti_technolog` count
+539; `cy_beltsvill_trunc` count 669, identical to `cy_beltsville`'s own 669 -- every
+CY=BELTSVILLE record's value is exactly "BELTSVILLE", so nothing in this corpus is caught by
+the wider BELTSVILL stem that was not already caught by the exact match.
+
+sha256 of `scripts/naive-split.py` after this change:
+sha256: 96784d0ae73bd53aa62a3e097962bde086574369ea7c08eeabe2abc57f2fca48
+
 ## The corpus's own trailer line
 
 The last 82-byte line of `data/RG164.CRIS.FY94.txt` is

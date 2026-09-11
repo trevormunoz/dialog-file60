@@ -1707,6 +1707,23 @@
     ],
     "decision": "NOT is binary (spec 7.12); a leading NOT does not parse. In 1978 these combinations were made with COMBINE and a set-number legend, not SELECT's own AND/OR/NOT words; COMBINE is out of this slice, and the SELECT form of 1984 onward is what this reconstruction implements."
   },
+  "proto.select.truncation": {
+    "value": { "symbol": "?", "position": "trailing", "perTermLine": "as typed" },
+    "status": "documented",
+    "claim": "A question mark at the end of a search word finds every word that starts with it, counted together on one line.",
+    "sources": [
+      { "source": "successful-searching-2001",
+        "locator": "SELECT, \"Truncation\": '?select forecast?' printing 'S1 16106 FORECAST?'",
+        "sourceDate": "2001", "observedSystem": "DIALOG general" },
+      { "source": "bluesheet-1998-text",
+        "locator": "Basic Index, SELECT examples: 'S DIET?/PR', 'S CHOLESTEROL?/TX'",
+        "sourceDate": "1998-03-02", "observedSystem": "File 60" },
+      { "source": "epa-session-1978",
+        "locator": "Sample Search/Output, p. 184: '? SELECT LOBSTER?' printing '3 14 LOBSTER?'",
+        "sourceDate": "1978-02-28", "observedSystem": "File 60" }
+    ],
+    "note": "Only the single trailing '?' is implemented. Statement of absence: no other truncation form (bounded '??', spaced '? ?', internal '?') was found for File 60 by grepping 'truncat', '??' and '? ?' across the 2001 manual text and the stripped 1998 Blue Sheet text on 2026-09-10; the parser refuses those forms rather than reading them as a single '?'. A PREFIX=value? truncation (Blue Sheet: 'S PO=OHIO STATE UNIV?') is documented and not implemented here."
+  },
   "proto.error.unmatched_parens": {
     "value": ">>>Unmatched parentheses",
     "status": "documented",

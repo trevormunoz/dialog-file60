@@ -27,7 +27,11 @@ export type SearchExpression =
    * empty as parsed -- DialogSession resolves it against the open EXPAND display before
    * search() ever sees the node, so search() itself learns nothing about what an E-number is,
    * only a pre-resolved ordinal list. `echo` is the token as typed, uppercased. */
-  | { kind: "refs"; ordinals: number[]; echo: string };
+  | { kind: "refs"; ordinals: number[]; echo: string }
+  /** `word?` -- a prefix scan over the sorted term list of each code named. `stem` is the
+   *  text before the "?", uppercased; `echo` is the operand exactly as typed, uppercased,
+   *  including the "?" -- the per-term line shows the truncated term as entered. */
+  | { kind: "trunc"; codes: string[]; stem: string; echo: string };
 export interface SearchResult { perTerm: { display: string; postings: number }[]; ordinals: number[]; }
 
 /** Byte order of the uppercased keys -- the same collation EXPAND's browse list uses
@@ -81,6 +85,10 @@ export class RetrievalEngine {
   /** The merged Basic Index browse list (BASIC_INDEX), built once and reused by every bare
    * EXPAND. */
   private basicIndexTerms: [string, number][] | null = null;
+  /** Prefix-scan results for a "trunc" operand, resolved by prepare() and read by search()'s
+   * "trunc" case -- keyed `${resolved code}:${stem}` so search() stays synchronous, the same
+   * pattern `shards` gives the "word" case. */
+  private truncCache = new Map<string, number[]>();
 
   constructor(
     private offsets: Offsets,
@@ -109,6 +117,14 @@ export class RetrievalEngine {
             if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
             this.shards.set(key, await this.wordSource.shard(resolved, shard));
           }
+        }
+        return;
+      }
+      case "trunc": {
+        for (const code of expr.codes) {
+          const resolved = resolveWordCode(code);
+          const key = `${resolved}:${expr.stem}`;
+          if (!this.truncCache.has(key)) this.truncCache.set(key, await this.prefixPostings(resolved, expr.stem));
         }
         return;
       }
@@ -145,6 +161,22 @@ export class RetrievalEngine {
     const out = Object.entries(idx.terms).map(([t, o]) => [t, o.length] as [string, number]).sort((a, b) => collate(a[0], b[0]));
     this.phraseTerms.set(code, out);
     return out;
+  }
+
+  /** Every posting of every term in `code` whose key begins with `stem`. The sorted term list
+   * gives the run of matching keys in one contiguous block, so this binary-searches for the
+   * first key >= stem and walks while the key still starts with stem. For a word suffix the
+   * postings themselves live in the shards, which are loaded per first character -- a stem
+   * never spans two shards, since every matching term shares the stem's first character. */
+  async prefixPostings(code: string, stem: string): Promise<number[]> {
+    const terms = await this.termList(code);
+    let lo = 0, hi = terms.length;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (collate(terms[mid]![0], stem) < 0) lo = mid + 1; else hi = mid; }
+    const out = new Set<number>();
+    for (let i = lo; i < terms.length && terms[i]![0].startsWith(stem); i++) {
+      for (const o of await this.termOrdinals(code, terms[i]![0])) out.add(o);
+    }
+    return [...out].sort((a, b) => a - b);
   }
 
   /** The postings for one already-known (code, term) pair -- what a SELECT on an EXPAND ref
@@ -211,6 +243,15 @@ export class RetrievalEngine {
           // search() run) -- this case reads it, never an E-number itself.
           perTerm.push({ display: e.echo, postings: e.ordinals.length });
           return e.ordinals;
+        }
+        case "trunc": {
+          const ords = [...new Set(e.codes.flatMap(c => {
+            const cached = this.truncCache.get(`${resolveWordCode(c)}:${e.stem}`);
+            if (!cached) throw new Error(`prepare() was not called for ${c}:${e.stem}?`);
+            return cached;
+          }))].sort((a, b) => a - b);
+          perTerm.push({ display: e.echo, postings: ords.length });
+          return ords;
         }
       }
     };

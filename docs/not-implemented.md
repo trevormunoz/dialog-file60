@@ -24,6 +24,18 @@ Word indexes and suffix search are implemented: `S PEACH/TI` and
 `S PEACH/TI,DE` search the word indexes described in
 [Word indexes](indexes.md).
 
+Right truncation (`?`) is implemented as a prefix scan over the sorted term lists: a single
+trailing `?` on a word, with or without a suffix list (`OYSTER?`, `TECHNOLOG?/TI`), finds every
+term that starts with the text before the `?` and unions their postings on one line, the same
+form the 2001 manual's worked example prints (`?select forecast?` -> `S1 16106 FORECAST?`) and
+the 1978 File 60 session prints (`SELECT LOBSTER?` -> `3 14 LOBSTER?`). No held source documents
+any other truncation form for File 60: the bounded (`word??`), spaced (`word? ?`) and internal
+(`wo?rd`) forms are refused rather than read as a single `?`, a statement of absence (not found
+by grepping `truncat`, `??` and `? ?` across the 2001 manual text and the stripped 1998 Blue
+Sheet text on 2026-09-10). `PREFIX=value?` truncation is a different, real File 60 form -- the
+1998 Blue Sheet documents it (`S PO=OHIO STATE UNIV?`) -- and is not implemented here, since
+this task's operand grammar has no `PREFIX=` truncation form.
+
 EXPAND and PAGE are implemented: `E IN=SNOOK` browses the IN index a
 twelve-row page at a time, with the entered term usually third and starred;
 `E` with only a prefix code (`E DS=`) starts at the head of that index; a
@@ -62,7 +74,7 @@ beneath the prompt reads "DIALOG documented `SORT` for File 60; this
 reconstruction does not implement it yet." (registry `capability.notice`),
 outside the stream entirely -- it never appears in scrollback or in a copied
 selection, and it does not change the session. Every other out-of-slice
-command or option -- proximity, right truncation, subfile limits
+command or option -- proximity, `PREFIX=value?` truncation, subfile limits
 inside SELECT, multi-word implicit-adjacency terms -- remains
 indistinguishable from a typo and gets the simulated error form, `?`
 followed by the offending token (an out-of-slice TYPE format prints the item

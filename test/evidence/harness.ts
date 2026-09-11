@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { DialogSession } from "../../src/dialog/session";
 import { RetrievalEngine, type RangeReader } from "../../src/retrieval/engine";
+import { MemoryWordIndex } from "../../src/retrieval/words";
 
 const fixture = new Uint8Array(readFileSync("packages/cris-formatb/fixtures/fy94-9049442.bin"));
 const reader: RangeReader = { async read(o, l) { return fixture.subarray(o - 6810182, o - 6810182 + l); } };
@@ -19,7 +20,11 @@ const FIXED_CLOCK = { now: () => new Date(Date.UTC(1994, 4, 3, 10, 0, 0)) };
 export const mk = (opts?: { clock?: { now: () => Date }; user?: string; accounting?: boolean }) => {
   seenFormats = [];
   return new DialogSession(
-    new RetrievalEngine(offsets, indexes, reader, "fy1991plus"),
+    // An empty MemoryWordIndex, not omitted: a bare truncation (`s oyster?`) reaches the
+    // merged Basic Index ("*"), which throws if no word source is configured at all, the
+    // same way a bare EXPAND would. Every other evidence test here only ever touches the CY
+    // and IN phrase indexes above, so the empty word source changes nothing for them.
+    new RetrievalEngine(offsets, indexes, reader, "fy1991plus", new MemoryWordIndex({})),
     (rec, format) => {
       seenFormats.push(format);
       return format === "5"
