@@ -56,3 +56,47 @@ test.skipIf(skip)(
   },
   120_000,
 );
+
+// SORT S1/ALL/IN exercises the multi-valued tie-break RetrievalEngine.sortKey now applies
+// (proto.sort.multivalue_key): 312 of the 669 Beltsville records carry more than one IN value
+// (multiple investigators), where PN never does, so this is the one archival case that can
+// actually distinguish the fixed rule -- the record's own alphabetically-first IN value --
+// from the pre-fix "first write wins in index-insertion order" bug. cy_beltsville_sorted_by_in
+// is naive-split.py's independent derivation (min() of each record's own IN values, ties
+// broken by AN), not read from src/retrieval/engine.ts.
+test.skipIf(skip)(
+  "S CY=BELTSVILLE then SORT S1/ALL/IN reorders the set to match the independently-derived, multi-valued IN order",
+  async () => {
+    if (!exists) {
+      throw new Error(
+        `missing ${FILE} -- run scripts/extract-corpus.py to produce it, or set CRIS_CORPUS_OPTIONAL=1 to skip archival tests`,
+      );
+    }
+    let offsets: Offsets;
+    let indexes: Record<string, Index>;
+    if (existsSync("public/corpus/offsets.json")) {
+      offsets = JSON.parse(readFileSync("public/corpus/offsets.json", "utf8"));
+      indexes = {};
+      for (const code of PHRASE_FIELDS) indexes[code] = JSON.parse(readFileSync(`public/corpus/index/${code}.json`, "utf8"));
+    } else {
+      const bytes = new Uint8Array(readFileSync(FILE));
+      const built = buildIndexes(bytes, "RG164.CRIS.FY94.txt");
+      offsets = built.offsets;
+      indexes = built.indexes;
+    }
+    const engine = new RetrievalEngine(offsets, indexes, new FsRangeReader(FILE), "fy1991plus", new FsWordIndex("public/corpus"));
+    const session = new DialogSession(
+      engine,
+      (rec, format) => (format === "5" ? render5(rec) : [{ text: `? /${format}` }]),
+    );
+
+    await session.submit("b 60");
+    await session.submit("s cy=beltsville");
+    const s2 = (await session.submit("sort s1/all/in")).map(l => l.text);
+    expect(s2).toEqual([setLine(2, acc.cy_beltsville_sorted_by_in.count, "Sort S1/ALL/IN")]);
+
+    const ans = session.sets[1]!.ordinals.map(o => offsets.records[o]![0]);
+    expect(ans).toEqual(acc.cy_beltsville_sorted_by_in.an);
+  },
+  120_000,
+);

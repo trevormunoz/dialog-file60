@@ -1855,6 +1855,12 @@
     ],
     "note": "Five of the nineteen listed codes (AG, AI, CG, ID, SP) are HNRIMS/ICAR codes this CRIS-only FY 1994 export carries no value for -- no built phrase index exists under any of them (PHRASE_PREFIX_TAGS, src/loader/corpus-format.ts). A sixth, AT, is also unbuilt under its own two-letter code: this corpus's only index for that Format B tag lives under the composite search code A1 (map.AT), not under the bare tag AT the Blue Sheet's Sorting section lists, so sorting on AT also returns every record's key empty. All six are accepted, not refused -- refusal (the simulated '? <FIELD>' form) is reserved for a code outside this nineteen-field list entirely, e.g. 'SORT S1/ALL/OB'."
   },
+  "proto.sort.multivalue_key": {
+    "value": "collation-first of the record's own values",
+    "status": "chosen",
+    "claim": "A multi-valued sort field uses the record's alphabetically-first value; no source shows File 60's own multi-valued tie-break.",
+    "note": "sortKey (src/retrieval/engine-helpers.ts) picks, among the values idx.terms records for one ordinal, the one that sorts first under the same byte-order collate() SORT itself uses -- a defensible, stated rule, not a reading of any source. Not found by grepping the 1998 Blue Sheet text or the 2001 manual text for a multi-valued SORT example on 2026-09-11."
+  },
   "proto.expand.page": {
     "value": {
       "forward": "PAGE or P",

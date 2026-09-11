@@ -7,6 +7,7 @@ import type { WordIndexSource } from "./words";
 import { registry } from "../registry";
 export type { RangeReader } from "./reader";
 import type { RangeReader } from "./reader";
+import { collate, prefixPostings as prefixPostingsHelper, sortKey as sortKeyHelper, sortOrdinals as sortOrdinalsHelper } from "./engine-helpers";
 
 registry.get("proto.select.per_term_postings");
 registry.get("render.record.order");
@@ -33,11 +34,6 @@ export type SearchExpression =
    *  including the "?" -- the per-term line shows the truncated term as entered. */
   | { kind: "trunc"; codes: string[]; stem: string; echo: string };
 export interface SearchResult { perTerm: { display: string; postings: number }[]; ordinals: number[]; }
-
-/** Byte order of the uppercased keys -- the same collation EXPAND's browse list uses
- * (proto.expand.collation). Duplicated here as one line rather than imported from the dialog
- * layer, so retrieval keeps no dependency on dialog. */
-const collate = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 /** SELECT named a set number with no set open in the session yet (e.g. `S S7` with no S7).
  * Carries the offending id, not a message string, so the caller builds its own printed token
@@ -90,11 +86,11 @@ export class RetrievalEngine {
    * pattern `shards` gives the "word" case. */
   private truncCache = new Map<string, number[]>();
   /** ordinal -> term reverse map per phrase code, built lazily once per code by sortKey()
-   * from this.indexes[code].terms and cached here. First write wins for an ordinal that
-   * shows up under more than one term of the same code (a repeating field carrying more
-   * than one distinct value): the term whose key comes first in Object.entries()'s own
-   * iteration order, which is the order distinct term strings were first created while
-   * building the index, not necessarily this one record's own field order. */
+   * from this.indexes[code].terms and cached here. For an ordinal that shows up under more
+   * than one term of the same code (a repeating field carrying more than one distinct value,
+   * e.g. IN), the collation-first term wins -- see engine-helpers.ts's sortKey doc comment
+   * (proto.sort.multivalue_key), not the order distinct term strings were first created while
+   * building the index. */
   private sortReverse = new Map<string, Map<number, string>>();
 
   constructor(
@@ -170,20 +166,11 @@ export class RetrievalEngine {
     return out;
   }
 
-  /** Every posting of every term in `code` whose key begins with `stem`. The sorted term list
-   * gives the run of matching keys in one contiguous block, so this binary-searches for the
-   * first key >= stem and walks while the key still starts with stem. For a word suffix the
-   * postings themselves live in the shards, which are loaded per first character -- a stem
-   * never spans two shards, since every matching term shares the stem's first character. */
+  /** Every posting of every term in `code` whose key begins with `stem` -- see
+   * engine-helpers.ts's own doc comment (this is a thin wrapper kept here so callers see no
+   * difference: test/archival/truncation-corpus.test.ts's own engine.prefixPostings(...)). */
   async prefixPostings(code: string, stem: string): Promise<number[]> {
-    const terms = await this.termList(code);
-    let lo = 0, hi = terms.length;
-    while (lo < hi) { const mid = (lo + hi) >> 1; if (collate(terms[mid]![0], stem) < 0) lo = mid + 1; else hi = mid; }
-    const out = new Set<number>();
-    for (let i = lo; i < terms.length && terms[i]![0].startsWith(stem); i++) {
-      for (const o of await this.termOrdinals(code, terms[i]![0])) out.add(o);
-    }
-    return [...out].sort((a, b) => a - b);
+    return prefixPostingsHelper(c => this.termList(c), (c, t) => this.termOrdinals(c, t), code, stem);
   }
 
   /** The postings for one already-known (code, term) pair -- what a SELECT on an EXPAND ref
@@ -266,39 +253,16 @@ export class RetrievalEngine {
     return { perTerm, ordinals };
   }
 
-  /** The sort key for one record under one phrase field code: the record's first value for
-   * that field, uppercased by phraseKey, or "" when it carries none (either the field is not
-   * a built phrase index at all -- a Blue Sheet sortable field with no CRIS value in this
-   * corpus -- or this record's own postings under `code` are empty). Read from the already-
-   * loaded phrase index rather than by re-reading the record's bytes -- the index is the same
-   * text the field prints, and a sort of 669 records must not fetch 669 byte ranges. */
+  /** The sort key for one record under one phrase field code -- see engine-helpers.ts's own
+   * doc comment (this is a thin wrapper kept here so callers see no difference:
+   * commands/sort.ts's own session.engine.sortOrdinals(...), which calls this in turn). */
   sortKey(code: string, ordinal: number): string {
-    let rev = this.sortReverse.get(code);
-    if (!rev) {
-      rev = new Map<number, string>();
-      const idx = this.indexes[code];
-      if (idx) for (const [term, ords] of Object.entries(idx.terms)) for (const o of ords) if (!rev.has(o)) rev.set(o, term);
-      this.sortReverse.set(code, rev);
-    }
-    return rev.get(ordinal) ?? "";
+    return sortKeyHelper(this.indexes, this.sortReverse, code, ordinal);
   }
 
-  /** Ordinals of `ordinals`, ordered by `keys`. Stable: equal keys keep their input order,
-   * which is `render.record.order` (ascending) for a SORT operand's source set -- relies on
-   * Array.prototype.sort's spec-guaranteed stability (ES2019+) rather than an explicit tie-
-   * break. Uses the same byte-order collation as EXPAND's browse list (proto.expand.collation),
-   * reused rather than restated. */
+  /** Ordinals of `ordinals`, ordered by `keys` -- see engine-helpers.ts's own doc comment. */
   sortOrdinals(ordinals: number[], keys: { field: string; descending: boolean }[]): number[] {
-    return ordinals
-      .map(o => ({ o, keys: keys.map(k => this.sortKey(k.field, o)) }))
-      .sort((a, b) => {
-        for (let i = 0; i < keys.length; i++) {
-          const cmp = collate(a.keys[i]!, b.keys[i]!);
-          if (cmp !== 0) return keys[i]!.descending ? -cmp : cmp;
-        }
-        return 0;
-      })
-      .map(w => w.o);
+    return sortOrdinalsHelper((c, o) => this.sortKey(c, o), ordinals, keys);
   }
 
   async record(ordinal: number): Promise<LogicalRecord> {

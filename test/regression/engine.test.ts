@@ -120,3 +120,24 @@ test("search() throws when a word expression is evaluated without a prior prepar
   const unprepared = new RetrievalEngine(offsets, indexes, reader, "fy1991plus", new MemoryWordIndex(words));
   expect(() => unprepared.search(expr, new Map())).toThrow("prepare() was not called for /TI:P");
 });
+
+// sortKey's own comment used to say it returns the record's first value, but it actually
+// walked idx.terms in index-insertion order ("first write wins") -- honest for a single-valued
+// field only. Ordinal 0 carries two IN values under a *reversed* insertion order (OWENS before
+// HAMMERSCHLAG in the object literal below), so a first-write-wins bug and the collation-first
+// fix disagree: first-write-wins would answer OWENS, the fix answers the alphabetically-first
+// HAMMERSCHLAG (proto.sort.multivalue_key). Ordinal 1 carries one IN value, ADAMS -- smaller
+// than either of ordinal 0's -- so the fixed ascending order is [1, 0], not [0, 1].
+const multiIndexes = {
+  IN: { code: "IN", terms: { "OWENS  L D": [0], "HAMMERSCHLAG  F A": [0], "ADAMS  J": [1] } },
+};
+const multiEngine = new RetrievalEngine(offsets, multiIndexes, reader, "fy1991plus");
+
+test("sortKey picks the collation-first of a record's own values for a multi-valued field", () => {
+  expect(multiEngine.sortKey("IN", 0)).toBe("HAMMERSCHLAG  F A");
+  expect(multiEngine.sortKey("IN", 1)).toBe("ADAMS  J");
+});
+
+test("sortOrdinals orders records by that same collation-first key", () => {
+  expect(multiEngine.sortOrdinals([0, 1], [{ field: "IN", descending: false }])).toEqual([1, 0]);
+});

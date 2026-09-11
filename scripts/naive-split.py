@@ -76,7 +76,18 @@ cy_beltsvill_trunc = [r for r in recs if any(v.startswith("BELTSVILL") for v in 
 # in this fixture -- which is `sorted()` for comparison against a set of ANs regardless of
 # retrieval order -- this list is ORDERED, not resorted after this point: it is the answer
 # test/archival/sort-corpus.test.ts checks the engine's own sorted set against, item by item.
+# PN carries exactly one value per Beltsville record in this corpus (checked separately, not
+# asserted here), so ties are broken by AN, which for this subset already equals file order.
 belt_by_pn = [an(r) for r in sorted(belt, key=lambda r: ((values(r, b"PN") or [""])[0], an(r)))]
+# SORT on IN (multiple investigators): 312 of the 669 Beltsville records carry more than one
+# IN value, so this is the one field this task uses to independently derive the multi-valued
+# tie-break RetrievalEngine.sortKey now applies -- the alphabetically-first (min()) of the
+# record's own IN values, ties broken by AN (proto.sort.multivalue_key; no source documents
+# DIALOG's own rule, so this script reimplements the same stated choice fresh, not the engine's
+# code). A record with no IN value at all would sort first under key "" -- none exist in this
+# corpus's Beltsville set, so this fixture cannot itself prove that empty-key path; the direct
+# unit test in test/regression/engine.test.ts covers it with a synthetic index instead.
+belt_by_in = [an(r) for r in sorted(belt, key=lambda r: (min(values(r, b"IN"), default=""), an(r)))]
 # KWIC (format K): the 2001 manual's window rule -- nn words wide, centred on the match,
 # shifted rather than padded when the match sits near an edge, a leading space on any
 # ellipsis a cut side carries. Reimplemented fresh here (own word split, own centring math),
@@ -114,5 +125,6 @@ print(json.dumps({
     "ti_technolog": {"count": len(ti_technolog), "an": sorted(an(r) for r in ti_technolog)},
     "cy_beltsvill_trunc": {"count": len(cy_beltsvill_trunc), "an": sorted(an(r) for r in cy_beltsvill_trunc)},
     "cy_beltsville_sorted_by_pn": {"count": len(belt_by_pn), "an": belt_by_pn},
+    "cy_beltsville_sorted_by_in": {"count": len(belt_by_in), "an": belt_by_in},
     "kwic_9049442_ti_peach_14": kwic_9049442_ti_peach_14,
 }, indent=1))

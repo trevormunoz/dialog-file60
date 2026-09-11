@@ -141,6 +141,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.print.no_artefact
 - proto.session.clock
 - proto.session.user_number
+- proto.sort.multivalue_key
 - render.format6.columns
 - render.record.order
 - terminal.backgroundColor

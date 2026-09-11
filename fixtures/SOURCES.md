@@ -209,8 +209,20 @@ field ("GENE TRANSFER AND TISSUE CULTURE TECHNOLOGIES FOR IMPROVEMENT OF PEACH, 
 TOBACCO") with no ellipsis on either side -- a 14-word window is wider than the 13-word field,
 so nothing is cut.
 
+Added a thirteenth field, `cy_beltsville_sorted_by_in`, for SORT on a multi-valued field: the
+AN order of the `cy_beltsville` set sorted by IN (multiple investigators), the field this
+project's Block A review picked because 312 of the 669 Beltsville records carry more than one
+IN value -- PN, the field `cy_beltsville_sorted_by_pn` already checks, never does. The key is
+the record's own alphabetically-first IN value (`min()` of that record's values), ties broken
+by AN -- the same stated tie-break `RetrievalEngine.sortKey` now applies
+(`proto.sort.multivalue_key`; no source documents DIALOG's own multi-valued SORT rule, so this
+is an independent re-implementation of the same chosen rule, not a read of the engine's code).
+Re-ran `python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus after
+adding it: the first twelve fields are byte-for-byte unchanged; `cy_beltsville_sorted_by_in`
+count 669, the same 669 ANs `cy_beltsville` already has, reordered by IN.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: 6d3ca1a5315177cd5f52214cd371af9e6cda33eb5a954bbd18e108581dfb2504
+sha256: cfd0a6aefb312badb17438d1d222faf407715d7912d95ba1226a3dabb32b7ca7
 
 ## The corpus's own trailer line
 
