@@ -1178,7 +1178,7 @@
     "value": null,
     "status": "chosen",
     "claim": "No source records what DIALOG printed for a set number that did not exist; this reconstruction prints a question mark and the set.",
-    "note": "'Unknown set' is its own error case, distinct from 'bad field code' and from an item number past the end of a set that does exist. Covers a SELECT operand naming an unset set number (e.g. 'S S7' with no S7, prints '? S7'), a TYPE naming an unset set number (e.g. 'T S9/5/1' with no S9, prints '? S9'), and a COMBINE naming an unset set number -- COMBINE's own operand grammar has no 'S' prefix (proto.combine.statement), so this case echoes the bare number as typed instead ('COMBINE 1-2/OR' with no S1, prints '? 1'); no error text for any of the three cases read from any source. One key covers the identical condition across commands; proto.error.unknown_field is about a field code the engine cannot resolve and proto.error.type_range about an item number past the end of a set that does exist, so neither fits it."
+    "note": "'Unknown set' is its own error case, distinct from 'bad field code' and from an item number past the end of a set that does exist. Covers a SELECT operand naming an unset set number (e.g. 'S S7' with no S7, prints '? S7'), a TYPE naming an unset set number (e.g. 'T S9/5/1' with no S9, prints '? S9'), a PRINT naming an unset set number (the same 'T S<n>' form, e.g. 'PRINT 9/5/1' with no S9, prints '? S9'), and a COMBINE naming an unset set number -- COMBINE's own operand grammar has no 'S' prefix (proto.combine.statement), so this case echoes the bare number as typed instead ('COMBINE 1-2/OR' with no S1, prints '? 1'); no error text for any of the three cases read from any source. One key covers the identical condition across commands; proto.error.unknown_field is about a field code the engine cannot resolve and proto.error.type_range about an item number past the end of a set that does exist, so neither fits it."
   },
   "proto.error.type_range": {
     "value": null,
@@ -1198,6 +1198,27 @@
         "observedSystem": "DIALOG general"
       }
     ]
+  },
+  "proto.print.ack": {
+    "value": "Printed${echo}",
+    "status": "documented",
+    "claim": "PRINT answers with one line: the word \"Printed\" and the request echoed back, with no space between them.",
+    "sources": [
+      {
+        "source": "epa-session-1978",
+        "locator": "Sample Search/Output, p. 185: '? PRINT 16/5/1-35/AS/PN' answered 'Printed16/5/1-35/AS/PN'",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
+      }
+    ],
+    "conflicts": "Successful Searching on Dialog (2001), PRINT: 'The response to a PRINT command consists of a PRINT transaction number, a confirmation of the PRINT command, and an estimated cost of the prints requested', worked example '?print s2/3/all' answered 'P108: PRINT S2/3/ALL (items 1-75) est. cost of $67.50' plus a postal-surcharge line and a cancellation-window note. This reconstruction prints the 1978 File 60 form instead of the later generic one (Trevor's ruling).",
+    "note": "Pre-anchor: the 28 February 1978 session is twelve years before this reconstruction's 1990-1994 anchor, and is the only source in the collection that shows PRINT's response for File 60. The missing space in 'Printed16/5/...' is in the printed 1978 original and is preserved here as printed, not corrected -- the same treatment proto.prompt.spacing's own conflicts note gives that source's typeset spacing generally."
+  },
+  "proto.print.no_artefact": {
+    "value": null,
+    "status": "chosen",
+    "claim": "PRINT acknowledges the request and counts it; the printed pages were made elsewhere and are not part of this reconstruction.",
+    "note": "printouts-memo-evaluation.md rules that an offline print is a separate artifact with its own evidence class (offline print, 1981, generic DIALOG), its own header form, and its own status labels, and that the 1981 facsimile headers cannot ground File 60's print header. PRINT here produces no artefact, applies no format render, and does not obey the sort codes it carries (Blue Sheet: 'PRINT S5/5/ZP'; 1978 session: 'PRINT 16/5/1-35/AS/PN') -- they are echoed only, since nothing is printed from the set for them to order."
   },
   "map.AN.display_padding": {
     "value": "zero-pad to 8 digits",
@@ -1973,25 +1994,39 @@
   "rates.file60_1998": {
     "value": {
       "perMinute": 0.25,
-      "typeByFormat": { "1": 0, "5": 0.6, "6": 0, "8": 0 }
+      "typeByFormat": { "1": 0, "5": 0.6, "6": 0, "8": 0, "K": null }
     },
     "status": "documented",
-    "claim": "Connect time costs $0.25 a minute; TYPE format prices are mostly $0.60, with formats 1, 6 and 8 free.",
+    "claim": "Connect time costs $0.25 a minute; TYPE/PRINT format prices are mostly $0.60, formats 1, 6, 8 free, KWIC's Prints price illegible.",
     "sources": [
       {
         "source": "bluesheet-1998-text",
-        "locator": "Rates section: 'Cost per minute: $0.25'; Types/Prints table, $0.60 for every format except 1, 6 and 8 at $0.00",
+        "locator": "Rates section: 'Cost per minute: $0.25'; Types/Prints table, $0.60 for every format except 1, 6 and 8 at $0.00; rows KWIC95 and KWIC96, Types $0.00, Prints '??'",
         "sourceDate": "1998-03-02",
         "observedSystem": "File 60"
       }
     ],
-    "note": "no 1990-1994 rate card is held -- statement of absence, not found in dataset-cards/research/cris-dialog/sources/ by the acquisition and review of 2026-09-09. Formats 1, 5 and 6 are implemented, so LOGOFF now prices real TYPE lines for all three (1 and 6 both free); typeByFormat's remaining entries (2,3,4,7,8,9,10,12,13,14) never price anything this reconstruction actually prints, and are carried because the 1998 sheet documents them for the file as a whole. A user-defined display-code format is never priced from this table: the Rates section of bl0060_19980423153346.html has no row for a display-code list -- a statement of absence, not found there on 2026-09-10 -- so accounting.ts's typeByFormat lookup falls through to its own zero default for that format string."
+    "note": "no 1990-1994 rate card is held -- statement of absence, not found in dataset-cards/research/cris-dialog/sources/ by the acquisition and review of 2026-09-09. Formats 1, 5 and 6 are implemented, so LOGOFF now prices real TYPE lines for all three (1 and 6 both free); typeByFormat's remaining entries (2,3,4,7,8,9,10,12,13,14) never price anything this reconstruction actually prints, and are carried because the 1998 sheet documents them for the file as a whole. A user-defined display-code format is never priced from this table: the Rates section of bl0060_19980423153346.html has no row for a display-code list -- a statement of absence, not found there on 2026-09-10 -- so accounting.ts's typeByFormat lookup falls through to its own zero default for that format string. The Types and Prints columns carry the same value for every numeric format row (0, 1-14, 66) on a 2026-09-11 re-read, confirming this one table can price both -- except the two KWIC rows, whose Prints column reads '??', not a price; that entry is 'K': null rather than a number, and proto.accounting.prints records why."
   },
   "proto.accounting.combination": {
     "value": null,
     "status": "inferred",
     "claim": "This reconstruction prices a session using the 1978/1988 LOGOFF template with the 1998 rate card.",
     "note": "No single source gives both the template and rates for the same year, so this key is labeled inferred rather than documented. Pricing never bills anything, and BEGIN's opts.accounting flag (spec 7.9) can switch it off entirely."
+  },
+  "proto.accounting.prints": {
+    "value": null,
+    "status": "documented",
+    "claim": "LOGOFF prices a Prints line per format printed, at the 1998 rate card's Prints price -- except KWIC, whose Prints price is illegible.",
+    "sources": [
+      {
+        "source": "epa-session-1978",
+        "locator": "LOGOFF block, p. 185: '  $3.50  35 Prints'",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "Priced here from the 1998 rate card's Prints column, not from 1978's own $0.10 per citation -- the same 1978-shape/1998-rate combination proto.accounting.combination already records for the Types lines. Statement of absence: the 1998 rate card's Prints price for KWIC formats (K) is not legible -- not found by reading the Prints column of the Rates table in bl0060_19980423153346.html for the two KWIC rows on 2026-09-11 (the cells read '??'); PRINT of format K is therefore not priced, and docs/not-implemented.md names it."
   },
   "proto.session.user_number": {
     "value": "013140",

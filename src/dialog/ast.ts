@@ -23,6 +23,14 @@ export type DialogCommand =
    * transcript's own set lines print it exactly this way, and COMBINE prints no per-term lines
    * even for a multi-operand statement (see proto.combine.statement). */
   | { cmd: "combine"; expr: SearchExpression; echo: string }
+  /** PRINT <Sn>/<format>/<items>[/<sortcode>...], with or without the `S` prefix (the 1978
+   * File 60 session writes `PRINT 16/5/1-35/AS/PN`, the Blue Sheet `PRINT S5/5/ZP`): the 1978
+   * File 60 form's single acknowledgement, `Printed<echo>`. `items` is `ALL` or a range, as
+   * typed but unenforced here (session.ts resolves it to a count), the same way SORT keeps its
+   * own `items` field. `sortCodes` is the trailing `/AS/PN`-shaped text, echoed only -- PRINT
+   * carries sort codes but this reconstruction produces no artefact for them to order (see
+   * proto.print.no_artefact). `echo` is everything after the command word, uppercased. */
+  | { cmd: "print"; set: number; format: string; items: string; sortCodes: string; echo: string }
   | { cmd: "expand"; term: string }
   /** PAGE or P, and PAGE- or P- (`back`) to return to the page before the current one. */
   | { cmd: "page"; back: boolean }
@@ -38,8 +46,8 @@ export type DialogCommand =
    * effect until LOGOFF"). `size` is already validated to 2..50 -- a value outside that range
    * does not reach this variant, it parses to { cmd: "unknown" } instead (proto.kwic.window). */
   | { cmd: "setkwic"; size: number }
-  /** A command DIALOG documented for File 60 but outside this milestone's slice: PRINT and
-   * TYPE by accession number. `command` names it
+  /** A command DIALOG documented for File 60 but outside this milestone's slice: TYPE by
+   * accession number and PRINT by accession number. `command` names it
    * canonically (e.g. "LOGOFF"); `rest` is whatever followed the recognized command
    * word, unparsed. */
   | { cmd: "unsupported"; command: string; rest: string }

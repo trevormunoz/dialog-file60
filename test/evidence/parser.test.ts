@@ -118,14 +118,27 @@ test("a parenthesized group parses like its ungrouped contents", () => {
 // A capability-notice stub. Each of these is a documented File 60 command but outside this
 // milestone's slice; the parser recognizes the command word and returns
 // { cmd: "unsupported" } instead of treating it the same as a typo.
-// EXPAND, PAGE, DISPLAY SETS, LOGOFF and SORT are implemented (see test/evidence/expand.test.ts,
-// test/evidence/displaysets.test.ts, test/evidence/logoff.test.ts and test/evidence/sort.test.ts)
-// and no longer parse to this stub; they are dropped from this list rather than moved, since
-// they now have their own DialogCommand variants ({ cmd: "expand" }, { cmd: "page" },
-// { cmd: "displaysets" }, { cmd: "logoff" }, { cmd: "sort" }), not { cmd: "unsupported" }.
+// EXPAND, PAGE, DISPLAY SETS, LOGOFF, SORT and PRINT (by set number) are implemented (see
+// test/evidence/expand.test.ts, test/evidence/displaysets.test.ts, test/evidence/logoff.test.ts,
+// test/evidence/sort.test.ts and test/evidence/print.test.ts) and no longer parse to this stub;
+// they are dropped from this list rather than moved, since they now have their own
+// DialogCommand variants ({ cmd: "expand" }, { cmd: "page" }, { cmd: "displaysets" },
+// { cmd: "logoff" }, { cmd: "sort" }, { cmd: "print" }), not { cmd: "unsupported" }. PRINT by
+// accession number stays on this stub -- the same channel TYPE by accession number already uses.
 test("capability-notice command words parse to unsupported, not unknown", () => {
-  expect(parse("print s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
-  expect(parse("pr s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
+  expect(parse("print 09136021/2")).toEqual({ cmd: "unsupported", command: "PRINT (by accession number)", rest: "09136021/2" });
+  expect(parse("pr 09136021/2")).toEqual({ cmd: "unsupported", command: "PRINT (by accession number)", rest: "09136021/2" });
+});
+
+// PRINT's own set form: bare set number, as the 1978 session writes it, and S-prefixed, as the
+// Blue Sheet writes it. `echo` is everything after the command word, uppercased.
+test("PRINT's set form parses set, format, items and trailing sort codes", () => {
+  expect(parse("print s1/5/1-3")).toEqual({
+    cmd: "print", set: 1, format: "5", items: "1-3", sortCodes: "", echo: "S1/5/1-3",
+  });
+  expect(parse("pr 16/5/1-35/as/pn")).toEqual({
+    cmd: "print", set: 16, format: "5", items: "1-35", sortCodes: "/AS/PN", echo: "16/5/1-35/AS/PN",
+  });
 });
 
 // KWIC is implemented as of Task 4 (test/regression/kwic-window.test.ts, test/evidence/kwic.test.ts):

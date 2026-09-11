@@ -11,7 +11,10 @@ registry.get("proto.select.truncation"); // the single-trailing-? rule TRUNCATED
 
 const unknown = (text: string): DialogCommand => ({ cmd: "unknown", text });
 
-function parseItems(s: string): number[] | null {
+// Exported for commands/print.ts: PRINT keeps `items` as typed (ALL or a range, see the
+// "print" AST variant's own comment), and resolves it to a count with this same function
+// rather than a second copy of its range grammar.
+export function parseItems(s: string): number[] | null {
   const out: number[] = [];
   for (const part of s.split(",")) {
     const m = /^(\d+)(?:-(\d+))?$/.exec(part);
@@ -172,10 +175,11 @@ function parseOperand(tok: string): SearchExpression | null {
  * command word (undefined when nothing follows); `rest` below defaults that to "".
  * `\s+(.*)` (not `\b`) requires at least one space before any remainder, so "expandable" does
  * not parse as EXPAND with rest "able" -- the capture is only ever a separate word or words.
+ * PRINT no longer lives here: its two documented shapes are recognized above, one implemented
+ * (the set form), one still a capability notice of its own (the accession-number form). Empty
+ * for now -- kept as the route for a future documented-but-unimplemented command word.
  */
-const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [
-  { pattern: /^(?:print|pr)(?:\s+(.*))?$/i, command: "PRINT" },
-];
+const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [];
 
 export function parse(line: string): DialogCommand {
   const t = line.trim();
@@ -235,6 +239,27 @@ export function parse(line: string): DialogCommand {
   if ((m = /^combine\s+(.+)$/i.exec(t))) {
     const expr = parseExpression(m[1]!.replace(/\b(\d+)\b/g, "S$1"));
     return expr ? { cmd: "combine", expr, echo: m[1]!.replace(/\s+$/, "").toUpperCase() } : unknown(line);
+  }
+  // PRINT <Sn>/<format>/<items>[/<sortcode>...] -- the 1978 File 60 session's own form
+  // (`PRINT 16/5/1-35/AS/PN`, bare set number) and the Blue Sheet's (`PRINT S5/5/ZP`,
+  // S-prefixed). `items` is ALL or a range, kept as typed (see parseItems, called at
+  // commands/print.ts's run time, not here); the trailing sort-code group is zero or more
+  // `/CC` or `/CC,D` runs, echoed only -- see the "print" AST variant's own comment on why
+  // they are never obeyed.
+  if ((m = /^(?:print|pr)\s+s?(\d+)\/([A-Za-z0-9,]+)\/([\d,-]+|all)((?:\/[A-Za-z]{2}(?:,[Dd])?)*)$/i.exec(t))) {
+    return {
+      cmd: "print",
+      set: Number(m[1]),
+      format: m[2]!.toUpperCase(),
+      items: m[3]!.toUpperCase(),
+      sortCodes: m[4]!.toUpperCase(),
+      echo: t.replace(/^(?:print|pr)\s+/i, "").toUpperCase(),
+    };
+  }
+  // PRINT by accession number (Blue Sheet, N/A section: `PRINT 09136021/2`): recognized, not
+  // implemented -- the same capability-notice channel TYPE by accession number already uses.
+  if ((m = /^(?:print|pr)\s+(\d{7,8})\/([A-Za-z0-9,]+)$/i.exec(t))) {
+    return { cmd: "unsupported", command: "PRINT (by accession number)", rest: `${m[1]}/${m[2]!.toUpperCase()}` };
   }
   if ((m = /^(?:e|expand)\s+(.+)$/i.exec(t))) return { cmd: "expand", term: m[1]!.trim() };
   if ((m = /^(?:p|page)(-)?$/i.exec(t))) return { cmd: "page", back: m[1] === "-" };

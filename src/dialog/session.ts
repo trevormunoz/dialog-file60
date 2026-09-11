@@ -16,6 +16,7 @@ import { runDisplaySets } from "./commands/displaysets";
 import { runLogoff } from "./commands/logoff";
 import { runSort } from "./commands/sort";
 import { runCombine } from "./commands/combine";
+import { runPrint } from "./commands/print";
 import { KWIC_DEFAULT } from "./kwic";
 
 const DEFAULT_USER = registry.get("proto.session.user_number").value as string;
@@ -57,6 +58,12 @@ export class DialogSession {
   /** TYPE calls actually made (a valid item ordinal reached, format-render errors included),
    * counted per format string -- what LOGOFF's per-format cost lines price. */
   typeCounts: Record<string, number> = {};
+  /** PRINT calls actually made, counted per format string the same way typeCounts counts
+   * TYPE -- what LOGOFF's Prints lines price. Not `private`: commands/print.ts increments it
+   * and commands/logoff.ts reads it, the same access every other extracted handler has to
+   * this session's other state (see kwicSize's own note on the same point). PRINT produces no
+   * artefact (proto.print.no_artefact); this is only a count. */
+  printCounts: Record<string, number> = {};
   /** The KWIC window size, in words -- SET KWIC nn sets it; the 2001 entry's own note says it
    * "remains in effect until LOGOFF", so runLogoff resets it back to KWIC_DEFAULT rather than
    * this field's initializer running again. Not `private`: commands/type.ts reads it directly
@@ -90,6 +97,7 @@ export class DialogSession {
       case "type": return runType(this, cmd);
       case "sort": return runSort(this, cmd);
       case "combine": return runCombine(this, cmd);
+      case "print": return runPrint(this, cmd);
       case "expand": return runExpand(this, cmd);
       case "page": return runPage(this, cmd);
       case "displaysets": return runDisplaySets(this, cmd);

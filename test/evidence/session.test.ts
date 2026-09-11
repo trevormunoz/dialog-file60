@@ -134,19 +134,21 @@ test("a SELECT before any BEGIN also names an offending token, never a bare ?", 
 // separately (lastNotice), for the app to show outside the stream.
 describe("capability notices", () => {
   // EXPAND is implemented (test/evidence/expand.test.ts, test/regression/expand-window.test.ts),
-  // LOGOFF is implemented (test/evidence/logoff.test.ts), and SORT is implemented
-  // (test/evidence/sort.test.ts) -- none of the three belongs on this list any longer.
+  // LOGOFF is implemented (test/evidence/logoff.test.ts), SORT is implemented
+  // (test/evidence/sort.test.ts), and PRINT (by set number) is implemented
+  // (test/evidence/print.test.ts) -- none of those belongs on this list any longer. PRINT by
+  // accession number stays a capability notice, the same channel TYPE by accession number uses.
   test("a recognized-but-unimplemented command prints nothing into the stream", async () => {
     const s = mk(); await s.submit("b 60");
-    expect(await s.submit("print")).toEqual([]);
+    expect(await s.submit("print 09136021/2")).toEqual([]);
     expect(await s.submit("t 09143165/5")).toEqual([]);
   });
 
   test("the session records the last capability notice, cleared by any other command", async () => {
     const s = mk(); await s.submit("b 60");
     expect(s.lastNotice).toBeNull();
-    await s.submit("print");
-    expect(s.lastNotice).toEqual({ command: "PRINT" });
+    await s.submit("print 09136021/2");
+    expect(s.lastNotice).toEqual({ command: "PRINT (by accession number)" });
     await s.submit("s cy=beltsville"); // an ordinary command clears the stale notice
     expect(s.lastNotice).toBeNull();
   });

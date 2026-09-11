@@ -64,6 +64,7 @@ rests on. This is the full registry, grouped by status, produced by
 - nara.file.header_record
 - nara.file.trailer_record
 - nara.tape.fy1988_accession
+- proto.accounting.prints
 - proto.begin.set_header
 - proto.begin.set_reset
 - proto.combine.statement
@@ -74,6 +75,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.expand.window
 - proto.kwic.window
 - proto.logoff.template
+- proto.print.ack
 - proto.prompt
 - proto.prompt.spacing
 - proto.select.boolean
@@ -136,6 +138,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.error.unknown_suffix
 - proto.expand.collation
 - proto.kwic.layout
+- proto.print.no_artefact
 - proto.session.clock
 - proto.session.user_number
 - render.format6.columns

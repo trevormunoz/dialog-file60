@@ -116,8 +116,9 @@ nineteen-code list (`SORT S1/ALL/OB`) is refused with the simulated `?
 <FIELD>` error instead. SORT does not implement the `FROM <file>` option
 (part of OneSearch, out of scope here) or sorting as part of a PRINT command
 -- the Blue Sheet's own `PRINT S5/5/ZP` and the 1978 File 60 session's
-`PRINT 16/5/1-35/AS/PN` both carry sort codes on PRINT itself, which is a
-later task's subject, not this one's.
+`PRINT 16/5/1-35/AS/PN` both carry sort codes on PRINT itself; PRINT is now
+implemented, but those sort codes are echoed only, not applied -- see the
+PRINT paragraph below.
 
 COMBINE is implemented, in the two forms the 28 February 1978 File 60
 session shows (EPA *Chemical Information Resources Handbook*, January
@@ -145,8 +146,11 @@ SELECT's `? S<n>` form -- no source records COMBINE's own error text
 either.
 
 A capability notice exists as a stub, not the full mechanism:
-PRINT and TYPE by accession number
-(`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
+TYPE by accession number
+(`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) and
+PRINT by accession number
+(`PRINT 09136021/2`, Blue Sheet, N/A section, distinct from the
+implemented `PRINT S3/5/1-3` form) are
 recognized by the parser as documented commands outside version 1's slice.
 Recognizing one prints nothing into the character stream; one modern line
 beneath the prompt reads "DIALOG documented `PRINT` for File 60; this
@@ -159,19 +163,46 @@ indistinguishable from a typo and gets the simulated error form, `?`
 followed by the offending token (an out-of-slice TYPE format prints the item
 header first, as described above).
 
+PRINT is implemented, in the 1978 File 60 form: `PRINT <Sn>/<format>/<items>`,
+with or without the `S` prefix, plus any trailing sort codes, answers with
+one line, `Printed<echo>` -- the request echoed back with no space after
+"Printed" (the 28 February 1978 File 60 session: `? PRINT 16/5/1-35/AS/PN`
+answered `Printed16/5/1-35/AS/PN`; the missing space is in the printed
+original and is preserved, not corrected). *Successful Searching on Dialog*
+(2001) documents a different, later response -- a PRINT transaction number,
+a confirmation, and an estimated cost (`?print s2/3/all` answered `P108:
+PRINT S2/3/ALL (items 1-75) est. cost of $67.50`, plus a postal-surcharge
+line and a cancellation-window note) -- recorded at `proto.print.ack` as a
+conflict, not printed. What PRINT does not do: **produce an artefact** --
+the printed pages a real PRINT made were produced offline, are a separate
+evidence class (`printouts-memo-evaluation.md`), and are not part of this
+reconstruction; **apply its sort codes** -- they are echoed, not obeyed,
+since nothing is printed from the set for them to order; **PRINT by
+accession number**; **PRINT TITLE**; **price a PRINT of format K** -- the
+1998 rate card's Prints price for KWIC formats is illegible, a statement of
+absence at `proto.accounting.prints`, not found by reading the Prints
+column of the Rates table in `bl0060_19980423153346.html` for the two KWIC
+rows on 2026-09-11 (the cells read `??`); and the **ERA/COPIES/REDIST/
+ARCHIVE options**.
+
 LOGOFF is implemented: it ends the session and prints the accounting block
 -- a date/time/user line, connect time at $0.25 a minute, one line per TYPE
-format actually used, and the estimated total, twice (per file and for the
-search, equal in this single-file slice). The same date/time/user line
-opens BEGIN. The 1978 File 60 session and 1988 figure 5 document the
-block's shape; the 1998 Blue Sheet's rate card prices it -- combining the
-two is inferred, since no single held source gives both for the same year.
-No rate card from 1990-1994 is held: a statement of absence, not found in
+format actually used, one line per PRINT format actually used, and the
+estimated total, twice (per file and for the search, equal in this
+single-file slice). The same date/time/user line opens BEGIN. The 1978
+File 60 session and 1988 figure 5 document the block's shape; the 1998
+Blue Sheet's rate card prices it -- combining the two is inferred, since no
+single held source gives both for the same year. No rate card from
+1990-1994 is held: a statement of absence, not found in
 `dataset-cards/research/cris-dialog/sources/` by the review of 2026-09-09.
-Pricing never bills anything and can be switched off. A real DIALOG
-accounting block's Descriptors and Prints lines -- added when a session
-displayed thesaurus descriptors or used PRINT -- are not implemented; only
-the connect-time and TYPE-format lines print.
+Pricing never bills anything and can be switched off. The Prints line is
+priced from the same rate-card column as Types -- the 1998 rate card's
+Types and Prints columns carry the same value for every numeric format row
+-- except format K, whose Prints price is illegible and is skipped rather
+than priced at an invented $0.00 (see the PRINT paragraph above). A real
+DIALOG accounting block's Descriptors line -- added when a session
+displayed thesaurus descriptors -- is not implemented; only the
+connect-time, TYPE-format and Prints-format lines print.
 
 The 1998 Blue Sheet documents 30 Additional Index (phrase-indexed) prefixes
 for File 60. Version 1 builds a phrase index for every one of them except
