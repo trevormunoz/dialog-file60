@@ -35,13 +35,19 @@ test("PRINT by accession number is a capability notice, the same channel TYPE by
   expect((await s.submit("print 09136021/2")).map(l => l.text)).toEqual([]);
 });
 
-test("LOGOFF prices the prints requested, at the 1998 rate card's per-format Prints column", async () => {
+// This harness's CY=BELTSVILLE set is the single real record fixture (AN 9049442, one item,
+// see harness.ts) -- a range naming items past that (1-10) must bill only the one item that
+// actually exists, the same clamp TYPE applies via set.ordinals[i-1] (commands/type.ts), not
+// the ten items the range names. A range wholly inside the set's real size is billed against
+// the real corpus's own multi-item Beltsville set in test/archival/sort-corpus.test.ts's
+// neighbourhood; this harness cannot exercise that case with only one record held.
+test("LOGOFF prices the prints actually in the set, clamped to its real size, not the requested range", async () => {
   const s = mk();
   await s.submit("b 60");
   await s.submit("s cy=beltsville");
   await s.submit("print 1/5/1-10");
   const out = (await s.submit("logoff")).map(l => l.text);
-  expect(out).toContainEqual("  $6.00  10 Prints");
+  expect(out).toContainEqual("  $0.60  1 Prints");
 });
 
 test("LOGOFF prices a PRINT ALL as the whole set's item count", async () => {

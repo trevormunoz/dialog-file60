@@ -19,8 +19,14 @@ export async function runPrint(session: DialogSession, cmd: Extract<DialogComman
   // admits digits, commas and hyphens, but parseItems can still refuse it (a reversed range),
   // and counting zero items for that case rather than throwing keeps PRINT's own acknowledgement
   // line -- unconditional in every source held -- from failing on a request LOGOFF simply prices
-  // at nothing.
-  const count = cmd.items === "ALL" ? set.ordinals.length : (parseItems(cmd.items) ?? []).length;
+  // at nothing. A range naming items past the set's own last item (e.g. "1-10" on a 1-item set)
+  // is clamped to the items that actually exist, the same clamp TYPE applies via its own
+  // set.ordinals[i-1] check (commands/type.ts) -- PRINT must not bill for records that do not
+  // exist, and the 2001 manual's own worked example (ALL -> "items 1-75") equals the set size,
+  // never a requested range larger than it.
+  const count = cmd.items === "ALL"
+    ? set.ordinals.length
+    : (parseItems(cmd.items) ?? []).filter(i => i <= set.ordinals.length).length;
   session.printCounts[cmd.format] = (session.printCounts[cmd.format] ?? 0) + count;
   // Printed<echo>, the 1978 File 60 session's own acknowledgement, missing space preserved as
   // printed (proto.print.ack's note). PRINT's sort codes are part of `echo` here, not read
