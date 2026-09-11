@@ -1,7 +1,7 @@
 import type { DialogCommand } from "../ast";
 import type { DialogSession } from "../session";
 import { line, type OutputLine } from "../stream";
-import { UnknownSet, UnknownField, UnknownSuffix, UnknownRef, type SearchExpression } from "../../retrieval/engine";
+import { UnknownSet, UnknownField, UnknownSuffix, UnknownRef, UnimplementedProximityField, type SearchExpression } from "../../retrieval/engine";
 import { setLine } from "../setline";
 import { firstAndOperand, operands, echoOf } from "./shared";
 import { registry } from "../../registry";
@@ -74,6 +74,14 @@ export async function addSet(
     if (e instanceof UnknownSet) return [line(`? ${bareSetErrors ? "" : "S"}${e.id}`, { registryKeys: ["proto.error.unknown_set"] })];
     if (e instanceof UnknownSuffix) return [line(`? ${e.code}`, { registryKeys: ["proto.error.unknown_suffix"] })];
     if (e instanceof UnknownRef) return [line(`? ${e.echo}`, { registryKeys: ["proto.error.unknown_field"] })];
+    if (e instanceof UnimplementedProximityField) {
+      // A proximity SELECT named a suffix outside POSITIONAL_CODES (/TI, /DE) -- a real File
+      // 60 search this reconstruction has not implemented (the positional index for every
+      // other code was measured over the 150 MB ceiling and not shipped, decision (a)), not a
+      // typo. Routed to the capability-notice channel, the same as UnknownField.documented.
+      session.lastNotice = { command: `(W)/(N)/(F) proximity over ${e.code}` };
+      return [];
+    }
     if (e instanceof UnknownField) {
       // A prefix the 1998 Blue Sheet documents but this build has no index for
       // (e.g. FY=) is a real File 60 search this milestone has not implemented, not a

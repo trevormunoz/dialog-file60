@@ -277,3 +277,30 @@ LOGOFF Types count, and the connect time against the rebuilt cast, in addition t
 9049442 line it already checked. `pnpm test` ran green (54 files, 324 tests) and `pnpm
 typecheck` was clean after this session's changes, including the regenerated
 `casts/first-session.cast` and `casts/first-session.poster.txt` (`pnpm cast && pnpm poster`).
+
+## Run record, 2026-09-11 (Task 8, proximity operators)
+
+Chosen term pair for the independent proximity check: `FRESH(W)WATER/TI` over the real corpus.
+Several candidate pairs were checked by hand against `data/RG164.CRIS.FY94.txt` before choosing
+one -- a zero count proves nothing, since it could be absence of data rather than absence of the
+feature: `GENE/TRANSFER` 39, `TISSUE/CULTURE` 66, `SOIL/EROSION` 47, `DAIRY/CATTLE` 181,
+`PEACH/TREE` 9, `WATER/QUALITY` 369, `PLANT/GROWTH` 74, `DISEASE/RESISTANCE` 119,
+`FRESH/WATER` **2**, `SWEET/POTATO` 41, `INTEGRATED/PEST` 81, `PEST/MANAGEMENT` 256.
+`FRESH(W)WATER` was chosen: small (so the AN list is easy to read and check by hand) but real --
+AN 9135868 and 9145616 (two records). Added to
+`scripts/naive-split.py` as `ti_fresh_w_water` (a fresh `prox_w` position-aware check, no code
+shared with the loader or the engine) and to `fixtures/acceptance-fy94.json`; the script's new
+sha256 is recorded in `fixtures/SOURCES.md`. `test/archival/proximity-corpus.test.ts` runs
+`S FRESH(W)WATER/TI` end to end through `DialogSession` against the real corpus and the prebuilt
+positional shards under `public/corpus/pos`, and asserts the resulting set's AN list equals
+`ti_fresh_w_water.an` exactly, not only its length.
+
+Curso p. 99 (printed 113) of `ERIC_ED374805_Curso_Introductorio_DIALOG_1994.pdf` was rendered at
+200 dpi and read: legible, and useful -- a 1994 SS session (File 49, Pais Int., not File 60, but
+the same DIALOG SELECT/SS mechanics) shows `TECHNOLOG?(W)TRANSFER?/TI` and
+`TECHNOLOG?(1N)TRANSFER?/TI`, confirming the single-trailing-suffix-shared-by-both-operands rule
+and the per-operand-then-combined SS printing shape with an anchor-period (1994) source, moving
+`proto.select.proximity.perterm` off a 2001-only bracket.
+
+`pnpm test`, `pnpm typecheck`, and `pnpm verify:acceptance` all ran clean after this session's
+changes.

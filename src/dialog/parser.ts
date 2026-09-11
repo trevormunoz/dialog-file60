@@ -6,8 +6,11 @@ import { registry } from "../registry";
 
 registry.get("proto.select.echo_case"); // the echoed SELECT expression is uppercased
 registry.get("proto.select.suffix"); // the word/CODE[,CODE...] suffix grammar SUFFIXED below implements
-registry.get("proto.select.precedence"); // the parentheses-then-NOT-then-AND-then-OR order parseExpression below implements
+registry.get("proto.select.precedence"); // the parentheses-then-proximity-then-NOT-then-AND-then-OR order parseExpression below implements
 registry.get("proto.select.truncation"); // the single-trailing-? rule TRUNCATED below implements
+registry.get("proto.select.proximity"); // (W)/(N)/(F), implemented by prox() below
+registry.get("proto.select.proximity.numbered"); // (nW)/(nN), also implemented by prox() below
+registry.get("proto.select.proximity.unimplemented"); // (S)/(L)/(T), refused by prox() below
 
 const unknown = (text: string): DialogCommand => ({ cmd: "unknown", text });
 
@@ -72,7 +75,10 @@ const TRUNCATED = /^([^=/?()]+)\?(?:\/([A-Za-z]{2}(?:,[A-Za-z]{2})*))?$/;
  */
 function lex(src: string): string[] {
   const out: string[] = [];
-  const re = /\s*(\(|\)|\bAND\b|\bOR\b|\bNOT\b)\s*/gi;
+  // The proximity alternative (a whole "(nX)" unit, e.g. "(W)" or "(3N)") is tried before the
+  // bare "(" so a proximity operator is never mis-split into "(" + "3N" + ")" -- the likeliest
+  // bug in this grammar (parser.ts's own note on prox() below).
+  const re = /\s*(\(\d*[A-Za-z]\)|\(|\)|\bAND\b|\bOR\b|\bNOT\b)\s*/gi;
   let last = 0;
   for (const m of src.matchAll(re)) {
     const operand = src.slice(last, m.index).trim();
@@ -87,15 +93,26 @@ function lex(src: string): string[] {
 
 const OPERATORS = new Set(["AND", "OR", "NOT"]);
 
+// A proximity operator token, as lex() now emits it: "(", an optional digit run (the numbered
+// forms' n), one letter, ")". Six letters are documented (Successful Searching on Dialog, 2001,
+// "Order of Processing": T W N L S F); only W, N and F are implemented here -- (S), (L) and (T)
+// are each defined only relative to something "as defined by the database", and no held source
+// states File 60's own subfield unit, descriptor unit, or chemical-name parts. Statement of
+// absence: not found by grepping "(S)", "(L)", "(T)", "subfield", "descriptor unit" and
+// "chemical name" across the stripped 1998 Blue Sheet text and the 2001 manual text on
+// 2026-09-10 (proto.select.proximity.unimplemented).
+const PROX = /^\((\d*)([WNFSLT])\)$/i;
+// A bare word or truncated word with no suffix of its own -- inside a proximity expression the
+// suffix belongs to the WHOLE expression, carried only on the run's last token (see prox()
+// below), so an earlier leaf like "SERUM" in "SERUM(W)LIPID?/DE" is genuinely bare here.
+const PROX_TRUNC = /^([^=/?()]+)\?$/;
+const PROX_BARE = /^[^=/?()]+$/;
+
 /**
  * Recursive descent over the documented order of processing (Successful Searching on Dialog,
  * 2001, "Order of Processing": parentheses, then proximity, then NOT, then AND, then OR;
- * innermost parentheses first). Proximity operators are out of this slice and never reach
- * here -- parse() would answer them with a capability notice before calling this, but none of
- * the CAPABILITY_WORDS below recognize a proximity operator yet, so a SELECT using one is
- * unknown, the same as before this grammar existed. Returns null for any statement this
- * grammar cannot read, including an unmatched parenthesis and a leading NOT (spec 7.12: NOT
- * is binary).
+ * innermost parentheses first). Returns null for any statement this grammar cannot read,
+ * including an unmatched parenthesis and a leading NOT (spec 7.12: NOT is binary).
  */
 export function parseExpression(src: string): SearchExpression | null {
   const t = lex(src);
@@ -126,7 +143,43 @@ export function parseExpression(src: string): SearchExpression | null {
     i++;
     return parseOperand(tok);
   };
-  const not = binary(primary, "not", "NOT");
+  /**
+   * A single proximity operand pair: leftTok (op) rightTok. Only rightTok, the run's last
+   * token, is parsed through the ordinary parseOperand (so it carries its own real suffix or
+   * truncation, e.g. "LIPID?/DE"); leftTok is parsed bare. The suffix codes found on rightTok
+   * (or BASIC_INDEX if it names none) are pushed onto BOTH leaves -- SERUM(W)LIPID?/DE searches
+   * /DE for both operands, not only the right one (Blue Sheet's own four File 60 examples, and
+   * the 1994 Curso p. 99 SS session, TECHNOLOG?(W)TRANSFER?/TI, show the same single trailing
+   * suffix). Chains of more than one proximity operator are not attempted: no held source shows
+   * one, and every documented example is exactly two operands.
+   */
+  const prox = (): SearchExpression | null => {
+    const tok = peek();
+    if (tok === undefined || !(t[i + 1] !== undefined && PROX.test(t[i + 1]!))) return primary();
+    const leftTok = t[i]!;
+    const opTok = t[i + 1]!;
+    const m = PROX.exec(opTok)!;
+    const op = m[2]!.toUpperCase();
+    const rightTok = t[i + 2];
+    if (rightTok === undefined || rightTok === "(" || OPERATORS.has(rightTok) || PROX.test(rightTok)) return null;
+    i += 3;
+    if (op === "S" || op === "L" || op === "T") return null; // proto.select.proximity.unimplemented
+    const suffixMatch = /^(.+)\/([A-Za-z]{2}(?:,[A-Za-z]{2})*)$/.exec(rightTok);
+    const codes = suffixMatch ? suffixMatch[2]!.toUpperCase().split(",").map(c => `/${c}`) : [BASIC_INDEX];
+    const leaf = (raw: string): SearchExpression | null => {
+      const truncM = PROX_TRUNC.exec(raw);
+      if (truncM) return { kind: "trunc", codes, stem: truncM[1]!.toUpperCase(), echo: raw.toUpperCase() };
+      if (PROX_BARE.test(raw)) return { kind: "word", codes, term: raw.toUpperCase() };
+      return null;
+    };
+    const left = leaf(leftTok);
+    const right = leaf(suffixMatch ? suffixMatch[1]! : rightTok);
+    if (!left || !right) return null;
+    const distance = m[1] ? Number(m[1]) : 1; // proto.select.proximity.numbered: inferred, see registry
+    const echo = `${leftTok.toUpperCase()}${opTok.toUpperCase()}${rightTok.toUpperCase()}`;
+    return { kind: "prox", op: op as "W" | "N" | "F", distance, left, right, echo };
+  };
+  const not = binary(prox, "not", "NOT");
   const and = binary(not, "and", "AND");
   const or = binary(and, "or", "OR");
   const expr = or();

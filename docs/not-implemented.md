@@ -82,18 +82,41 @@ OR and NOT are implemented, following the order of processing a later DIALOG
 manual documents: without parentheses, NOT is worked out first, then AND,
 then OR; parentheses change the order, innermost group first. `S CY=AMES OR
 CY=BELTSVILLE AND ST=MARYLAND` and `S (CY=AMES OR CY=BELTSVILLE) AND
-ST=MARYLAND` parse to different expressions. Proximity operators
-((W), (N), and the rest) are not implemented; a SELECT using one is
-indistinguishable from a typo, the same as before OR and NOT existed here.
-The positional index that would make them resolvable
-([Positional index](indexes.md)) is itself built and uploaded for only two
-Basic Index codes, `/TI` and `/DE`: the full eight-code positional index
-measured 205,241,665 bytes under `public/corpus/pos` (`pnpm load`,
+ST=MARYLAND` parse to different expressions.
+
+Proximity is implemented for five of the eight documented forms: `(W)`
+(terms adjacent, in the order typed), `(N)` (terms adjacent, either order),
+`(F)` (terms in the same field, any distance), and their numbered forms
+`(nW)`/`(nN)`. `S SERUM(W)LIPID?/DE`, `S FISH(F)OIL?/NR`,
+`S LIPID?(N)LEVEL?/OB` and `S LIPID?(3N)METABOL?/TI` (the Blue Sheet's own
+four File 60 examples) all parse and evaluate; a proximity expression's
+suffix is shared by both operands (it searches the same code for each), not
+attached to the right one only. The *meaning* of the number in `(nW)`/
+`(nN)` is not documented anywhere held -- only the examples `(1W)`, `(2N)`
+and `(3N)` appear -- so it is *inferred*, not read: this reconstruction
+takes `n` as the maximum count of words allowed between the two terms, so a
+bare `(W)`/`(N)` is the same as `(1W)`/`(1N)` (`proto.select.proximity.numbered`).
+`(S)`, `(L)` and `(T)` are refused rather than approximated: each is
+defined only relative to something "as defined by the database" (a
+subfield unit, a descriptor unit, or a chemical name's parts), and no held
+source states what any of the three means for File 60 -- a statement of
+absence (not found by grepping `(S)`, `(L)`, `(T)`, "subfield",
+"descriptor unit" and "chemical name" across the stripped 1998 Blue Sheet
+text and the 2001 manual text on 2026-09-10). A SELECT using one of the
+three parses to null, the simulated `?` error, the same as any other
+statement this grammar cannot read.
+
+Proximity is resolved over the positional index Task 7 built
+([Positional index](indexes.md)), which is itself built and uploaded for
+only two Basic Index codes, `/TI` and `/DE`: the full eight-code positional
+index measured 205,241,665 bytes under `public/corpus/pos` (`pnpm load`,
 2026-09-11), over this reconstruction's 150 MB ceiling on bytes added to
 the bucket's `v1/` prefix (Trevor's pre-approved decision (a), recorded at
 `index.word.positions`). `/TX`, `/AP`, `/OB`, `/PR`, `/PB` and `PO=` carry
-no positional index, so proximity over them could not be answered without a
-further, larger build even once the operators themselves are implemented.
+no positional index, so a proximity SELECT naming any of those six codes
+is not silently accepted as a zero-item set: it is refused at prepare()
+time and routed to the same capability-notice channel as a documented
+search prefix with no built index (`proto.select.proximity.unimplemented`).
 
 SELECT STEPS (`SS`, or `SELECT STEPS`) is implemented: it prints `Processing`,
 then a numbered set for each operand of the search, then the combined set,

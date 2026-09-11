@@ -5,7 +5,7 @@ value, not more text appended to the value already open) -- see registry key
 formatb.encoding.continuation_0xAC. No shared code with packages/cris-formatb.
 Usage: python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt > fixtures/acceptance-fy94.json
 """
-import json, sys
+import json, re, sys
 
 def values(rec: bytes, tag: bytes) -> list[str]:
     out: list[bytearray] = []
@@ -109,6 +109,25 @@ def kwic_window(words: list[str], match_idx: int, size: int) -> str:
     right = " ..." if end < len(words) - 1 else ""
     return left + " ".join(words[start:end + 1]) + right
 
+# Proximity (W): position-aware check for S FRESH(W)WATER/TI, written fresh here -- counts
+# positions over every whitespace-separated word of a TI value, including stop words (the same
+# rule Task 7's positional index chose, index.word.positions), so the two derivations are
+# comparable. No code shared with src/loader/index-builder.ts's buildPositions or
+# src/retrieval/engine.ts's near().
+def prox_w(text: str, a: str, b: str, distance: int = 1) -> bool:
+    words = [w.strip("-") for w in re.split(r"[^A-Za-z0-9-]+", text.upper()) if w.strip("-")]
+    for i, w in enumerate(words):
+        if w != a:
+            continue
+        for j in range(i + 1, min(i + 1 + distance, len(words))):
+            if words[j] == b:
+                return True
+    return False
+
+# FRESH(W)WATER over /TI: a real, small, nonzero pair, chosen after checking several candidates
+# by hand (GENE/TRANSFER 39, TISSUE/CULTURE 66, PEACH/TREE 9, FRESH/WATER 2, ... -- a zero count
+# proves nothing, so this is a pair actually present, not the corpus's absence of one).
+ti_fresh_w_water = [r for r in recs if any(prox_w(v, "FRESH", "WATER") for v in values(r, b"TI"))]
 rec_9049442 = next(r for r in recs if an(r) == "9049442")
 ti_9049442_words = " ".join(values(rec_9049442, b"TI")).split()
 ti_9049442_peach_idx = next(i for i, w in enumerate(ti_9049442_words) if kwic_word_match(w, "PEACH"))
@@ -127,4 +146,5 @@ print(json.dumps({
     "cy_beltsville_sorted_by_pn": {"count": len(belt_by_pn), "an": belt_by_pn},
     "cy_beltsville_sorted_by_in": {"count": len(belt_by_in), "an": belt_by_in},
     "kwic_9049442_ti_peach_14": kwic_9049442_ti_peach_14,
+    "ti_fresh_w_water": {"count": len(ti_fresh_w_water), "an": sorted(an(r) for r in ti_fresh_w_water)},
 }, indent=1))

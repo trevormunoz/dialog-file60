@@ -1713,7 +1713,7 @@
       }
     ],
     "decision": "no anchor-period source states the order of processing, so this reconstruction follows the 2001 book's stated order (parentheses, then proximity, then NOT, then AND, then OR) instead of refusing mixed operators.",
-    "note": "proximity operators are out of the slice, so only the NOT, AND, OR part of the order is exercised"
+    "note": "As of Task 8, (W), (N), (F) and their numbered forms (nW)/(nN) are implemented and exercise the proximity step of this order; (S), (L) and (T) are refused (proto.select.proximity.unimplemented) and never reach it."
   },
   "proto.select.boolean": {
     "value": [
@@ -1738,6 +1738,64 @@
       }
     ],
     "decision": "NOT is binary (spec 7.12); a leading NOT does not parse. In 1978 these combinations were made with COMBINE and a set-number legend, not SELECT's own AND/OR/NOT words; COMBINE is out of this slice, and the SELECT form of 1984 onward is what this reconstruction implements."
+  },
+  "proto.select.proximity": {
+    "value": { "W": "adjacent, in order", "N": "adjacent, either order", "F": "same field, any distance" },
+    "status": "documented",
+    "claim": "Three proximity operators are implemented: (W) requires two terms next to each other in the order typed, (N) the same but in either order, and (F) only that both terms are in the same field.",
+    "sources": [
+      { "source": "bluesheet-1998-text",
+        "locator": "Basic Index, SELECT examples: 'S SERUM(W)LIPID?/DE', 'S FISH(F)OIL?/NR', 'S LIPID?(N)LEVEL?/OB', 'S LIPID?(3N)METABOL?/TI'; Additional Indexes, 'S PO=(OHIO(W)STATE)'",
+        "sourceDate": "1998-03-02", "observedSystem": "File 60" },
+      { "source": "successful-searching-2001",
+        "locator": "SELECT, \"Logical and Proximity Operators\": (W) 'Requests that terms be adjacent to each other and in the order specified.'; (N) 'Requests that terms be adjacent but in any order.'; (F) 'Requests that terms be in the same field, as defined by the database.'",
+        "sourceDate": "2001", "observedSystem": "DIALOG general" },
+      { "source": "curso-1994",
+        "locator": "p. 99 (printed 113), 'Uso de los operadores de proximidad (W), (), y (N)': '?ss technolog?(w)transfer?/ti' -> 'S1 4322 TECHNOLOG?/TI', 'S2 1330 TRANSFER?/TI', 'S3 252 TECHNOLOG?(W)TRANSFER?/TI' (File 49, Pais Int., not File 60, but the same DIALOG SELECT/SS mechanics: a single trailing suffix shared by both truncated operands, and one per-operand set line before the combined one)",
+        "sourceDate": "1994", "observedSystem": "DIALOG general" }
+    ],
+    "decision": "(S), (L) and (T) are not implemented -- each is defined only relative to something 'as defined by the database' (a subfield unit, a descriptor unit, or a chemical name's parts), and no held source states what any of those three are for File 60. Implementing them would mean choosing a definition and presenting it as File 60's own. Statement of absence: not found by grepping \"(S)\", \"(L)\", \"(T)\", \"subfield\", \"descriptor unit\" and \"chemical name\" across the stripped 1998 Blue Sheet text and Successful_Searching_on_Dialog_2001_djvu.txt on 2026-09-10. A SELECT using one of the three parses to null, the same as any other statement this grammar cannot read (proto.select.proximity.unimplemented carries the runtime-facing side of this same absence).",
+    "note": "Resolved over the positional index Task 7 built, which ships positions for /TI and /DE only -- a proximity SELECT naming any other code (/TX, /AP, /OB, /PR, /PB, PO=) is refused at prepare() time (UnimplementedProximityField) and routed to the capability-notice channel, not silently accepted; see proto.select.proximity.unimplemented and index.word.positions for the 150 MB ceiling that set that boundary."
+  },
+  "proto.select.proximity.numbered": {
+    "value": "n = the maximum number of words that may fall between the two terms",
+    "status": "inferred",
+    "claim": "A number before (W) or (N), like (3N), allows up to that many words between the two search terms; a bare (W) or (N) is the same as (1W) or (1N).",
+    "sources": [
+      { "source": "bluesheet-1998-text",
+        "locator": "Basic Index, SELECT example: 'S LIPID?(3N)METABOL?/TI'",
+        "sourceDate": "1998-03-02", "observedSystem": "File 60" },
+      { "source": "successful-searching-2001",
+        "locator": "SELECT worked example: '?s self(Iw)esteem and kindergarten?' (the OCR renders '(1W)' as '(Iw)')",
+        "sourceDate": "2001", "observedSystem": "DIALOG general" },
+      { "source": "curso-1994",
+        "locator": "p. 99 (printed 113): '?ss technolog?(1n)transfer?/ti' -> 'S9 382 TECHNOLOG?(1N)TRANSFER?/TI'",
+        "sourceDate": "1994", "observedSystem": "DIALOG general" }
+    ],
+    "decision": "No held source states what the number in (nW)/(nN) means -- only the examples (1W), (2N) (implicit in the 1994 Curso's own bare-(W)-vs-(1N) pairing, where (1N)'s count 382 differs from (W)'s 252) and (3N) appear. This reconstruction reads n as the maximum count of intervening words, so a bare (W)/(N) is the same as (1W)/(1N) -- the alternative reading (n as an exact required gap) is not adopted, and no source distinguishes between the two."
+  },
+  "proto.select.proximity.perterm": {
+    "value": "one postings line per word, then one for the proximity expression, then the set line",
+    "status": "documented",
+    "claim": "A proximity search prints a count for each word searched, then a count for the whole proximity expression, then the set line -- the same shape any other multi-term search prints.",
+    "sources": [
+      { "source": "successful-searching-2001",
+        "locator": "SELECT worked example: '?s self(Iw)esteem and kindergarten?' -> '223646 SELF', '26261 ESTEEM', '25506 SELF(IW)ESTEEM', '19458 KINDERGARTEN?', 'S2 265 SELF(IW)ESTEEM AND KINDERGARTEN?'",
+        "sourceDate": "2001", "observedSystem": "DIALOG general" },
+      { "source": "database-magazine-1988",
+        "locator": "a (W) expression's printed postings lines with SET DETAIL off, the same shape",
+        "sourceDate": "1988", "observedSystem": "DIALOG general" },
+      { "source": "curso-1994",
+        "locator": "p. 99 (printed 113): 'S1 4322 TECHNOLOG?/TI', 'S2 1330 TRANSFER?/TI', 'S3 252 TECHNOLOG?(W)TRANSFER?/TI' -- SELECT STEPS' own per-operand-then-combined numbering, applied to a proximity expression",
+        "sourceDate": "1994", "observedSystem": "DIALOG general" }
+    ],
+    "decision": "No new printing rule: the existing perTerm mechanism (one line per leaf, in evaluation order, then the combined/set line) already produces this shape; the proximity node contributes its own line after its operands' lines. Moved from a 2001-only bracket to a 1994-anchored reading once the Curso p. 99 render (Task 8 Step 1) turned out legible."
+  },
+  "proto.select.proximity.unimplemented": {
+    "value": null,
+    "status": "chosen",
+    "claim": "Three of DIALOG's proximity operators are refused here, because no surviving source says what they meant in this file.",
+    "note": "Statement of absence: no File 60 definition of the (S), (L) or (T) units is found by grepping \"(S)\", \"(L)\", \"(T)\", \"subfield\", \"descriptor unit\" and \"chemical name\" across the stripped 1998 Blue Sheet text and Successful_Searching_on_Dialog_2001_djvu.txt on 2026-09-10 (see proto.select.proximity's own decision for the same absence, stated once and cited from both). Separately, and for a different reason: proximity over any Basic Index code other than /TI and /DE -- /TX, /AP, /OB, /PR, /PB, and PO= -- is also not implemented, because the positional index Task 7 built ships only /TI and /DE (the full eight-code positional index measured 205,241,665 bytes, over this reconstruction's 150 MB ceiling on bytes added to the bucket's v1/ prefix, Trevor's pre-approved decision (a), recorded at index.word.positions). A proximity SELECT naming an unshipped code is refused at prepare() time (UnimplementedProximityField, src/retrieval/engine.ts) and routed to the capability-notice channel, the same as any other documented-but-unimplemented File 60 search -- never silently accepted as a zero-item set."
   },
   "proto.select.truncation": {
     "value": { "symbol": "?", "position": "trailing", "perTermLine": "as typed" },

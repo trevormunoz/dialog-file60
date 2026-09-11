@@ -82,6 +82,8 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.select.echo_case
 - proto.select.per_term_postings
 - proto.select.precedence
+- proto.select.proximity
+- proto.select.proximity.perterm
 - proto.select.setline
 - proto.select.truncation
 - proto.selectsteps.processing
@@ -112,6 +114,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.accounting.combination
 - proto.begin.banner
 - proto.expand.display
+- proto.select.proximity.numbered
 - proto.select.suffix
 - render.headings.join
 - render.text.justify
@@ -140,6 +143,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.expand.collation
 - proto.kwic.layout
 - proto.print.no_artefact
+- proto.select.proximity.unimplemented
 - proto.session.clock
 - proto.session.user_number
 - proto.sort.multivalue_key

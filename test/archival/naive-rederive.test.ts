@@ -20,8 +20,11 @@ test("naive-split.py's bytes match the sha256 recorded in fixtures/SOURCES.md", 
   );
 });
 
-test("naive-split.py shares no code with the TS reader: it imports only json and sys", () => {
+// Task 8 added `re` (scripts/naive-split.py's own prox_w, a position-aware proximity check
+// written fresh for the independence rule -- no code shared with src/loader/index-builder.ts's
+// buildPositions or src/retrieval/engine.ts's near()).
+test("naive-split.py shares no code with the TS reader: it imports only json, re and sys", () => {
   const src = readFileSync(SCRIPT, "utf8");
   const imports = [...src.matchAll(/^import\s+(.+)$/gm)].map(m => m[1]!.trim());
-  expect(imports).toEqual(["json, sys"]);
+  expect(imports).toEqual(["json, re, sys"]);
 });

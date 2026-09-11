@@ -2,7 +2,8 @@ import { parseRecord, lineToOffset, LINE_BYTES, type LogicalRecord, type Profile
 import type { Offsets, Index } from "../loader/corpus-format";
 import { DOCUMENTED_PHRASE_PREFIXES } from "../loader/corpus-format";
 import { phraseKey } from "../loader/phrase";
-import { WORD_CODES, shardOf, resolveWordCode } from "../loader/words";
+import { WORD_CODES, POSITIONAL_CODES, FIELD_STRIDE, shardOf, resolveWordCode } from "../loader/words";
+import type { PositionalShard } from "../loader/corpus-format";
 import type { WordIndexSource, PositionalSource } from "./words";
 import { registry } from "../registry";
 export type { RangeReader } from "./reader";
@@ -16,6 +17,9 @@ registry.get("proto.select.boolean");
 // phraseKey) is cited here, at the point where a SELECT term is looked up: this is the one
 // place in the retrieval layer that applies it.
 registry.get("index.phrase.uppercase");
+registry.get("proto.select.proximity");
+registry.get("proto.select.proximity.numbered");
+registry.get("proto.select.proximity.perterm");
 
 export type SearchExpression =
   | { kind: "term"; field: string; term: string }
@@ -32,7 +36,18 @@ export type SearchExpression =
   /** `word?` -- a prefix scan over the sorted term list of each code named. `stem` is the
    *  text before the "?", uppercased; `echo` is the operand exactly as typed, uppercased,
    *  including the "?" -- the per-term line shows the truncated term as entered. */
-  | { kind: "trunc"; codes: string[]; stem: string; echo: string };
+  | { kind: "trunc"; codes: string[]; stem: string; echo: string }
+  /** A proximity expression: (W) adjacent-in-order, (N) adjacent-either-order, (F) same field,
+   * and their numbered forms (nW)/(nN) -- proto.select.proximity, .numbered. `left` and
+   * `right` are always "word" or "trunc" leaves in this grammar (parser.ts's prox() never
+   * nests one proximity expression inside another); typed as the broader SearchExpression here
+   * only so this variant does not need its own leaf type. Both leaves' `codes` are the whole
+   * expression's own shared suffix, pushed down by the parser -- SERUM(W)LIPID?/DE searches
+   * /DE for both operands, not just the right one (Blue Sheet). `distance` is 1 for the bare
+   * forms and the number inside the parens for a numbered form; unused for (F). `echo` is the
+   * operand exactly as typed, uppercased (e.g. "SERUM(W)LIPID?/DE") -- what the combined
+   * per-term postings line prints (proto.select.proximity.perterm). */
+  | { kind: "prox"; op: "W" | "N" | "F"; distance: number; left: SearchExpression; right: SearchExpression; echo: string };
 export interface SearchResult { perTerm: { display: string; postings: number }[]; ordinals: number[]; }
 
 /** SELECT named a set number with no set open in the session yet (e.g. `S S7` with no S7).
@@ -59,6 +74,30 @@ export class UnknownField extends Error {
 export class UnknownSuffix extends Error {
   constructor(readonly code: string) { super(`unknown suffix ${code}`); }
 }
+
+/** A proximity leaf named a suffix outside POSITIONAL_CODES (/TI and /DE only -- Trevor's
+ * pre-approved decision (a): the full eight-code positional index measured 205,241,665 bytes,
+ * over this reconstruction's 150 MB ceiling, so only /TI and /DE shipped -- registry key
+ * proto.select.proximity.unimplemented). `code` is the offending suffix, uppercased with its
+ * leading slash. This names a real File 60 search this reconstruction has not implemented, not
+ * a typo -- the caller routes it to the capability-notice channel, the same as
+ * UnknownField.documented. */
+export class UnimplementedProximityField extends Error {
+  constructor(readonly code: string) { super(`proximity not indexed for ${code}`); }
+}
+
+/** (W): b follows a in the same field, with at most distance-1 words between it and a. (N):
+ * the same, in either order. (F): the same field, any distance -- distance is not read. Pure
+ * arithmetic over two packed positions (fieldOrdinal * FIELD_STRIDE + wordPosition,
+ * src/loader/words.ts); registry: index.word.positions (the packing rule this reads) and
+ * proto.select.proximity (the operator definitions this implements). Exported for
+ * test/regression/proximity.test.ts's own pure position-comparison cases. */
+export const near = (op: "W" | "N" | "F", distance: number, a: number, b: number): boolean => {
+  if (Math.floor(a / FIELD_STRIDE) !== Math.floor(b / FIELD_STRIDE)) return false;
+  if (op === "F") return true;
+  const d = (b % FIELD_STRIDE) - (a % FIELD_STRIDE);
+  return op === "W" ? d > 0 && d <= distance : d !== 0 && Math.abs(d) <= distance;
+};
 
 /** SELECT named an EXPAND ref (E3 or E3:E5) with no EXPAND open, or naming a row outside the
  * page currently displayed. `echo` is the token as typed -- the caller prints it bare (`? E3`),
@@ -92,6 +131,11 @@ export class RetrievalEngine {
    * (proto.sort.multivalue_key), not the order distinct term strings were first created while
    * building the index. */
   private sortReverse = new Map<string, Map<number, string>>();
+  /** Positional shards already fetched, keyed `${code}:${shard}` -- the (Task 8) proximity
+   * side of `shards`, loaded by preparePositional() and read by positionsOf(). Kept separate
+   * from `shards` since a PositionalShard (term -> ordinal -> packed positions) is a different
+   * shape from a word shard (term -> ordinals). */
+  private posShards = new Map<string, PositionalShard>();
 
   constructor(
     private offsets: Offsets,
@@ -140,8 +184,61 @@ export class RetrievalEngine {
         }
         return;
       }
+      case "prox":
+        await this.preparePositional(expr.left);
+        await this.preparePositional(expr.right);
+        return;
       default: return;
     }
+  }
+
+  /** Loads the positional shard(s) a proximity leaf's own codes need -- POSITIONAL_CODES only
+   * (/TI, /DE): any other suffix throws UnimplementedProximityField before any fetch is
+   * attempted, the same guard shape UnknownSuffix gives an unrecognized word code. A "trunc"
+   * leaf's stem shares its shard with every term it can match, since shardOf keys on a term's
+   * first character and a truncation stem's first character is the same for every match. */
+  private async preparePositional(leaf: SearchExpression): Promise<void> {
+    if (leaf.kind !== "word" && leaf.kind !== "trunc") throw new Error("a proximity leaf must be a word or a truncated term");
+    for (const code of leaf.codes) {
+      if (!POSITIONAL_CODES.includes(code)) throw new UnimplementedProximityField(code);
+      const shard = shardOf(leaf.kind === "word" ? phraseKey(leaf.term) : leaf.stem);
+      const key = `${code}:${shard}`;
+      if (!this.posShards.has(key)) {
+        if (!this.posSource) throw new Error(`no positional index source configured for ${code}`);
+        this.posShards.set(key, await this.posSource.positions(code, shard));
+      }
+    }
+  }
+
+  /** ordinal -> that record's packed positions for a proximity leaf, read from the shard(s)
+   * preparePositional() already cached. Pushes the leaf's own per-term postings line as a side
+   * effect -- the same "one line per leaf, in evaluation order" shape every other multi-operand
+   * SELECT already prints (proto.select.per_term_postings); no new printing rule
+   * (proto.select.proximity.perterm). A truncated leaf's postings union every term in the
+   * shard that starts with its stem, the same rule prefixPostings applies for an ordinary
+   * truncated SELECT. `display` carries no suffix -- the leaf's own echo/term as typed, since
+   * the suffix belongs to the whole proximity expression (the combined line below shows it),
+   * matching the 2001 and 1994 (curso) printed examples, whose bare-word operands show no
+   * suffix on their own lines either. */
+  private positionsOf(leaf: SearchExpression, perTerm: SearchResult["perTerm"]): Map<number, number[]> {
+    if (leaf.kind !== "word" && leaf.kind !== "trunc") throw new Error("a proximity leaf must be a word or a truncated term");
+    const out = new Map<number, number[]>();
+    const seen = new Set<number>();
+    for (const code of leaf.codes) {
+      const shard = shardOf(leaf.kind === "word" ? phraseKey(leaf.term) : leaf.stem);
+      const posShard = this.posShards.get(`${code}:${shard}`);
+      if (!posShard) throw new Error(`prepare() was not called for ${code}:${shard}`);
+      const terms = leaf.kind === "word" ? [phraseKey(leaf.term)] : Object.keys(posShard).filter(t => t.startsWith(leaf.stem));
+      for (const term of terms) {
+        for (const [ordStr, packed] of Object.entries(posShard[term] ?? {})) {
+          const ord = Number(ordStr);
+          seen.add(ord);
+          out.set(ord, (out.get(ord) ?? []).concat(packed));
+        }
+      }
+    }
+    perTerm.push({ display: leaf.kind === "word" ? phraseKey(leaf.term) : leaf.echo, postings: seen.size });
+    return out;
   }
 
   /** Every term the given field or suffix carries, paired with its postings count -- used by
@@ -255,6 +352,19 @@ export class RetrievalEngine {
           }))].sort((a, b) => a - b);
           perTerm.push({ display: e.echo, postings: ords.length });
           return ords;
+        }
+        case "prox": {
+          const l = this.positionsOf(e.left, perTerm);
+          const r = this.positionsOf(e.right, perTerm);
+          const out: number[] = [];
+          for (const [ord, lp] of l) {
+            const rp = r.get(ord);
+            if (!rp) continue;
+            if (lp.some(a => rp.some(b => near(e.op, e.distance, a, b)))) out.push(ord);
+          }
+          const sorted = out.sort((a, b) => a - b);
+          perTerm.push({ display: e.echo, postings: sorted.length });
+          return sorted;
         }
       }
     };

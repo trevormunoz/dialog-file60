@@ -47,6 +47,9 @@ export function echoOf(expr: SearchExpression): string {
     case "set": return `S${expr.id}`;
     // `echo` is already the operand as typed and uppercased, including the trailing "?".
     case "trunc": return expr.echo;
+    // Also already the operand as typed and uppercased, e.g. "SERUM(W)LIPID?/DE" (parser.ts's
+    // prox()) -- operands() treats a "prox" node as one leaf, the same as "trunc" and "word".
+    case "prox": return expr.echo;
     default: return "";   // operands() returns leaves only, so this is unreachable
   }
 }

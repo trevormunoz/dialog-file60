@@ -221,8 +221,26 @@ Re-ran `python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the cor
 adding it: the first twelve fields are byte-for-byte unchanged; `cy_beltsville_sorted_by_in`
 count 669, the same 669 ANs `cy_beltsville` already has, reordered by IN.
 
+Added a fourteenth field, `ti_fresh_w_water`, for proximity (W): the AN list for TI text
+carrying FRESH immediately followed by WATER (at most 0 intervening words), checking
+`S FRESH(W)WATER/TI` against `prox_w`, a position-aware check written fresh inside the script
+(own word split, own adjacency loop, counting positions over every whitespace-separated word of
+a TI value including stop words -- the same rule Task 7's positional index chose,
+`index.word.positions`) -- no code shared with `src/loader/index-builder.ts`'s `buildPositions`
+or `src/retrieval/engine.ts`'s `near()`. The pair was chosen by checking several candidates by
+hand against the real corpus before settling on one (GENE/TRANSFER 39, TISSUE/CULTURE 66, SOIL/
+EROSION 47, DAIRY/CATTLE 181, PEACH/TREE 9, WATER/QUALITY 369, PLANT/GROWTH 74, DISEASE/
+RESISTANCE 119, FRESH/WATER 2, SWEET/POTATO 41, INTEGRATED/PEST 81, PEST/MANAGEMENT 256):
+FRESH(W)WATER is small but real, not a zero count that would prove nothing. Adding `import re`
+(the script previously imported only `json, sys`; `prox_w`'s word split needs it) is the one
+change to the script's own import list this field required --
+test/archival/naive-rederive.test.ts's import-list pin was updated alongside it. Re-ran
+`python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus after adding it:
+the first thirteen fields are byte-for-byte unchanged; `ti_fresh_w_water` count 2, AN 9135868 and
+9145616.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: cfd0a6aefb312badb17438d1d222faf407715d7912d95ba1226a3dabb32b7ca7
+sha256: 50e6a70b5a96859aede399d3c36b999f5866a84d541aafe95fb57f3635172fed
 
 ## The corpus's own trailer line
 
