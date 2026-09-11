@@ -94,8 +94,16 @@ suffix is shared by both operands (it searches the same code for each), not
 attached to the right one only. The *meaning* of the number in `(nW)`/
 `(nN)` is not documented anywhere held -- only the examples `(1W)`, `(2N)`
 and `(3N)` appear -- so it is *inferred*, not read: this reconstruction
-takes `n` as the maximum count of words allowed between the two terms, so a
-bare `(W)`/`(N)` is the same as `(1W)`/`(1N)` (`proto.select.proximity.numbered`).
+takes `n` as the maximum distance between the two terms' word positions
+(adjacent terms are distance 1), so a bare `(W)`/`(N)` requires adjacency
+and a numbered `(nW)`/`(nN)` allows at most `n`-1 words between them
+(`proto.select.proximity.numbered`).
+
+Multi-operator proximity chains (`A(W)B(N)C`) are not supported: the parser's
+`prox()` never nests one proximity expression inside another, so a chain
+falls through the ungrammatical path and prints the simulated `?` error, the
+same as any other statement this grammar cannot read -- no held source shows
+a chained proximity expression for File 60, so nothing narrower is claimed.
 `(S)`, `(L)` and `(T)` are refused rather than approximated: each is
 defined only relative to something "as defined by the database" (a
 subfield unit, a descriptor unit, or a chemical name's parts), and no held

@@ -1758,9 +1758,9 @@
     "note": "Resolved over the positional index Task 7 built, which ships positions for /TI and /DE only -- a proximity SELECT naming any other code (/TX, /AP, /OB, /PR, /PB, PO=) is refused at prepare() time (UnimplementedProximityField) and routed to the capability-notice channel, not silently accepted; see proto.select.proximity.unimplemented and index.word.positions for the 150 MB ceiling that set that boundary."
   },
   "proto.select.proximity.numbered": {
-    "value": "n = the maximum number of words that may fall between the two terms",
+    "value": "n is the maximum distance between the two terms' word positions; adjacent terms are distance 1, so at most n-1 words may fall between them",
     "status": "inferred",
-    "claim": "A number before (W) or (N), like (3N), allows up to that many words between the two search terms; a bare (W) or (N) is the same as (1W) or (1N).",
+    "claim": "A number before (W) or (N), like (3N), sets n as the max distance between the two terms' word positions; adjacent is distance 1.",
     "sources": [
       { "source": "bluesheet-1998-text",
         "locator": "Basic Index, SELECT example: 'S LIPID?(3N)METABOL?/TI'",
@@ -1772,7 +1772,7 @@
         "locator": "p. 99 (printed 113): '?ss technolog?(1n)transfer?/ti' -> 'S9 382 TECHNOLOG?(1N)TRANSFER?/TI'",
         "sourceDate": "1994", "observedSystem": "DIALOG general" }
     ],
-    "decision": "No held source states what the number in (nW)/(nN) means -- only the examples (1W), (2N) (implicit in the 1994 Curso's own bare-(W)-vs-(1N) pairing, where (1N)'s count 382 differs from (W)'s 252) and (3N) appear. This reconstruction reads n as the maximum count of intervening words, so a bare (W)/(N) is the same as (1W)/(1N) -- the alternative reading (n as an exact required gap) is not adopted, and no source distinguishes between the two."
+    "decision": "No held source states what the number in (nW)/(nN) means -- only the examples (1W), (2N) (implicit in the 1994 Curso's own bare-(W)-vs-(1N) pairing, where (1N)'s count 382 differs from (W)'s 252) and (3N) appear. This reconstruction's near() reads n as the maximum allowed distance between the two terms' word positions -- adjacent terms are distance 1, so a bare (W)/(N) requires adjacency (0 words between) and (nW)/(nN) allows at most n-1 intervening words. That meaning is this reconstruction's inferred reading, chosen because no held source defines it; the alternative reading (n as the count of intervening words directly) is not adopted."
   },
   "proto.select.proximity.perterm": {
     "value": "one postings line per word, then one for the proximity expression, then the set line",

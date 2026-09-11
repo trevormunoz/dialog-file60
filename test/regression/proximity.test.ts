@@ -33,7 +33,8 @@ test("(S), (L) and (T) are refused rather than approximated", () => {
   for (const op of ["s", "l", "t"]) expect(parseExpression(`alpha(${op})bravo/ti`)).toBeNull();
 });
 
-// The numbered forms' meaning (n bounds intervening words) is inferred, not documented --
+// The numbered forms' meaning (n bounds the word-position distance between the two terms,
+// so at most n-1 words may fall between them) is inferred, not documented --
 // proto.select.proximity.numbered. A bare (W)/(N)/(F) is the numbered form with n = 1.
 test("a bare (W)/(N) is the numbered form with distance 1", () => {
   expect(parseExpression("alpha(w)bravo/ti")).toMatchObject({ distance: 1 });
@@ -70,6 +71,6 @@ test("(W) is ordered and adjacent; (N) is adjacent either way; (F) only checks t
   expect(near("F", 1, a, bSameFieldFar)).toBe(true); // (F) ignores distance within the field
   expect(near("W", 1, a, bOtherField)).toBe(false);
   expect(near("F", 1, a, bOtherField)).toBe(false); // (F) still requires the same field
-  expect(near("N", 3, a, a + 3)).toBe(true); // (3N): up to 3 intervening words
+  expect(near("N", 3, a, a + 3)).toBe(true); // (3N): distance 3 (2 intervening words), at the bound
   expect(near("N", 3, a, a + 4)).toBe(false); // one word too far for (3N)
 });
