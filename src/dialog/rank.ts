@@ -47,11 +47,14 @@ export interface RankDisplayState { setId: number; itemsSearched: number; field:
  * Content and line order read from Curso Introductorio DIALOG (1994) p.126, the anchor-period
  * source (proto.rank.display) -- "RANK Results", the "RANK: Sn/1-N  Field: FF=  File(s): nnn"
  * line and the "(N records - M terms)" count line are its own wording, File(s) fixed to 60
- * (the only file this reconstruction opens). The column header's single-line form and every
- * column's character width are this reconstruction's choice (proto.rank.columns), the same
- * rule Task 2 applied to format 6's typeset source: the 1994 page's own three-line stacked
- * header ("RANK  No.Items" / "No.   Ranked  Term" / dashes) is real observed content, but its
- * layout is the typesetter's, not DIALOG's, so it is not reproduced character-for-character. */
+ * (the only file this reconstruction opens). The column header now follows the same anchor
+ * rule: the 1994 page's own three-line stacked form ("RANK  No.Items" / "No.   Ranked  Term" /
+ * "---   -------- ----") is reproduced verbatim, not 2001's single-line "RANK  No. Items  Term"
+ * (Task 10 owner ruling -- the header follows the 1994 anchor like the other three elements).
+ * Row column widths (where "No." holds the rank, "Ranked" the item count, "Term" the term) are
+ * chosen to align under that header's own column starts (proto.rank.columns): the header text
+ * fixes col 0 for "No.", col 6 for "Ranked", col 14 for "Term", but no source gives the digit
+ * widths a live row would print, so the row padding itself remains this reconstruction's choice. */
 export function rankLines(state: RankDisplayState): string[] {
   const { setId, itemsSearched, field, rows } = state;
   const shown = rows.slice(0, RANK_PAGE);
@@ -62,8 +65,9 @@ export function rankLines(state: RankDisplayState): string[] {
     `RANK: S${setId}/1-${itemsSearched}  Field: ${field}=  File(s): 60`,
     `(${itemsSearched} records - ${rows.length} terms)`,
     "",
-    "RANK  No. Items  Term",
-    "",
-    ...shown.map(r => `  ${String(r.rank).padEnd(7)}${String(r.items).padEnd(9)}${r.term}`),
+    "RANK  No.Items",
+    "No.   Ranked  Term",
+    "---   -------- ----",
+    ...shown.map(r => `${String(r.rank).padEnd(6)}${String(r.items).padEnd(8)}${r.term}`),
   ];
 }
