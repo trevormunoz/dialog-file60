@@ -19,11 +19,16 @@ const vals = (rec: LogicalRecord, tag: string) => fields(rec, tag).flatMap(f => 
  * tags each one prints. A user-defined format is a comma-separated list of these. Re-derived
  * from the DISPLAY CODE column of the Basic Index and Additional Indexes tables in
  * sources/bluesheets/file60/bl0060_19980423153346.html -- every code the Blue Sheet lists
- * under a real display code (not "None") is here, including HNRIMS/ICAR/CZARIS-only ones
- * (AG, AI, CD, GD, GY, ID, N1, NC, SD (raw tag SX, the field's own dialog-code note in
- * map.ts), SP, TD (raw tag TX), UL, XP): a code the Blue Sheet lists whose tag is absent from
- * FY 1994 is kept in the map and prints nothing for a CRIS record -- that is the record's
- * content, not a missing feature.
+ * under a real display code (not "None") is here, including several codes the Blue Sheet
+ * footnotes to a record system other than CRIS: AG, AI, CD, GD, N1, NC, SP, UL are HNRIMS
+ * Records only (footnote 3), and XP is HNRIMS and CZARIS Records (footnotes 3,5). GY, ID, SD
+ * and TD (raw tags GY, ID, SX, TX -- SD and TD display through the same SX/TX fields map.ts's
+ * own dialog-code note uses) sit in the same "absent from FY 1994" group below, but none of
+ * the four is HNRIMS/ICAR/CZARIS-only: GY is CRIS Records (footnote 1); SD carries no footnote
+ * at all; TD is CRIS and ICAR Records (footnotes 1,4); ID is CRIS and HNRIMS Records
+ * (footnotes 1,3). A code the Blue Sheet lists whose tag is absent from FY 1994 is kept in the
+ * map and prints nothing for a CRIS record -- that is the record's content, not a missing
+ * feature.
  *
  * `AT` (Activity Type Code and Name, footnote 3, HNRIMS-only) is the one code left out rather
  * than guessed: its raw Format B tag is not independently held anywhere in this project's
@@ -49,8 +54,11 @@ export const DISPLAY_CODES: Readonly<Record<string, readonly string[]>> = {
   PD: ["PD"], PN: ["PN"], PO: ["PF", "PI"], PP: ["PX"], PS: ["PS"], PT: ["PT"], RE: ["RE"],
   RG: ["RG"], RN: ["RN"], SC: ["SC", "SN"], SF: ["SF"], SH: ["PH", "GH"], ST: ["ST"], UP: ["UP"],
   ZP: ["ZP"], CG: ["CG"], SD: ["SX"], TD: ["TX"],
-  // Additional Indexes -- HNRIMS/ICAR/CZARIS-only codes (footnote 3 and friends), not in
-  // map.ts because Format 5 never shows them; a real CRIS record has no data under these tags.
+  // Additional Indexes -- not in map.ts because Format 5 never shows them; a real CRIS record
+  // has no data under these tags. Most are HNRIMS-only (AG, AI, CD, GD, N1, NC, SP -- footnote
+  // 3) or HNRIMS/CZARIS (XP -- footnotes 3,5); GY and ID are not HNRIMS-only despite living
+  // here (GY is CRIS, footnote 1; ID is CRIS and HNRIMS, footnotes 1,3) -- see the doc comment
+  // above.
   AG: ["AG"], AI: ["AI"], CD: ["CD"], GD: ["GD"], GY: ["GY"], ID: ["ID"], N1: ["N1"], NC: ["NC"],
   SP: ["SP"], UL: ["UL"], XP: ["XP"],
 };
