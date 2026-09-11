@@ -24,14 +24,26 @@ import { appDefine } from "../config/define";
 (globalThis as Record<string, unknown>).__REGISTRY_HASH__ = JSON.parse(appDefine.__REGISTRY_HASH__);
 
 const FILE = "RG164.CRIS.FY94.txt";
-const COMMANDS = [
+
+// Clip 1 -- friction: terse, unforgiving, metered.
+export const FRICTION_COMMANDS = [
+  "b 60",              // banner + opening cost line (the meter)
+  "s poultry/xx",      // unknown two-letter code -> proto.error.unknown_suffix (curt error)
+  "s poultry/ti",      // the corrected, field-scoped form -> the count
+  "logoff",            // short connect-time bill, no prints
+];
+
+// Clip 2 -- poultry payoff: overview -> inspect a record -> context -> ordered output.
+export const POULTRY_COMMANDS = [
   "b 60",
-  "e in=hammerschlag",
-  "ss cy=beltsville or cy=greenbelt",
-  "s s3 and in=hammerschlag  f a",
-  "ds",
-  "t s4/5/1",
-  "logoff",
+  "s poultry/ti",      // S1 = the poultry set
+  "rank in s1",        // ranked list of investigators (the overview)
+  "t s1/5/1",          // drill into one full record
+  "ds",                // back out to the set list
+  "set kwic 14",
+  "t s1/k/1-2",        // the term in context in two records
+  "print s1/5/all",    // order the offline prints for the set
+  "logoff",            // the bill, now with the Prints line
 ];
 
 // A deterministic clock, not the real one -- the recording is reproducible byte for byte
@@ -92,20 +104,24 @@ function castStatement(offsets: Offsets): string {
 }
 
 /**
- * Runs an extended research session -- the acceptance session's CY=BELTSVILLE/IN=HAMMERSCHLAG
- * question (fixtures/ACCEPTANCE.md) plus EXPAND, an OR across SELECT STEPS, DISPLAY SETS, and
- * LOGOFF -- through the same RetrievalEngine and DialogSession wiring as src/app/main.ts, and
- * builds the asciicast recording from its output. Exported so test/archival/cast-session.test.ts can run it in-process rather than
- * shelling out to a subprocess from inside a Vitest test; the module's own bottom guard is the
- * `pnpm cast` entry point.
+ * Runs one of the two clip command sequences (FRICTION_COMMANDS or POULTRY_COMMANDS) through
+ * the same RetrievalEngine and DialogSession wiring as src/app/main.ts, and builds the
+ * asciicast recording from its output. Exported so test/archival/cast-session.test.ts can run
+ * it in-process rather than shelling out to a subprocess from inside a Vitest test; the
+ * module's own bottom guard is the `pnpm cast` entry point.
+ *
+ * Resets the module-level fake-clock counter first, so each clip's stamps and connect-time
+ * line -- and so the whole cast byte-for-byte -- depend only on its own command count, never
+ * on which clip (or how many) built before it in the same process.
  */
-export async function buildFirstSessionCast(): Promise<{ cast: string; offsets: Offsets }> {
+export async function buildClipCast(commands: string[], title: string): Promise<{ cast: string; offsets: Offsets }> {
+  castClockCalls = 0;
   const { engine, offsets } = loadEngine();
   const session = new DialogSession(engine, renderFor, { clock: CAST_CLOCK });
   const prompt = (registry.get("proto.prompt").value as string) + (registry.get("proto.prompt.spacing").value as string);
 
   const sessionLines: OutputLine[] = [];
-  for (const cmd of COMMANDS) {
+  for (const cmd of commands) {
     sessionLines.push({ text: prompt + cmd });
     sessionLines.push(...(await session.submit(cmd)));
   }
@@ -120,7 +136,7 @@ export async function buildFirstSessionCast(): Promise<{ cast: string; offsets: 
     cps: pacing.cps,
     typeCps: pacing.typeCps,
     pauseAfterCommand: pacing.pauseAfterCommand,
-    title: "DIALOG File 60 -- first research session (reconstruction)",
+    title,
     header: {
       statement,
       corpusSha256: offsets.sha256,
@@ -133,9 +149,13 @@ export async function buildFirstSessionCast(): Promise<{ cast: string; offsets: 
 }
 
 if (process.argv[1]?.endsWith("cast.ts")) {
-  const { cast } = await buildFirstSessionCast();
   mkdirSync("casts", { recursive: true });
-  writeFileSync("casts/first-session.cast", cast);
-  const lineCount = cast.trim().split("\n").length;
-  console.log(`wrote casts/first-session.cast: ${cast.length} bytes, ${lineCount} lines (1 header + ${lineCount - 1} events)`);
+  for (const [name, commands, title] of [
+    ["friction", FRICTION_COMMANDS, "DIALOG File 60 -- what using it is like (reconstruction)"],
+    ["poultry", POULTRY_COMMANDS, "DIALOG File 60 -- a poultry search, ranked and printed (reconstruction)"],
+  ] as const) {
+    const { cast } = await buildClipCast(commands, title);
+    writeFileSync(`casts/${name}.cast`, cast);
+    console.log(`wrote casts/${name}.cast: ${cast.length} bytes`);
+  }
 }
