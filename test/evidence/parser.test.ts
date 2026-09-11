@@ -118,13 +118,12 @@ test("a parenthesized group parses like its ungrouped contents", () => {
 // A capability-notice stub. Each of these is a documented File 60 command but outside this
 // milestone's slice; the parser recognizes the command word and returns
 // { cmd: "unsupported" } instead of treating it the same as a typo.
-// EXPAND, PAGE, DISPLAY SETS and LOGOFF are implemented (see test/evidence/expand.test.ts,
-// test/evidence/displaysets.test.ts and test/evidence/logoff.test.ts) and no longer parse to
-// this stub; they are dropped from this list rather than moved, since they now have their own
-// DialogCommand variants ({ cmd: "expand" }, { cmd: "page" }, { cmd: "displaysets" },
-// { cmd: "logoff" }), not { cmd: "unsupported" }.
+// EXPAND, PAGE, DISPLAY SETS, LOGOFF and SORT are implemented (see test/evidence/expand.test.ts,
+// test/evidence/displaysets.test.ts, test/evidence/logoff.test.ts and test/evidence/sort.test.ts)
+// and no longer parse to this stub; they are dropped from this list rather than moved, since
+// they now have their own DialogCommand variants ({ cmd: "expand" }, { cmd: "page" },
+// { cmd: "displaysets" }, { cmd: "logoff" }, { cmd: "sort" }), not { cmd: "unsupported" }.
 test("capability-notice command words parse to unsupported, not unknown", () => {
-  expect(parse("sort s1/ti")).toEqual({ cmd: "unsupported", command: "SORT", rest: "S1/TI" });
   expect(parse("print s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
   expect(parse("pr s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
   expect(parse("kwic s1/ti")).toEqual({ cmd: "unsupported", command: "KWIC", rest: "S1/TI" });

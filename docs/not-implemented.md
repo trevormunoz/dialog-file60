@@ -80,12 +80,32 @@ set-line layout SELECT and SELECT STEPS use. `DS` alone shows every set;
 `DS 1-3` or `DS S1-S3` shows a range, and a single number shows one set. `DS`
 before any SELECT shows the header alone, and BEGIN clears the list.
 
+SORT is implemented: `SORT <Sn>/<items>/<ff> <,D>` builds a new set holding
+the source set's records reordered by one or more field codes, each
+optionally reversed with a comma and `D` (`SORT S1/ALL/SA,D/ST` sorts SA
+descending, then ST ascending). `<items>` is parsed (`ALL` or a range) but
+not enforced -- every SORT reorders the whole source set regardless, the
+same way the 2001 manual's own note ("For correct results, you must sort
+ALL items in a set") only warns about a subset sort rather than describing
+what one does. The new set's description is the literal string `Sort `
+followed by the command's own argument uppercased, reproducing the source's
+own mixed case rather than normalizing it. The Blue Sheet's Sorting section
+lists nineteen sortable field codes; a sort on one this FY 1994 CRIS-only
+export carries no value for (`AG`, `AI`, `AT`, `CG`, `ID`, `SP`) succeeds
+with every record's key empty, not an error -- naming a field outside that
+nineteen-code list (`SORT S1/ALL/OB`) is refused with the simulated `?
+<FIELD>` error instead. SORT does not implement the `FROM <file>` option
+(part of OneSearch, out of scope here) or sorting as part of a PRINT command
+-- the Blue Sheet's own `PRINT S5/5/ZP` and the 1978 File 60 session's
+`PRINT 16/5/1-35/AS/PN` both carry sort codes on PRINT itself, which is a
+later task's subject, not this one's.
+
 A capability notice exists as a stub, not the full mechanism:
-SORT, PRINT, KWIC, and TYPE by accession number
+PRINT, KWIC, and TYPE by accession number
 (`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
 recognized by the parser as documented commands outside version 1's slice.
 Recognizing one prints nothing into the character stream; one modern line
-beneath the prompt reads "DIALOG documented `SORT` for File 60; this
+beneath the prompt reads "DIALOG documented `PRINT` for File 60; this
 reconstruction does not implement it yet." (registry `capability.notice`),
 outside the stream entirely -- it never appears in scrollback or in a copied
 selection, and it does not change the session. Every other out-of-slice

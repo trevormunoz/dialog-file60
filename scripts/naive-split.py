@@ -71,6 +71,12 @@ belt_not_maryland_ans = sorted(an(r) for r in belt if an(r) not in maryland_ans)
 # str.startswith over the raw CY values, no tokenizer involved.
 ti_technolog = [r for r in recs if any(t.startswith("TECHNOLOG") for t in tokenize_ti(" ".join(values(r, b"TI"))))]
 cy_beltsvill_trunc = [r for r in recs if any(v.startswith("BELTSVILL") for v in values(r, b"CY"))]
+# SORT: the AN order of the cy_beltsville set (already derived above) when sorted by PN, the
+# Blue Sheet's own File 60 SORT example field ("SORT S13/ALL/PN"). Unlike every other "an" list
+# in this fixture -- which is `sorted()` for comparison against a set of ANs regardless of
+# retrieval order -- this list is ORDERED, not resorted after this point: it is the answer
+# test/archival/sort-corpus.test.ts checks the engine's own sorted set against, item by item.
+belt_by_pn = [an(r) for r in sorted(belt, key=lambda r: ((values(r, b"PN") or [""])[0], an(r)))]
 print(json.dumps({
     "records": len(recs),
     "cy_beltsville": {"count": len(belt), "an": sorted(an(r) for r in belt)},
@@ -82,4 +88,5 @@ print(json.dumps({
     "cy_beltsville_not_st_maryland": {"count": len(belt_not_maryland_ans), "an": belt_not_maryland_ans},
     "ti_technolog": {"count": len(ti_technolog), "an": sorted(an(r) for r in ti_technolog)},
     "cy_beltsvill_trunc": {"count": len(cy_beltsvill_trunc), "an": sorted(an(r) for r in cy_beltsvill_trunc)},
+    "cy_beltsville_sorted_by_pn": {"count": len(belt_by_pn), "an": belt_by_pn},
 }, indent=1))

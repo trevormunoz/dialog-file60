@@ -188,8 +188,19 @@ after adding them: the first eight fields are byte-for-byte unchanged; `ti_techn
 CY=BELTSVILLE record's value is exactly "BELTSVILLE", so nothing in this corpus is caught by
 the wider BELTSVILL stem that was not already caught by the exact match.
 
+Added an eleventh field, `cy_beltsville_sorted_by_pn`, for SORT: the AN order of the
+`cy_beltsville` set (already derived above) sorted by PN -- the Blue Sheet's own File 60 SORT
+example field (`SORT S13/ALL/PN`) -- with AN itself as the tie-break. Unlike every other `an`
+list in this fixture, which is `sorted()` for comparison against a set of ANs regardless of
+retrieval order, this list is **ordered**, not resorted after this point: it is the answer
+`test/archival/sort-corpus.test.ts` checks `RetrievalEngine.sortOrdinals`'s own output against,
+item by item, not just as a set. Re-ran `python3 scripts/naive-split.py
+data/RG164.CRIS.FY94.txt` against the corpus after adding it: the first ten fields are
+byte-for-byte unchanged; `cy_beltsville_sorted_by_pn` count 669, the same 669 ANs
+`cy_beltsville` already has, reordered.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: 96784d0ae73bd53aa62a3e097962bde086574369ea7c08eeabe2abc57f2fca48
+sha256: ed43146336b8d47ecda0a628097c0c60e0bf0c6337bea3a9416b5d77f4bbbeb7
 
 ## The corpus's own trailer line
 

@@ -14,6 +14,7 @@ import { runType } from "./commands/type";
 import { runExpand, runPage } from "./commands/expand";
 import { runDisplaySets } from "./commands/displaysets";
 import { runLogoff } from "./commands/logoff";
+import { runSort } from "./commands/sort";
 
 const DEFAULT_USER = registry.get("proto.session.user_number").value as string;
 registry.get("proto.error.unknown_command");
@@ -78,6 +79,7 @@ export class DialogSession {
       case "select": return runSelect(this, cmd);
       case "selectsteps": return runSelectSteps(this, cmd);
       case "type": return runType(this, cmd);
+      case "sort": return runSort(this, cmd);
       case "expand": return runExpand(this, cmd);
       case "page": return runPage(this, cmd);
       case "displaysets": return runDisplaySets(this, cmd);

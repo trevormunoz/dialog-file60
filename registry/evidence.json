@@ -1787,6 +1787,53 @@
     "claim": "The EXPAND list sorts terms in plain character order; no source records DIALOG's own index collation.",
     "note": "Statement of absence: DIALOG's collation for File 60 was not found by reading the EXPAND sections of the 1998 Blue Sheet, the 1988 DATABASE figures, the 1994 Curso pages, and the 2001 book, on 2026-09-10."
   },
+  "proto.sort.command": {
+    "value": "SORT <Sn>/<items>/<ff> <,D>",
+    "status": "documented",
+    "claim": "SORT takes a set number, an item range or ALL, and one or more field codes, each optionally reversed with a comma and D.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "Sorting: sortable field list and the example 'SORT S13/ALL/PN'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "SORT, 'Command format: SORT <Sn>/<items>/<ff> <,D>'",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ]
+  },
+  "proto.sort.newset": {
+    "value": "Sort <argument, uppercased>",
+    "status": "documented",
+    "claim": "SORT builds a new set, described as 'Sort' followed by the command's own argument in capitals.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "SORT: 'The SORT command creates a new, sorted set...' and the example printing 'S2 60 Sort Sl/ALL/AU'",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "The source's own two worked examples print 'Sort' with only its initial capitalised, followed by the rest of the argument in capitals ('S2 60 Sort Sl/ALL/AU'; 'S2 147 Sort S1/ALL/SA,D/ST') -- reproduced here exactly rather than normalised to 'SORT' or 'sort', since the source shows the same mixed-case form twice, not once as a plausible typo."
+  },
+  "proto.sort.fields": {
+    "value": ["AG", "AI", "AN", "AS", "AT", "CG", "CY", "DS", "ID", "IN", "PD", "PN", "PO", "PT", "RE", "SF", "SP", "ST", "ZP"],
+    "status": "documented",
+    "claim": "The Blue Sheet lists nineteen sortable fields; sorting on one this corpus has no value for leaves every record's key empty, not an error.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "Sorting: sortable field list, heading 'SORTABLE FIELDS / EXAMPLES'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "Five of the nineteen listed codes (AG, AI, CG, ID, SP) are HNRIMS/ICAR codes this CRIS-only FY 1994 export carries no value for -- no built phrase index exists under any of them (PHRASE_PREFIX_TAGS, src/loader/corpus-format.ts). A sixth, AT, is also unbuilt under its own two-letter code: this corpus's only index for that Format B tag lives under the composite search code A1 (map.AT), not under the bare tag AT the Blue Sheet's Sorting section lists, so sorting on AT also returns every record's key empty. All six are accepted, not refused -- refusal (the simulated '? <FIELD>' form) is reserved for a code outside this nineteen-field list entirely, e.g. 'SORT S1/ALL/OB'."
+  },
   "proto.expand.page": {
     "value": {
       "forward": "PAGE or P",

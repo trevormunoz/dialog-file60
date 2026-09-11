@@ -7,6 +7,11 @@ export type DialogCommand =
    * before the final combined set. */
   | { cmd: "selectsteps"; expr: SearchExpression; echo: string }
   | { cmd: "type"; set: number; format: string; items: number[] }
+  /** SORT <Sn>/<items>/<ff>[,D][/<ff>[,D]...]: reorders the ordinals of set `set` by `keys`
+   * into a new set. `items` is ALL or a range, as typed but unenforced -- see parser.ts's
+   * comment on the branch that builds this. `echo` is the argument after the command word,
+   * uppercased, for the new set's own "Sort <echo>" description. */
+  | { cmd: "sort"; set: number; items: string; keys: { field: string; descending: boolean }[]; echo: string }
   /** EXPAND, with the raw text after the command word: `PREFIX=value`, `PREFIX=` alone, or a
    * bare term to browse the Basic Index. Unparsed here -- the session splits it. */
   | { cmd: "expand"; term: string }
@@ -20,8 +25,8 @@ export type DialogCommand =
   /** LOGOFF: ends the session and prints the accounting block (spec 7.9). Takes no
    * argument -- unlike the capability-notice words below, it is implemented, not stubbed. */
   | { cmd: "logoff" }
-  /** A command DIALOG documented for File 60 but outside this milestone's slice: SORT,
-   * PRINT, KWIC, and TYPE by accession number. `command` names it
+  /** A command DIALOG documented for File 60 but outside this milestone's slice: PRINT,
+   * KWIC, and TYPE by accession number. `command` names it
    * canonically (e.g. "LOGOFF"); `rest` is whatever followed the recognized command
    * word, unparsed. */
   | { cmd: "unsupported"; command: string; rest: string }

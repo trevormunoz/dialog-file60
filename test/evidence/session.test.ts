@@ -133,20 +133,20 @@ test("a SELECT before any BEGIN also names an offending token, never a bare ?", 
 // milestone's slice prints nothing into the character stream -- the session tracks it
 // separately (lastNotice), for the app to show outside the stream.
 describe("capability notices", () => {
-  // EXPAND is implemented (test/evidence/expand.test.ts, test/regression/expand-window.test.ts)
-  // and no longer belongs on this list; LOGOFF is implemented (test/evidence/logoff.test.ts)
-  // and no longer belongs on it either.
+  // EXPAND is implemented (test/evidence/expand.test.ts, test/regression/expand-window.test.ts),
+  // LOGOFF is implemented (test/evidence/logoff.test.ts), and SORT is implemented
+  // (test/evidence/sort.test.ts) -- none of the three belongs on this list any longer.
   test("a recognized-but-unimplemented command prints nothing into the stream", async () => {
     const s = mk(); await s.submit("b 60");
-    expect(await s.submit("sort")).toEqual([]);
+    expect(await s.submit("print")).toEqual([]);
     expect(await s.submit("t 09143165/5")).toEqual([]);
   });
 
   test("the session records the last capability notice, cleared by any other command", async () => {
     const s = mk(); await s.submit("b 60");
     expect(s.lastNotice).toBeNull();
-    await s.submit("sort");
-    expect(s.lastNotice).toEqual({ command: "SORT" });
+    await s.submit("print");
+    expect(s.lastNotice).toEqual({ command: "PRINT" });
     await s.submit("s cy=beltsville"); // an ordinary command clears the stale notice
     expect(s.lastNotice).toBeNull();
   });

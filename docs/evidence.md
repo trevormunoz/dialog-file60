@@ -82,6 +82,9 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.select.truncation
 - proto.selectsteps.processing
 - proto.selectsteps.sets
+- proto.sort.command
+- proto.sort.fields
+- proto.sort.newset
 - proto.type.item_header
 - rates.file60_1998
 - render.format1.layout

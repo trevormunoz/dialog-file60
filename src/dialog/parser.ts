@@ -173,7 +173,6 @@ function parseOperand(tok: string): SearchExpression | null {
  * not parse as EXPAND with rest "able" -- the capture is only ever a separate word or words.
  */
 const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [
-  { pattern: /^sort(?:\s+(.*))?$/i, command: "SORT" },
   { pattern: /^(?:print|pr)(?:\s+(.*))?$/i, command: "PRINT" },
   { pattern: /^kwic(?:\s+(.*))?$/i, command: "KWIC" },
 ];
@@ -203,6 +202,16 @@ export function parse(line: string): DialogCommand {
   // such, rather than being reported as an accession-number TYPE.
   if ((m = /^(?:t|type)\s+(\d{7,8})\/([A-Za-z0-9,]+)$/i.exec(t))) {
     return { cmd: "unsupported", command: "TYPE (by accession number)", rest: `${m[1]}/${m[2]!.toUpperCase()}` };
+  }
+  // SORT <Sn>/<items>/<ff>[,D][/<ff>[,D]...] -- the 2001 command format, with the Blue
+  // Sheet's own File 60 example SORT S13/ALL/PN. `items` is ALL or a range; the 2001 note
+  // "For correct results, you must sort ALL items in a set" is recorded, not enforced.
+  if ((m = /^sort\s+s(\d+)\/(all|[\d,\-]+)\/(.+)$/i.exec(t))) {
+    const keys = m[3]!.split("/").map(part => {
+      const [field, suffix] = part.split(",");
+      return { field: field!.trim().toUpperCase(), descending: (suffix ?? "").trim().toUpperCase() === "D" };
+    });
+    return { cmd: "sort", set: Number(m[1]), items: m[2]!.toUpperCase(), keys, echo: t.slice(5).trim().toUpperCase() };
   }
   if ((m = /^(?:e|expand)\s+(.+)$/i.exec(t))) return { cmd: "expand", term: m[1]!.trim() };
   if ((m = /^(?:p|page)(-)?$/i.exec(t))) return { cmd: "page", back: m[1] === "-" };

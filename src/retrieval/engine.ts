@@ -89,6 +89,13 @@ export class RetrievalEngine {
    * "trunc" case -- keyed `${resolved code}:${stem}` so search() stays synchronous, the same
    * pattern `shards` gives the "word" case. */
   private truncCache = new Map<string, number[]>();
+  /** ordinal -> term reverse map per phrase code, built lazily once per code by sortKey()
+   * from this.indexes[code].terms and cached here. First write wins for an ordinal that
+   * shows up under more than one term of the same code (a repeating field carrying more
+   * than one distinct value): the term whose key comes first in Object.entries()'s own
+   * iteration order, which is the order distinct term strings were first created while
+   * building the index, not necessarily this one record's own field order. */
+  private sortReverse = new Map<string, Map<number, string>>();
 
   constructor(
     private offsets: Offsets,
@@ -257,6 +264,41 @@ export class RetrievalEngine {
     };
     const ordinals = evalExpr(expr).slice().sort((a, b) => a - b); // ascending file order (render.record.order)
     return { perTerm, ordinals };
+  }
+
+  /** The sort key for one record under one phrase field code: the record's first value for
+   * that field, uppercased by phraseKey, or "" when it carries none (either the field is not
+   * a built phrase index at all -- a Blue Sheet sortable field with no CRIS value in this
+   * corpus -- or this record's own postings under `code` are empty). Read from the already-
+   * loaded phrase index rather than by re-reading the record's bytes -- the index is the same
+   * text the field prints, and a sort of 669 records must not fetch 669 byte ranges. */
+  sortKey(code: string, ordinal: number): string {
+    let rev = this.sortReverse.get(code);
+    if (!rev) {
+      rev = new Map<number, string>();
+      const idx = this.indexes[code];
+      if (idx) for (const [term, ords] of Object.entries(idx.terms)) for (const o of ords) if (!rev.has(o)) rev.set(o, term);
+      this.sortReverse.set(code, rev);
+    }
+    return rev.get(ordinal) ?? "";
+  }
+
+  /** Ordinals of `ordinals`, ordered by `keys`. Stable: equal keys keep their input order,
+   * which is `render.record.order` (ascending) for a SORT operand's source set -- relies on
+   * Array.prototype.sort's spec-guaranteed stability (ES2019+) rather than an explicit tie-
+   * break. Uses the same byte-order collation as EXPAND's browse list (proto.expand.collation),
+   * reused rather than restated. */
+  sortOrdinals(ordinals: number[], keys: { field: string; descending: boolean }[]): number[] {
+    return ordinals
+      .map(o => ({ o, keys: keys.map(k => this.sortKey(k.field, o)) }))
+      .sort((a, b) => {
+        for (let i = 0; i < keys.length; i++) {
+          const cmp = collate(a.keys[i]!, b.keys[i]!);
+          if (cmp !== 0) return keys[i]!.descending ? -cmp : cmp;
+        }
+        return 0;
+      })
+      .map(w => w.o);
   }
 
   async record(ordinal: number): Promise<LogicalRecord> {
