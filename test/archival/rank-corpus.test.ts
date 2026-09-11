@@ -5,7 +5,7 @@ import { FsRangeReader } from "../../src/retrieval/reader-node";
 import { FsWordIndex } from "../../src/retrieval/words-node";
 import { DialogSession } from "../../src/dialog/session";
 import { render5 } from "../../src/dialog/render5";
-import { rankTally } from "../../src/dialog/rank";
+import { rankTally, RANK_PAGE } from "../../src/dialog/rank";
 import { PHRASE_FIELDS, type Offsets, type Index } from "../../src/loader/corpus-format";
 
 // S CY=BELTSVILLE then RANK ST runs end to end through RetrievalEngine.rankValues and
@@ -54,6 +54,54 @@ test.skipIf(skip)(
     const rows = rankTally(counts);
     const derived: [string, number][] = acc.rank_st_over_cy_beltsville;
     expect(rows.map(r => [r.term, r.items])).toEqual(derived);
+  },
+  120_000,
+);
+
+// S CY=BELTSVILLE then RANK OC exercises what RANK ST above cannot: descending order,
+// the collation tie-break, and RANK_PAGE's top-8 cutoff, all against real data. OC has 20
+// distinct values over the Beltsville set, including a five-way tie at count 2 that straddles
+// the top-8 boundary (fixtures/SOURCES.md and scripts/naive-split.py's own rank_oc_over_belt
+// comment) -- rank_st_over_cy_beltsville is a single term (every Beltsville record carries
+// ST=MARYLAND) and never exercised any of this (final review, Important 2).
+test.skipIf(skip)(
+  "S CY=BELTSVILLE then RANK OC matches the independently-derived per-set tally, in order, including the top-8 cutoff",
+  async () => {
+    if (!exists) {
+      throw new Error(
+        `missing ${FILE} -- run scripts/extract-corpus.py to produce it, or set CRIS_CORPUS_OPTIONAL=1 to skip archival tests`,
+      );
+    }
+    let offsets: Offsets;
+    let indexes: Record<string, Index>;
+    if (existsSync("public/corpus/offsets.json")) {
+      offsets = JSON.parse(readFileSync("public/corpus/offsets.json", "utf8"));
+      indexes = {};
+      for (const code of PHRASE_FIELDS) indexes[code] = JSON.parse(readFileSync(`public/corpus/index/${code}.json`, "utf8"));
+    } else {
+      const bytes = new Uint8Array(readFileSync(FILE));
+      const built = buildIndexes(bytes, "RG164.CRIS.FY94.txt");
+      offsets = built.offsets;
+      indexes = built.indexes;
+    }
+    const engine = new RetrievalEngine(offsets, indexes, new FsRangeReader(FILE), "fy1991plus", new FsWordIndex("public/corpus"));
+    const session = new DialogSession(
+      engine,
+      (rec, format) => (format === "5" ? render5(rec) : [{ text: `? /${format}` }]),
+    );
+
+    await session.submit("b 60");
+    await session.submit("s cy=beltsville");
+    expect(session.sets[0]!.ordinals.length).toBe(acc.cy_beltsville.count);
+
+    const counts = engine.rankValues("OC", session.sets[0]!.ordinals);
+    const rows = rankTally(counts);
+    const derived: [string, number][] = acc.rank_oc_over_cy_beltsville;
+    expect(derived.length).toBeGreaterThan(RANK_PAGE);
+    expect(rows.map(r => [r.term, r.items])).toEqual(derived);
+    // top-8 cutoff: the five-way tie at count 2 straddles it (001872/001908/002191 make the
+    // page, 008631/008764 do not) -- this is the sharpest available test of the tie-break.
+    expect(rows.slice(0, RANK_PAGE).map(r => [r.term, r.items])).toEqual(derived.slice(0, RANK_PAGE));
   },
   120_000,
 );

@@ -258,8 +258,26 @@ fourteen fields are byte-for-byte unchanged; `rank_st_over_cy_beltsville` is
 already carries ST=MARYLAND (Beltsville, Maryland is the Agricultural Research Center's own
 home county) -- a real, if unsurprising, result, not a fabricated one.
 
+Added a sixteenth field, `rank_oc_over_cy_beltsville`, for the final-review fix (Important 2:
+the archival RANK test needed a field that actually exercises descending order, the collation
+tie-break, and the top-8 cutoff -- `rank_st_over_cy_beltsville` above is a single term, MARYLAND,
+because every Beltsville record already carries ST=MARYLAND, so it never did). OC (Object
+Classification code) over the same `cy_beltsville` set has 20 distinct values, counted the same
+per-record-deduped way as ST (`set(values(r, b"OC"))`), sorted by count descending then term
+ascending -- the same tie-break `rank_st_over_cy_beltsville` already uses, now commented in the
+script itself as needing to keep mirroring `collate()` (Minor 4 of the final review). The result
+is real, not constructed to be convenient: 008009 leads with 279 (the Beltsville-wide default
+object class), then a genuine three-way tie at count 3 (002298, 004079, 007093) and a genuine
+five-way tie at count 2 (001872, 001908, 002191, 008631, 008764) -- the top-8 cutoff falls inside
+that five-way tie (001872, 001908 and 002191 make the printed page; 008631 and 008764 do not),
+so this field also exercises RANK_PAGE's truncation against a real tie at the boundary, not just
+an arbitrary count. No new import was needed (`Counter` was already imported for ST). Re-ran
+`python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus after adding it: the
+first fifteen fields are byte-for-byte unchanged; `rank_oc_over_cy_beltsville` is the 20-entry
+list above.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: f230080df17901352d39df6d1bad98147c386d7e7abde8f566f93a1d0131162b
+sha256: ac6e708c4b4974b8530c9cf5771c30a0562f32ec4ea4db3e0ad8781b2a2522d2
 
 ## The corpus's own trailer line
 

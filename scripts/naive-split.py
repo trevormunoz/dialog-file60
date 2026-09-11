@@ -140,7 +140,23 @@ rank_st_over_belt = Counter()
 for r in belt:
     for v in set(values(r, b"ST")):
         rank_st_over_belt[v] += 1
+# The tie-break below (kv[0], plain Python string ordering) must keep mirroring collate()
+# (src/retrieval/engine-helpers.ts: a < b ? -1 : a > b ? 1 : 0) for every field this script
+# ranks -- the two happen to agree on this corpus's ASCII field values, but nothing enforces
+# that agreement, so a future rankable field with ties in non-ASCII or mixed-case terms could
+# silently diverge without either side's test noticing.
 rank_st_over_cy_beltsville = sorted(rank_st_over_belt.items(), key=lambda kv: (-kv[1], kv[0]))
+# RANK OC (Object Classification code) over the same cy_beltsville set: unlike ST (one value,
+# MARYLAND, for all 669 records), OC has 20 distinct values with real ties -- three terms tied
+# at count 3, five terms tied at count 2 (the top-8 cutoff falls inside that five-way tie, so
+# this also exercises RANK_PAGE's truncation against a genuine tie at the boundary) -- so this
+# field, not ST, is what exercises descending order, the collation tie-break and the top-8 cutoff
+# together against real data (Trevor's accepted decision, Important 2 of the final review).
+rank_oc_over_belt = Counter()
+for r in belt:
+    for v in set(values(r, b"OC")):
+        rank_oc_over_belt[v] += 1
+rank_oc_over_cy_beltsville = sorted(rank_oc_over_belt.items(), key=lambda kv: (-kv[1], kv[0]))
 rec_9049442 = next(r for r in recs if an(r) == "9049442")
 ti_9049442_words = " ".join(values(rec_9049442, b"TI")).split()
 ti_9049442_peach_idx = next(i for i, w in enumerate(ti_9049442_words) if kwic_word_match(w, "PEACH"))
@@ -161,4 +177,5 @@ print(json.dumps({
     "kwic_9049442_ti_peach_14": kwic_9049442_ti_peach_14,
     "ti_fresh_w_water": {"count": len(ti_fresh_w_water), "an": sorted(an(r) for r in ti_fresh_w_water)},
     "rank_st_over_cy_beltsville": [[term, count] for term, count in rank_st_over_cy_beltsville],
+    "rank_oc_over_cy_beltsville": [[term, count] for term, count in rank_oc_over_cy_beltsville],
 }, indent=1))
