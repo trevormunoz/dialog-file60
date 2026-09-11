@@ -2,6 +2,13 @@
  * Source tag → DIALOG display code. Every entry names its registry key. `dialog` is `null`
  * for a tag with no DIALOG display code of its own: SX and TX are display text carried from
  * the SD/TD search fields, not independently coded.
+ *
+ * PC= (RP, AC, CM, FS, CT below) decomposes into five raw tags, not the four footnote 10 names
+ * ("Includes RPA, Activity, Commodity, and Science Codes"): the Blue Sheet's own PC= sample
+ * grid prints a fifth column, PRCNT (e.g. "040%"), alongside RPA/ACTVTY/CMMDTY/SCNCE, and the
+ * Format B element table's own CT row ("CRIS Product Percent") says "If PC is displayed, CT
+ * displays only once" -- CT is documented as part of the PC block even though footnote 10's
+ * prose only names the other four. Five is correct, not a miscount (map.PC.composite).
  */
 export const MAP: Record<string, { dialog: string | null; registry: string }> = {
   AN: { dialog: "AN=", registry: "map.AN.display_padding" }, PN: { dialog: "PN=", registry: "map.PN" }, AS: { dialog: "AS=", registry: "map.AS" },
