@@ -1,8 +1,4 @@
 --- RECONSTRUCTION, NOT A RECORDED SESSION ---
-DIALOG File 60 rules, anchored c. 1990-1994, applied to the FY 1994 Format B export held by NARA.
-corpus RG164.CRIS.FY94.txt sha256 437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a
-software dialog-file60 0.1.0; registry f072fcb8eb49
----
 ?b 60
           03may94 10:00:12 User013140
 

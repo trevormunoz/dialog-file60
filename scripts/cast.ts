@@ -85,22 +85,16 @@ function loadEngine(): { engine: RetrievalEngine; offsets: Offsets } {
 }
 
 /**
- * The plain-text statement the recording opens with, and repeats in the header's
- * x-reconstruction object. Written here rather than shared with src/app/statement.ts, whose
- * output is HTML for the on-screen panel.
- *
- * The block carries no list of the undocumented rules in effect: every behaviour cites its
- * registry key at its point of use, and registry/evidence.json is the one place the full
- * list lives.
+ * The single honesty line the recording opens with, repeated in the header's x-reconstruction
+ * object. It carries only the "reconstruction, not a recorded session" framing -- the corpus
+ * sha256, software version and registry hash are machine-readable provenance carried in the
+ * cast header's own fields (see buildCast's `header` below) and in fixtures/SOURCES.md, not
+ * on-screen clutter in a watchable clip. No list of undocumented rules is shown either: every
+ * behaviour cites its registry key at its point of use, and registry/evidence.json holds the
+ * full list.
  */
-function castStatement(offsets: Offsets): string {
-  return [
-    "--- RECONSTRUCTION, NOT A RECORDED SESSION ---",
-    "DIALOG File 60 rules, anchored c. 1990-1994, applied to the FY 1994 Format B export held by NARA.",
-    `corpus ${offsets.file} sha256 ${offsets.sha256}`,
-    `software dialog-file60 ${__APP_VERSION__}; registry ${__REGISTRY_HASH__}`,
-    "---",
-  ].join("\n");
+function castStatement(): string {
+  return "--- RECONSTRUCTION, NOT A RECORDED SESSION ---";
 }
 
 /**
@@ -126,7 +120,7 @@ export async function buildClipCast(commands: string[], title: string): Promise<
     sessionLines.push(...(await session.submit(cmd)));
   }
 
-  const statement = castStatement(offsets);
+  const statement = castStatement();
   const statementLines: OutputLine[] = statement.split("\n").map((text) => ({ text }));
 
   const pacingEntry = registry.get("cast.pacing");
