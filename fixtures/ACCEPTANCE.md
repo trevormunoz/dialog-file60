@@ -304,3 +304,41 @@ and the per-operand-then-combined SS printing shape with an anchor-period (1994)
 
 `pnpm test`, `pnpm typecheck`, and `pnpm verify:acceptance` all ran clean after this session's
 changes.
+
+## Run record, 2026-09-11 (Task 11 closeout: truncation, SORT, RANK answer sets)
+
+Four more answer sets this plan derived, each in `fixtures/acceptance-fy94.json`, each checked
+against an independently-run `scripts/naive-split.py`, never against the code under test.
+
+**Truncation.** Question: which records does `S TECHNOLOG?/TI` retrieve, and how many CY values
+start with BELTSVILL? Command: `B 60` then `S TECHNOLOG?/TI` (`ti_technolog`, 539 records, checked
+end to end through `DialogSession`) and, for the phrase-field prefix form this task's SELECT
+grammar does not parse (`CY=BELTSVILL?`), `RetrievalEngine.prefixPostings("CY", "BELTSVILL")`
+directly (`cy_beltsvill_trunc`, 669 records -- every CY=BELTSVILLE record, since no other CY value
+in this corpus starts with BELTSVILL). `test/archival/truncation-corpus.test.ts`.
+
+**SORT by PN.** Question: in what order does `SORT S1/ALL/PN` reorder the 669 CY=BELTSVILLE
+records? Command: `B 60`, `S CY=BELTSVILLE`, `SORT S1/ALL/PN` (`cy_beltsville_sorted_by_pn`, an
+*ordered* 669-AN list, ties on AN -- not resorted for comparison, checked item by item against
+`session.sets[1].ordinals` in stored order). `test/archival/sort-corpus.test.ts`.
+
+**SORT by a multi-valued field.** Question: with 312 of those 669 records carrying more than one
+IN value, does `SORT S1/ALL/IN` use each record's alphabetically-first IN value (`proto.sort.
+multivalue_key`), or does it depend on index-insertion order? Command: `B 60`, `S CY=BELTSVILLE`,
+`SORT S1/ALL/IN` (`cy_beltsville_sorted_by_in`, an ordered 669-AN list derived by
+`min()` of each record's own IN values, ties on AN). This is the one archival case able to
+distinguish the fixed rule from the pre-fix bug, since PN never repeats within a record.
+`test/archival/sort-corpus.test.ts`.
+
+**RANK.** Question: ranking ST over the 669 CY=BELTSVILLE records, what terms and counts does
+RANK tally? Command: `B 60`, `S CY=BELTSVILLE`, `RANK ST` (`rank_st_over_cy_beltsville`, a
+`[term, count]` list, derived by an independent `Counter` over the same set, sorted count
+descending then term ascending -- the same order `rankTally` produces, with no code shared).
+Checked against `RetrievalEngine.rankValues`'s own tally, not against the printed block's column
+layout (`proto.rank.columns` is this reconstruction's own choice, not evidence). Every
+CY=BELTSVILLE record's ST is MARYLAND, so the fixture is the single row `[["MARYLAND", 669]]` --
+small, but real, and it still exercises the tally-and-tie-break path end to end.
+`test/archival/rank-corpus.test.ts`.
+
+`pnpm test`, `pnpm typecheck`, and `pnpm verify:acceptance` all ran clean after this session's
+changes.

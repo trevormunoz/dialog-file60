@@ -313,3 +313,16 @@ sha256: 83d4427af0b3ec3a9d6651dde6c1a622eb9cd4bfe1e9b082fa8ab95428bb1e0c
 
 `casts/first-session.poster.txt` (`pnpm poster`, `scripts/poster.ts`), regenerated together
 with the cast: sha256 7d5f29a8a76806a6fd9632ce4afba1977d9ab093ba6627244b15f024653b45d7.
+
+Regenerated 2026-09-11 (Task 11 closeout): the registry hash carried in the recording's header
+and statement panel had gone stale across this plan's registry/evidence.json changes (the
+RANK entries landed after the previous cast, and this closeout's own registry review edited
+several more). Per the 2026-09-10 decision, the recording is regenerated once at closeout, not
+per task. Re-ran `pnpm cast && pnpm poster`; neither the session's commands nor the corpus
+changed.
+
+sha256 of `casts/first-session.cast` after this regeneration:
+sha256: ad808f2d31549d0e474b9e5af59df6880c5e7c63551c2e2d67c583eb66faf1de
+
+sha256 of `casts/first-session.poster.txt` after this regeneration:
+sha256: c7c06d939fef448048305ac596ea33071ff97dd07923eb8876e4a596adfe5c75

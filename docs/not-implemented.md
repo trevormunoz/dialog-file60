@@ -7,12 +7,29 @@ implement, and what it prints when you try it.
 
 Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
-guard as a suffix, never tested against the SF field), SET DETAIL ON (the
-File column it adds to DISPLAY SETS' table is not printed), the 1984 and
+guard as a suffix, never tested against the SF field), SET DETAIL ON (see
+below), the 1984 and
 1988 fixtures, variant indexes, a database-owner copyright line after the
 banner (`proto.begin.copyright_line`, status `chosen` -- a different
 File's in-period BEGIN transcript shows one; File 60's is not held, so
 none is printed).
+
+SET DETAIL is not implemented, and prints nothing distinct from a typo: `SET
+DETAIL` is not among `src/dialog/parser.ts`'s `CAPABILITY_WORDS` (that list
+is empty), so it is not routed to the capability-notice channel the way `SP=`
+or an out-of-slice `TYPE`/`PRINT` form is -- it falls straight through to the
+`unknown` command path, the same simulated `?` error any unrecognized line
+gets, with no notice at all. A reading of SET DETAIL as adding a per-word
+sub-count breakout to a proximity search's postings lines does not survive
+contact with either held source that shows it: DATABASE magazine's figure 3
+shows it as a OneSearch file-by-file toggle -- the File column DISPLAY SETS'
+table would carry with it on (`proto.displaysets.table`) -- and figure 2
+shows a `(W)` expression's own per-word postings lines already printing with
+DETAIL off (`proto.select.proximity.perterm`), which is the opposite of a
+switch that adds them. Its one documented effect, breaking counts out
+per file under OneSearch, is degenerate in a reconstruction that opens only
+File 60 and never searches more than one file at once -- there is no second
+file for a File column to distinguish.
 
 Format 1 (DIALOG Accession Number), format 5 (Full Record), format 6
 (Heading and Title), format K (KWIC, Key Word In Context), and
@@ -165,7 +182,8 @@ header, a count of records searched and terms found, a column header, and up to 
 ranked terms by count, ties broken by collation (RANK_PAGE, `src/dialog/rank.ts`, corroborated
 by both held worked examples: 2001's "the top eight terms are automatically displayed" and
 Curso Introductorio DIALOG (1994) p.126's own RANK Results block, which also stops at row 8).
-Omitting `Sn` ranks the session's own most recently created set. A field this build carries
+Omitting `Sn` ranks the session's own most recently created set -- an inferred default, since no
+held source states what a set-less RANK ranks (`proto.rank.default_set`). A field this build carries
 only as a word index (`TI`, `OB`, `AP`, `DE`, `PR`, `PB`, `TX`, `PO`) is refused with the
 simulated `? <FIELD>` form, citing `proto.rank.wordfields` -- 2001's own restriction, "RANK ...
 does not work in any word-indexed fields" -- distinct from a field this build indexes by

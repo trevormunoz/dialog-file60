@@ -1,8 +1,8 @@
-{"version":2,"width":80,"height":24,"timestamp":1789064135,"env":{},"title":"DIALOG File 60 -- first research session (reconstruction)","theme":{"fg":"#111111","bg":"#ffffff"},"x-reconstruction":{"statement":"--- RECONSTRUCTION, NOT A RECORDED SESSION ---\nDIALOG File 60 rules, anchored c. 1990-1994, applied to the FY 1994 Format B export held by NARA.\ncorpus RG164.CRIS.FY94.txt sha256 437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a\nsoftware dialog-file60 0.1.0; registry e34fc987093c\n---","corpusSha256":"437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a","softwareVersion":"0.1.0","registryHash":"e34fc987093c","pacingStatus":"chosen for this reconstruction"}}
+{"version":2,"width":80,"height":24,"timestamp":1789148386,"env":{},"title":"DIALOG File 60 -- first research session (reconstruction)","theme":{"fg":"#111111","bg":"#ffffff"},"x-reconstruction":{"statement":"--- RECONSTRUCTION, NOT A RECORDED SESSION ---\nDIALOG File 60 rules, anchored c. 1990-1994, applied to the FY 1994 Format B export held by NARA.\ncorpus RG164.CRIS.FY94.txt sha256 437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a\nsoftware dialog-file60 0.1.0; registry 40c17123792b\n---","corpusSha256":"437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a","softwareVersion":"0.1.0","registryHash":"40c17123792b","pacingStatus":"chosen for this reconstruction"}}
 [0.383,"o","--- RECONSTRUCTION, NOT A RECORDED SESSION ---"]
 [1.192,"o","\r\nDIALOG File 60 rules, anchored c. 1990-1994, applied to the FY 1994 Format B export held by NARA."]
 [2.008,"o","\r\ncorpus RG164.CRIS.FY94.txt sha256 437af4e896e7186a2afa69e7d9cfdf8bd176388e731ee07b6cc27fb403d3807a"]
-[2.433,"o","\r\nsoftware dialog-file60 0.1.0; registry e34fc987093c"]
+[2.433,"o","\r\nsoftware dialog-file60 0.1.0; registry 40c17123792b"]
 [2.458,"o","\r\n---"]
 [3.083,"o","\r\n?b 60"]
 [3.992,"o","\r\n          03may94 10:00:12 User013140"]

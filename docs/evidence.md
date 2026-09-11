@@ -117,6 +117,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.accounting.combination
 - proto.begin.banner
 - proto.expand.display
+- proto.rank.default_set
 - proto.select.proximity.numbered
 - proto.select.suffix
 - render.headings.join

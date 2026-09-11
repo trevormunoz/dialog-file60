@@ -1742,7 +1742,7 @@
   "proto.select.proximity": {
     "value": { "W": "adjacent, in order", "N": "adjacent, either order", "F": "same field, any distance" },
     "status": "documented",
-    "claim": "Three proximity operators are implemented: (W) requires two terms next to each other in the order typed, (N) the same but in either order, and (F) only that both terms are in the same field.",
+    "claim": "Three proximity operators are implemented: (W) adjacent and ordered, (N) adjacent either order, (F) same field, any distance.",
     "sources": [
       { "source": "bluesheet-1998-text",
         "locator": "Basic Index, SELECT examples: 'S SERUM(W)LIPID?/DE', 'S FISH(F)OIL?/NR', 'S LIPID?(N)LEVEL?/OB', 'S LIPID?(3N)METABOL?/TI'; Additional Indexes, 'S PO=(OHIO(W)STATE)'",
@@ -1777,13 +1777,13 @@
   "proto.select.proximity.perterm": {
     "value": "one postings line per word, then one for the proximity expression, then the set line",
     "status": "documented",
-    "claim": "A proximity search prints a count for each word searched, then a count for the whole proximity expression, then the set line -- the same shape any other multi-term search prints.",
+    "claim": "A proximity search prints one count per word, then one for the whole expression, then the set line -- like other multi-term searches.",
     "sources": [
       { "source": "successful-searching-2001",
         "locator": "SELECT worked example: '?s self(Iw)esteem and kindergarten?' -> '223646 SELF', '26261 ESTEEM', '25506 SELF(IW)ESTEEM', '19458 KINDERGARTEN?', 'S2 265 SELF(IW)ESTEEM AND KINDERGARTEN?'",
         "sourceDate": "2001", "observedSystem": "DIALOG general" },
       { "source": "database-magazine-1988",
-        "locator": "a (W) expression's printed postings lines with SET DETAIL off, the same shape",
+        "locator": "figure 2, a (W) expression's printed postings lines with SET DETAIL off, the same shape",
         "sourceDate": "1988", "observedSystem": "DIALOG general" },
       { "source": "curso-1994",
         "locator": "p. 99 (printed 113): 'S1 4322 TECHNOLOG?/TI', 'S2 1330 TRANSFER?/TI', 'S3 252 TECHNOLOG?(W)TRANSFER?/TI' -- SELECT STEPS' own per-operand-then-combined numbering, applied to a proximity expression",
@@ -2169,7 +2169,7 @@
   "render.format6.labels": {
     "value": ["AN", "AGENCY ID:", "PROJ NO:", "PERIOD:", "INVEST:", "PERF ORG:", "LOCATION:"],
     "status": "documented",
-    "claim": "Format 6 leads with the record's DIALOG accession number, then prints six labelled fields, in this order: agency, project number, period, investigator, performing organization, and location.",
+    "claim": "Format 6 prints the accession number, then six labelled fields: agency, project, period, investigator, organization, and location.",
     "sources": [
       {
         "source": "epa-session-1978",
@@ -2207,7 +2207,7 @@
   "proto.rank.command": {
     "value": "RANK <field>",
     "status": "documented",
-    "claim": "RANK tallies the values of a phrase- or numeric-indexed field across a set and lists the terms in descending order of frequency; it takes a field code and, optionally, a set number.",
+    "claim": "RANK counts a field's values across a set and lists the terms most-frequent first; it takes a field code and, optionally, a set number.",
     "sources": [
       {
         "source": "bluesheet-1998-text",
@@ -2222,12 +2222,32 @@
         "observedSystem": "DIALOG general"
       }
     ],
-    "note": "The Blue Sheet's EXAMPLES cell OCRs, after tag-stripping, as the single run 'RANK STRANK FY S4' -- checked against the raw HTML before citing it (Task 10 Step 5): the source markup is '<td>RANK ST<br>RANK FY S4</td>', a <br> between two examples, not one run-together example. The hypothesis that the cell was two examples with a lost table-cell boundary was correct once the raw HTML was read; nothing here was invented. This build implements only the un-prompted single-field form ('RANK <field>', with an optional 'S<n>' naming the set, defaulting to the most recently created set when omitted) -- the option words (CONT PERCENT ALPHA DESC DETAIL), the prompted/menu interaction, multi-field RANK (RANK DE, ID) and partial-field RANK (RANK (IC 1-4)) are named in docs/not-implemented.md, not read from any narrower source than this one."
+    "note": "The Blue Sheet's EXAMPLES cell OCRs, after tag-stripping, as the single run 'RANK STRANK FY S4' -- checked against the raw HTML before citing it (Task 10 Step 5): the source markup is '<td>RANK ST<br>RANK FY S4</td>', a <br> between two examples, not one run-together example. The hypothesis that the cell was two examples with a lost table-cell boundary was correct once the raw HTML was read; nothing here was invented. This build implements only the un-prompted single-field form ('RANK <field>', with an optional 'S<n>' naming the set) -- the option words (CONT PERCENT ALPHA DESC DETAIL), the prompted/menu interaction, multi-field RANK (RANK DE, ID) and partial-field RANK (RANK (IC 1-4)) are named in docs/not-implemented.md, not read from any narrower source than this one. What happens when 'S<n>' is omitted is a separate question, registered at proto.rank.default_set rather than folded into this documented entry."
+  },
+  "proto.rank.default_set": {
+    "value": "the session's own most recently created set",
+    "status": "inferred",
+    "claim": "A RANK with no set number is read here as ranking the session's own most recently created set.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "RANK: 'Command Format: RANK <field>' shows Sn as optional, but no held text says what a set-less RANK ranks",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "RANK EXAMPLES cell, raw HTML: 'RANK ST<br>RANK FY S4' -- the first example names no set at all",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "No held source states what a set-less RANK ranks. Both command-format sources show 'Sn' as optional, and the Blue Sheet's own first RANK example ('RANK ST') carries none, so a reading is needed to make that example do anything at all. This reconstruction infers 'the most recently created set' rather than any other candidate (the first set made, or every set combined), because it is the plainest reading of an unqualified command in a session that already numbers sets in creation order (S1, S2, ...). Statement of absence: RANK's own set-less default is not stated by any held source, not found by grepping 'RANK' and reading the RANK sections of the 1998 Blue Sheet text and the 2001 manual text on 2026-09-11. The alternative considered -- refusing a set-less RANK outright -- was rejected: nothing states RANK requires Sn, and the Blue Sheet's own bare 'RANK ST' example would then have no reading at all. src/dialog/session.ts's runRank falls back to this.sets[this.sets.length - 1] when cmd.set is null."
   },
   "proto.rank.display": {
     "value": "RANK Results\n-------------\n\nRANK: S<n>/1-<N>  Field: <FF>=  File(s): <nnn>\n(<N> records - <M> terms)\n\nRANK  No.Items\nNo.   Ranked  Term\n---   -------- ----\n<rank>        <items>  <TERM>",
     "status": "documented",
-    "claim": "RANK's results screen prints a header naming the ranked set and field, a count of records searched and terms found, a three-line column header (rank number, item count, term), and one row per ranked term.",
+    "claim": "RANK's results screen prints a header naming the set and field, a count of records and terms found, a column header, and one row per term.",
     "sources": [
       {
         "source": "curso-1994",
@@ -2247,13 +2267,13 @@
   "proto.rank.columns": {
     "value": null,
     "status": "chosen",
-    "claim": "The character positions of RANK's column header and rows are not evidence -- the one worked block held is typeset (2001) or a photocopy (1994's ERIC scan) -- so this reconstruction picks its own column layout rather than reproducing either source's spacing.",
+    "claim": "Where RANK's columns sit on the line is this reconstruction's choice; the examples held are typeset or photocopied, not spacing evidence.",
     "note": "Same rule Task 2 applied to format 6: the source documents that a rank number, an item count and a term appear, in that order, one row per term -- not the exact column widths. This reconstruction also collapses the 1994 page's own three-line stacked column header ('RANK  No.Items' / 'No.   Ranked  Term' / a dashed rule) to 2001's single-line form ('RANK  No. Items  Term'), since the stacking is that scan's own typesetting, not a difference in what RANK prints."
   },
   "proto.rank.wordfields": {
     "value": "RANK does not work in any word-indexed fields.",
     "status": "documented",
-    "claim": "RANK refuses a field this build only carries in a word index, because a word-indexed field's values are individual words, not the phrase- or numeric-indexed terms RANK tallies.",
+    "claim": "RANK refuses a word-indexed field, because its values are individual words, not the whole terms RANK tallies.",
     "sources": [
       {
         "source": "successful-searching-2001",

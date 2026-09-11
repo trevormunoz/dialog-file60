@@ -6,6 +6,7 @@ registry.get("proto.rank.command");
 registry.get("proto.rank.display");
 registry.get("proto.rank.columns");
 registry.get("proto.rank.wordfields");
+registry.get("proto.rank.default_set");
 
 /** "Once a term is ranked, the top eight terms are automatically displayed" -- Successful
  * Searching on Dialog (2001), RANK -- corroborated by the 1994 Curso Introductorio DIALOG

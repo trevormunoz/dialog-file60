@@ -126,7 +126,8 @@ export class DialogSession {
    * set/field (proto.error.unknown_set / proto.error.unknown_field, the same simulated `?`
    * forms SORT already uses) before tallying; otherwise prints the RANK Results block
    * (src/dialog/rank.ts's rankLines, over rankTally's ranked rows). No `Sn` (cmd.set === null)
-   * ranks this session's own most recently created set. */
+   * ranks this session's own most recently created set -- an inferred default, no held source
+   * states it (proto.rank.default_set). */
   private runRank(cmd: Extract<DialogCommand, { cmd: "rank" }>): OutputLine[] {
     const set = cmd.set !== null ? this.sets.find(s => s.id === cmd.set) : this.sets[this.sets.length - 1];
     if (cmd.set !== null && !set) return [line(`? S${cmd.set}`, { registryKeys: ["proto.error.unknown_set"] })];
@@ -139,8 +140,11 @@ export class DialogSession {
       throw e;
     }
     const rows = rankTally(counts);
+    const keys = cmd.set === null
+      ? ["proto.rank.command", "proto.rank.display", "proto.rank.columns", "proto.rank.default_set"]
+      : ["proto.rank.command", "proto.rank.display", "proto.rank.columns"];
     return rankLines({ setId: set.id, itemsSearched: set.ordinals.length, field: cmd.field, rows }).map(t =>
-      line(t, { registryKeys: ["proto.rank.command", "proto.rank.display", "proto.rank.columns"] }),
+      line(t, { registryKeys: keys }),
     );
   }
 }
