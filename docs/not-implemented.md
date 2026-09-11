@@ -85,6 +85,15 @@ CY=BELTSVILLE AND ST=MARYLAND` and `S (CY=AMES OR CY=BELTSVILLE) AND
 ST=MARYLAND` parse to different expressions. Proximity operators
 ((W), (N), and the rest) are not implemented; a SELECT using one is
 indistinguishable from a typo, the same as before OR and NOT existed here.
+The positional index that would make them resolvable
+([Positional index](indexes.md)) is itself built and uploaded for only two
+Basic Index codes, `/TI` and `/DE`: the full eight-code positional index
+measured 205,241,665 bytes under `public/corpus/pos` (`pnpm load`,
+2026-09-11), over this reconstruction's 150 MB ceiling on bytes added to
+the bucket's `v1/` prefix (Trevor's pre-approved decision (a), recorded at
+`index.word.positions`). `/TX`, `/AP`, `/OB`, `/PR`, `/PB` and `PO=` carry
+no positional index, so proximity over them could not be answered without a
+further, larger build even once the operators themselves are implemented.
 
 SELECT STEPS (`SS`, or `SELECT STEPS`) is implemented: it prints `Processing`,
 then a numbered set for each operand of the search, then the combined set,

@@ -50,3 +50,10 @@ export const wordShardUrl = (code: string, shard: string, env: UrlEnv): string =
  * all four codes for a bare EXPAND. */
 export const MERGED_WORD_DIR = "_merged";
 export const mergedWordTermsUrl = (env: UrlEnv): string => `${corpusBase(env)}word/${MERGED_WORD_DIR}/terms.json`;
+
+// The positional index sits beside the word index, one directory per code (same wordDir()
+// mapping) with one shard file per first character (src/loader/words.ts's shardOf) -- no
+// terms.json, since nothing browses a positional index directly.
+export const POS_DIR = "pos";
+export const posShardUrl = (code: string, shard: string, env: UrlEnv): string =>
+  `${corpusBase(env)}${POS_DIR}/${wordDir(code)}/${shard}.json`;

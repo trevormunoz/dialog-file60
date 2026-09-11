@@ -1,6 +1,6 @@
 import { FetchRangeReader } from "../retrieval/reader";
 import { RetrievalEngine } from "../retrieval/engine";
-import { FetchWordIndex } from "../retrieval/words";
+import { FetchWordIndex, FetchPositional } from "../retrieval/words";
 import { DialogSession } from "../dialog/session";
 import { renderFor } from "../dialog/render5";
 import { DomSink, type DisplayMode } from "../terminal/sink";
@@ -28,7 +28,10 @@ async function fetchJson<T>(url: string): Promise<T> {
 const offsets = await fetchJson<Offsets>(offsetsUrl(import.meta.env));
 const indexes: Record<string, Index> = {};
 for (const [c, url] of indexUrls(PHRASE_FIELDS, import.meta.env)) indexes[c] = await fetchJson<Index>(url);
-const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpusUrl(offsets.file, import.meta.env)), FY1994.profile, new FetchWordIndex(import.meta.env));
+// The positional source is not yet read by anything this milestone ships -- Task 8's
+// proximity operators are its first reader -- but it is wired in now, alongside FetchWordIndex,
+// so that landing it later is not a RetrievalEngine constructor-shape change.
+const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpusUrl(offsets.file, import.meta.env)), FY1994.profile, new FetchWordIndex(import.meta.env), new FetchPositional(import.meta.env));
 // Restart replaces this with a fresh DialogSession -- the DIALOG layer
 // gains no "restart" concept of its own; `new DialogSession` already starts with no current
 // file and no sets. `let`, not `const`, so the onSubmit closure below and restart() (further

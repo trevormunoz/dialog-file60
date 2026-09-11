@@ -62,4 +62,21 @@ for f in public/corpus/word/*/*.json; do
   echo "ok ${key}"
 done
 
-echo "done. now run: pnpm verify:remote <base url> -- it checks corpus fixity, the ranged read, every phrase index, and each word index's terms.json plus one deterministic shard"
+# The positional index (src/loader/words.ts's FIELD_STRIDE packing). Only /TI and /DE
+# (POSITIONAL_CODES) are built and uploaded -- decision (a): the full eight-code positional
+# index measured 205,241,665 bytes, over the 150 MB bucket-addition ceiling; docs/indexes.md
+# and docs/not-implemented.md record the measurement and what it leaves out.
+echo "uploading the positional indexes (TI and DE only, per decision (a) -- see docs/indexes.md)"
+for dir in TI DE; do
+  test -d "public/corpus/pos/${dir}" || { echo "public/corpus/pos/${dir} is missing; run pnpm load" >&2; exit 1; }
+done
+for f in public/corpus/pos/*/*.json; do
+  key="${f#public/corpus/}"
+  wrangler r2 object put "${BUCKET}/${PREFIX}/${key}" \
+    --file "$f" --remote \
+    --content-type "application/json" \
+    --cache-control "${CACHE}" >/dev/null
+  echo "ok ${key}"
+done
+
+echo "done. now run: pnpm verify:remote <base url> -- it checks corpus fixity, the ranged read, every phrase index, each word index's terms.json plus one deterministic shard, and that same shard's positional index file"

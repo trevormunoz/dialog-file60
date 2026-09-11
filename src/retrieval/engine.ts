@@ -3,7 +3,7 @@ import type { Offsets, Index } from "../loader/corpus-format";
 import { DOCUMENTED_PHRASE_PREFIXES } from "../loader/corpus-format";
 import { phraseKey } from "../loader/phrase";
 import { WORD_CODES, shardOf, resolveWordCode } from "../loader/words";
-import type { WordIndexSource } from "./words";
+import type { WordIndexSource, PositionalSource } from "./words";
 import { registry } from "../registry";
 export type { RangeReader } from "./reader";
 import type { RangeReader } from "./reader";
@@ -99,7 +99,16 @@ export class RetrievalEngine {
     private reader: RangeReader,
     private profile: Profile,
     private wordSource?: WordIndexSource,
+    // Task 8's proximity operators ((W)/(N)/(F)) are this constructor's only planned reader;
+    // accepted here, unused, so that landing it is not itself a constructor-shape change in
+    // the task that consumes it.
+    private posSource?: PositionalSource,
   ) {}
+
+  /** Whether a PositionalSource was configured. Task 8's proximity operators check this
+   * before attempting (W)/(N)/(F); nothing in this milestone calls either it or posSource
+   * itself, so this is the one read that keeps the field from looking unused. */
+  hasPositionalSource(): boolean { return this.posSource !== undefined; }
 
   /** Walks `expr` for its "word" operands and loads any (code, shard) pair search() will
    * need that is not already cached. Must run, and be awaited, before search() when expr may

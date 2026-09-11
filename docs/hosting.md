@@ -34,6 +34,14 @@ v1/word/<CODE>/<A-Z,0-9,_>.json     the shards; 304 word-index objects in all,
 v1/word/_merged/terms.json          4,280,332 bytes: the merged Basic Index term
                                     list with union counts, built by the loader so
                                     a bare EXPAND fetches one file, not the shards
+v1/pos/<CODE>/<A-Z,0-9,_>.json      the positional index shards, /TI and /DE only
+                                    (POSITIONAL_CODES, src/loader/words.ts) -- the
+                                    full eight-code positional index measured
+                                    205,241,665 bytes, over the 150 MB ceiling on
+                                    bytes added here, so /TX, /AP, /OB, /PR, /PB
+                                    and PO= carry no v1/pos objects (decision (a),
+                                    indexes.md); 74 objects, 16,883,977 bytes, the
+                                    same bytes as on disk
 ```
 
 `public/corpus/report.json` (a derived QC artifact that no reader or the app

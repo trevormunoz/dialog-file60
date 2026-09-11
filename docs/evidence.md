@@ -125,6 +125,7 @@ rests on. This is the full registry, grouped by status, produced by
 - cast.pacing
 - index.format
 - index.word.hyphen
+- index.word.positions
 - index.word.shards
 - inspect.mode
 - nara.tape.fy1994_accession

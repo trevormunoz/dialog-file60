@@ -1,5 +1,5 @@
-import { wordShardUrl, wordTermsUrl, mergedWordTermsUrl, type UrlEnv } from "../loader/corpus-urls";
-import type { WordIndex } from "../loader/corpus-format";
+import { wordShardUrl, wordTermsUrl, mergedWordTermsUrl, posShardUrl, type UrlEnv } from "../loader/corpus-urls";
+import type { WordIndex, PositionalShard } from "../loader/corpus-format";
 
 /** One suffix code's word index, loaded a shard at a time. `shard` returns the term ->
  * postings map for one first-character shard (src/loader/words.ts's shardOf); `terms`
@@ -34,10 +34,30 @@ export class FetchWordIndex implements WordIndexSource {
   }
 }
 
-// FsWordIndex is kept out of this file, in ./words-node -- the module src/app/main.ts
-// imports for the browser (this one, for FetchWordIndex) must carry no node: specifier,
-// static or dynamic (test/regression/loader-build-browser-safe.test.ts), the same reason
-// FsRangeReader is kept out of ./reader in ./reader-node.
+/** One suffix code's positional index, loaded a shard at a time -- the (Task 8) proximity
+ * operators' source of "where in the record, and in which field" for a term. `positions`
+ * returns the term -> record ordinal -> packed positions map for one first-character shard
+ * (the same shardOf() split WordIndexSource.shard uses); a code this source has never heard
+ * of is, as with WordIndexSource, not this interface's problem -- callers check the code
+ * against WORD_CODES first. */
+export interface PositionalSource {
+  positions(code: string, shard: string): Promise<PositionalShard>;
+}
+
+/** Browser: one HTTP request per shard, made only when a proximity search needs it. Same
+ * `env` FetchWordIndex takes, for the same reason. */
+export class FetchPositional implements PositionalSource {
+  constructor(private env: UrlEnv) {}
+  async positions(code: string, shard: string): Promise<PositionalShard> {
+    const res = await fetch(posShardUrl(code, shard, this.env));
+    return (await res.json()) as PositionalShard;
+  }
+}
+
+// FsWordIndex and FsPositional are kept out of this file, in ./words-node -- the module
+// src/app/main.ts imports for the browser (this one, for FetchWordIndex and FetchPositional)
+// must carry no node: specifier, static or dynamic (test/regression/loader-build-browser-safe.test.ts),
+// the same reason FsRangeReader is kept out of ./reader in ./reader-node.
 
 const MERGED_CODES = ["/TX", "/TI", "/DE", "/PB"] as const;
 

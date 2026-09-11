@@ -23,6 +23,12 @@ export interface Report {
    * the distinct-term count per code; wordPostings is the summed postings-list length. */
   wordTerms: Record<string, number>;
   wordPostings: Record<string, number>;
+  /** Per-code positional-index counts. posPostings counts occurrences (one per packed
+   * position, unlike wordPostings, which counts records); posBytes sums each code's shard
+   * files' serialized length, the same bytes src/loader/cli.ts writes under
+   * public/corpus/pos/<CODE>. */
+  posPostings: Record<string, number>;
+  posBytes: Record<string, number>;
 }
 
 /**
@@ -67,4 +73,8 @@ export const DOCUMENTED_PHRASE_PREFIXES = [
  * (buildIndexes, node:crypto) lives in ./index-builder, and the CLI entry point (node:fs)
  * in ./cli -- both Node-only, neither ever loaded by the browser.
  */
-export { indexUrl, indexUrls, offsetsUrl, corpusUrl, corpusBase, wordDir, wordTermsUrl, wordShardUrl, type UrlEnv } from "./corpus-urls";
+export { indexUrl, indexUrls, offsetsUrl, corpusUrl, corpusBase, wordDir, wordTermsUrl, wordShardUrl, posShardUrl, POS_DIR, type UrlEnv } from "./corpus-urls";
+/** The positional index's types are defined in ./words, beside the position-packing logic
+ * (FIELD_STRIDE, WORD_CODES, WORD_FIELDS) they depend on; re-exported here so every other
+ * corpus-format consumer keeps its one import site. */
+export { FIELD_STRIDE, type PositionalShard, type PositionalIndex } from "./words";

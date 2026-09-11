@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { verifyRemote } from "../../scripts/verify-remote";
 import { registry } from "../../src/registry";
 import type { Fixity } from "../../src/loader/fixity";
-import { WORD_CODES } from "../../src/loader/words";
+import { WORD_CODES, POSITIONAL_CODES } from "../../src/loader/words";
 import { wordDir, MERGED_WORD_DIR } from "../../src/loader/corpus-urls";
 import { PHRASE_FIELDS } from "../../src/loader/corpus-format";
 
@@ -54,11 +54,20 @@ const wordUrls = WORD_CODES.flatMap(code => {
     [`https://corpus.example/v1/word/${dir}/A.json`, '{"A":[0]}'],
   ] as [string, string][];
 });
+// The positional index reuses the same deterministic shard (word/<dir>/terms.json's first
+// term is always "A", so shardOf() always picks "A") -- one stub file per code, under pos/
+// instead of word/, with no terms.json counterpart. Only POSITIONAL_CODES (/TI and /DE) is
+// actually built and uploaded (decision (a), docs/indexes.md), so that is all verifyRemote
+// checks and all this stub provides.
+const posUrls = POSITIONAL_CODES.map(code =>
+  [`https://corpus.example/v1/pos/${wordDir(code)}/A.json`, '{"A":{"0":[9]}}'] as [string, string],
+);
 const okIndexes = Object.fromEntries([
   ["https://corpus.example/v1/offsets.json", '{"file":"RG164.CRIS.FY94.txt","sha256":"x","records":[]}'],
   ...INDEX_CODES.map(c => [`https://corpus.example/v1/index/${c}.json`, `{"code":"${c}","terms":{}}`]),
   ...wordUrls,
   [`https://corpus.example/v1/word/${MERGED_WORD_DIR}/terms.json`, '[["A",1]]'],
+  ...posUrls,
 ]);
 
 test("a matching object passes and reports the corpus size, the 206 and every index", async () => {
@@ -81,6 +90,22 @@ test("a matching object passes and reports the corpus size, the 206 and every in
     expect(w.shardBytes, w.code).toBeGreaterThan(0);
   }
   expect(report.mergedTermsBytes).toBeGreaterThan(0);
+  expect(report.positions.map(p => p.code)).toEqual([...POSITIONAL_CODES]);
+  for (const p of report.positions) {
+    expect(p.shard, p.code).toBe("A");
+    expect(p.bytes, p.code).toBeGreaterThan(0);
+  }
+});
+
+test("a missing positional shard fails with the URL and the status", async () => {
+  const missing = { ...okIndexes };
+  delete missing[`https://corpus.example/v1/pos/${wordDir("/TI")}/A.json`];
+  await expect(verifyRemote("https://corpus.example/v1/", {
+    fetchImpl: stubFetch(synthetic, missing),
+    expected: syntheticFixity,
+    fixture: FIXTURE,
+    fixtureOffset: FIXTURE_OFFSET,
+  })).rejects.toThrow(/pos\/TI\/A\.json: HTTP 404/);
 });
 
 test("a missing merged terms file fails with the URL and the status", async () => {

@@ -20,7 +20,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { checkFixity, type Fixity } from "../src/loader/fixity";
 import { PHRASE_FIELDS } from "../src/loader/corpus-format";
-import { WORD_CODES, shardOf } from "../src/loader/words";
+import { WORD_CODES, POSITIONAL_CODES, shardOf } from "../src/loader/words";
 import { wordDir, MERGED_WORD_DIR } from "../src/loader/corpus-urls";
 import { registry } from "../src/registry";
 
@@ -38,6 +38,7 @@ export interface RemoteReport {
   indexes: { code: string; status: number; bytes: number }[];
   words: { code: string; shard: string; termsBytes: number; shardBytes: number }[];
   mergedTermsBytes: number;
+  positions: { code: string; shard: string; bytes: number }[];
 }
 
 export interface VerifyOpts {
@@ -109,6 +110,23 @@ export async function verifyRemote(baseUrl: string, opts: VerifyOpts = {}): Prom
     words.push({ code, shard, termsBytes: termsBytes.length, shardBytes: shardBytes.length });
   }
 
+  // The positional index sits beside each word index, one directory per code (no terms.json --
+  // nothing browses it directly). Same deterministic shard already chosen above per code, so a
+  // single check reuses the code/shard pairing the word check just made instead of choosing a
+  // shard twice. Only POSITIONAL_CODES was actually written and uploaded (decision (a): the
+  // full eight-code positional index exceeds the 150 MB bucket-addition ceiling; see
+  // docs/indexes.md), so that is all this checks for.
+  const positions: RemoteReport["positions"] = [];
+  for (const w of words) {
+    if (!POSITIONAL_CODES.includes(w.code)) continue;
+    const posUrl = `${base}pos/${wordDir(w.code)}/${w.shard}.json`;
+    const posRes = await f(posUrl);
+    if (!posRes.ok) throw new Error(`${posUrl.slice(base.length)}: HTTP ${posRes.status} ${posRes.statusText}`);
+    const posBytes = new Uint8Array(await posRes.arrayBuffer());
+    if (posBytes.length === 0) throw new Error(`${posUrl.slice(base.length)}: empty body`);
+    positions.push({ code: w.code, shard: w.shard, bytes: posBytes.length });
+  }
+
   // The prebuilt merged Basic Index term list (src/loader/index-builder.ts's mergedTerms),
   // the file a bare EXPAND now reads instead of every shard of all four merged codes.
   const mergedTermsUrl = `${base}word/${MERGED_WORD_DIR}/terms.json`;
@@ -129,6 +147,7 @@ export async function verifyRemote(baseUrl: string, opts: VerifyOpts = {}): Prom
     indexes,
     words,
     mergedTermsBytes: mergedTermsBytes.length,
+    positions,
   };
 }
 
@@ -151,6 +170,7 @@ if (process.argv[1]?.endsWith("verify-remote.ts")) {
       `word/${wordDir(w.code)}/terms.json ${w.termsBytes} bytes, ` +
       `word/${wordDir(w.code)}/${w.shard}.json ${w.shardBytes} bytes`,
     ).join("\n") + "\n" +
-    `word/${MERGED_WORD_DIR}/terms.json ${report.mergedTermsBytes} bytes`,
+    `word/${MERGED_WORD_DIR}/terms.json ${report.mergedTermsBytes} bytes\n` +
+    report.positions.map(p => `pos/${wordDir(p.code)}/${p.shard}.json ${p.bytes} bytes`).join("\n"),
   );
 }
