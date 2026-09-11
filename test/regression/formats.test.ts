@@ -22,6 +22,17 @@ test("format 6 prints the 1978 labels in the 1978 order", () => {
   expect(text.indexOf("AGENCY ID:")).toBeLessThan(text.indexOf("PROJ NO:"));
 });
 
+// The 1978 session's own two printed examples (16/6/1, 16/6/2) each open with the record's
+// accession number ahead of "AGENCY ID:" -- format 6 is "Heading and Title" and the heading
+// includes the AN, the same padded form format1 prints alone (render.format6.labels,
+// map.AN.display_padding, reused rather than restated).
+test("format 6 leads with the padded accession number, ahead of the six labels", () => {
+  const lines = format6(rec).map(l => l.text);
+  expect(lines[0]).toBe(" 09049442");
+  const text = lines.join("\n");
+  expect(text.indexOf(" 09049442")).toBeLessThan(text.indexOf("AGENCY ID:"));
+});
+
 test("a display-code format prints only the named fields, in the order named", () => {
   const text = formatCodes(rec, ["IN", "OB"]).map(l => l.text);
   expect(text.some(t => t.includes("HAMMERSCHLAG"))).toBe(true);

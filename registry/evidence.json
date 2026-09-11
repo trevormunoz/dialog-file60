@@ -2098,18 +2098,18 @@
     ]
   },
   "render.format6.labels": {
-    "value": ["AGENCY ID:", "PROJ NO:", "PERIOD:", "INVEST:", "PERF ORG:", "LOCATION:"],
+    "value": ["AN", "AGENCY ID:", "PROJ NO:", "PERIOD:", "INVEST:", "PERF ORG:", "LOCATION:"],
     "status": "documented",
-    "claim": "Format 6 prints six labelled fields, in this order: agency, project number, period, investigator, performing organization, and location.",
+    "claim": "Format 6 leads with the record's DIALOG accession number, then prints six labelled fields, in this order: agency, project number, period, investigator, performing organization, and location.",
     "sources": [
       {
         "source": "epa-session-1978",
-        "locator": "Sample Search/Output, p. 185: the `16/6/1` and `16/6/2` blocks",
+        "locator": "Sample Search/Output, p. 185: the `16/6/1` and `16/6/2` blocks, each headed by its own accession number (`0071310`, `0068219`)",
         "sourceDate": "1978-02-28",
         "observedSystem": "File 60"
       }
     ],
-    "note": "The 1978 EPA session predates this reconstruction's 1990-1994 anchor period; it is pre-anchor evidence for the six labels and their order, not for the corpus record itself."
+    "note": "The 1978 EPA session predates this reconstruction's 1990-1994 anchor period; it is pre-anchor evidence for the accession number, the six labels and their order, not for the corpus record itself."
   },
   "render.format6.columns": {
     "value": null,

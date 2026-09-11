@@ -79,14 +79,23 @@ const f6Line = (text: string, tags: string[]): OutputLine =>
     registryKeys: [...tags.map(t => MAP[t]?.registry ?? "render.format6.labels"), "render.format6.labels", "render.format6.columns"],
   });
 
-/** Format 6: heading and title. The six labels and their order -- AGENCY ID:, PROJ NO:,
- * PERIOD:, INVEST:, PERF ORG:, LOCATION: -- follow the 1978 File 60 session's two printed
- * examples (render.format6.labels); one label per line is this reconstruction's own column
- * choice (render.format6.columns), since the 1978 print is typeset and its layout is not
- * evidence. The title wraps the same unstretched way render5's TI does. */
+/** Format 6: heading and title. The block leads with the record's DIALOG accession number,
+ * padded the same way format1's own AN line is (map.AN.display_padding, reused rather than
+ * restated) -- the 1978 File 60 session's own two printed examples open `16/6/1` with
+ * "0071310          AGENCY ID: ..." before the six labels. Those six labels and their order --
+ * AGENCY ID:, PROJ NO:, PERIOD:, INVEST:, PERF ORG:, LOCATION: -- are the same two examples
+ * (render.format6.labels); one label per line is this reconstruction's own column choice
+ * (render.format6.columns), since the 1978 print is typeset and its layout is not evidence --
+ * the AN's own leading line is the one piece of that print's column layout this reconstruction
+ * does follow, since it is the block's own leading element, not an inter-column position. The
+ * title wraps the same unstretched way render5's TI does. */
 export function format6(rec: LogicalRecord): OutputLine[] {
   const agency = [v(rec, "AS"), v(rec, "DS")].filter(Boolean).join(" ");
   const out: OutputLine[] = [
+    line(" " + v(rec, "AN").padStart(8, "0"), {
+      sources: [{ tag: "AN" }],
+      registryKeys: ["render.format6.labels", "map.AN.display_padding"],
+    }),
     f6Line(`AGENCY ID: ${agency}`, ["AS", "DS"]),
     f6Line(`PROJ NO: ${v(rec, "PN")}`, ["PN"]),
     f6Line(`PERIOD: ${v(rec, "SX")} TO ${v(rec, "TX")}`, ["SX", "TX"]),
