@@ -1582,7 +1582,7 @@
     "note": "the trailer's own two counts, 3384620 (data lines between header and trailer) and 34090 (records), match scanRecords' full-corpus scan; scanRecords closes the record open before this line and excludes the line itself from that span. The value is a direct byte read of the corpus at line 3384622, which shows the two 9-digit counts concatenated with no separating space rather than a space between them."
   },
   "capability.notice": {
-    "value": "one modern line beneath the prompt, shown only after EXPAND, PAGE, DISPLAY SETS, LOGOFF, SORT, PRINT, KWIC, or TYPE by accession number",
+    "value": "one modern line beneath the prompt, shown only after a TYPE or PRINT by accession number, an SP= search prefix, or a proximity search naming a field with no positional index",
     "status": "chosen",
     "claim": "A note below the prompt says when a real DIALOG command is not reconstructed; DIALOG printed no such note.",
     "note": "A command DIALOG documented for File 60 but not implemented here is recognized by the parser (returns { cmd: \"unsupported\" }, src/dialog/parser.ts) instead of being treated the same as a typo. The session (src/dialog/session.ts) prints nothing for it into the character stream; the app (src/app/main.ts) shows the one-line notice outside the stream, so it never reaches scrollback, a copied selection, or the copy trailer."

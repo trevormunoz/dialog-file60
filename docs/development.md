@@ -32,7 +32,7 @@ config/                      base.ts (the app's base path); define.ts (version a
                               vite.config.ts and vitest.config.ts)
 scripts/                     extract-corpus.py, naive-split.py, cast.ts, poster.ts, registry-report.ts,
                               verify-remote.ts, upload-corpus.sh, build-for-site.sh
-casts/                       first-session.cast and its plain-text poster
+casts/                       friction.cast and poultry.cast, each with a plain-text poster
 fixtures/                    ACCEPTANCE.md, SOURCES.md, the sample record, the acceptance JSON
 test/archival/, test/evidence/, test/regression/   see each file's own header comment
 ```
@@ -45,22 +45,41 @@ run record for the session it requires: `B 60`, `S CY=BELTSVILLE`, `S S1 AND
 IN=<name>`, `T S2/5/1`, and the typed record inspected back to its byte
 offset.
 
-## Recording
+## Recordings
 
-`casts/first-session.cast` is an asciicast v2 recording
-(https://docs.asciinema.org/manual/asciicast/v2/) of the acceptance session
-above, built from the character stream itself rather than screen-captured:
-`pnpm cast` (`scripts/cast.ts`) wires `RetrievalEngine` and `DialogSession`
-exactly as the app does, runs `B 60`, `S CY=BELTSVILLE`, `S S1 AND
-IN=HAMMERSCHLAG  F A`, `T S2/5/1`, and hands every output line plus the
-reconstruction statement to `src/cast/asciicast.ts`'s `buildCast`, a pure
-function with no dependency on the DOM or on `DialogSession` itself. The
-recording carries the reconstruction statement as its own first frames, and
-the header's custom `x-reconstruction` object repeats it machine-readably
-alongside the corpus sha256, the software version, and the registry hash --
-the same integrity facts the on-screen statement panel carries (see
-[Reading the panels](evidence.md#reading-the-panels)). The recording does
-not list the registry keys the run applied; the registry file is the list.
+`casts/` holds two asciicast v2 recordings
+(https://docs.asciinema.org/manual/asciicast/v2/), built from the character
+stream itself rather than screen-captured, for people who will not sit and
+operate a terse, cost-metered command interface:
+
+- `friction.cast` -- the interface's terseness: a mistyped field code
+  (`S POULTRY/XX`) drawing the emulator's curt unknown-suffix error, the
+  corrected `S POULTRY/TI`, and the running connect-time meter.
+- `poultry.cast` -- one coherent poultry session showing the payoff:
+  `S POULTRY/TI` builds a set, `RANK IN` ranks it by investigator, `T S1/5/1`
+  drills one full record and `DS` returns to the set, `SET KWIC`/`T S1/K/1-2`
+  shows the term in context, and `PRINT S1/5/ALL` orders the offline prints
+  whose cost lands in the `LOGOFF` bill.
+
+`pnpm cast` (`scripts/cast.ts`) builds both: `buildClipCast(commands, title)`
+wires `RetrievalEngine` and `DialogSession` exactly as the app does, resets
+the deterministic clock so each clip is byte-reproducible on its own command
+count, and hands every output line to `src/cast/asciicast.ts`'s `buildCast`,
+a pure function with no dependency on the DOM or on `DialogSession` itself.
+Every count, ranked value, KWIC window, drilled record, and print total the
+poultry clip shows is derived independently in `scripts/naive-split.py` over
+the real corpus and cross-checked against the engine's own output by
+`test/archival/poultry-corpus.test.ts` -- the same real-data discipline the
+rest of the code follows; nothing is invented for a clip.
+
+Each recording opens with the single line `--- RECONSTRUCTION, NOT A
+RECORDED SESSION ---` and nothing else on screen. The corpus sha256, the
+software version, and the registry hash are not shown as clutter in a
+watchable clip; they ride in the header's custom `x-reconstruction` object,
+machine-readable, the same integrity facts the on-screen statement panel
+carries (see [Reading the panels](evidence.md#reading-the-panels)). The
+recording does not list the registry keys the run applied; the registry file
+is the list.
 
 Playback is paced, not instant: registry key `cast.pacing` (`chosen`)
 labels the recording's own speed -- 120 characters per second for output,
@@ -71,14 +90,22 @@ speed any 1990-1994 session is known to have used. (`terminal.pacing`, also
 `chosen`, is the separate key for the rate at which the live app prints
 characters: 120 per second, a speed documented for DIALOG access in
 1984-1988, with no source recording the speed of a File 60 session -- see
-[the registry listing](evidence.md#documented-inferred-chosen).) The recording's theme uses the app's own
-neutral ground and ink, `#ffffff` and `#111111`: no CRT, scanline, phosphor,
-sound, or colour claim.
+[the registry listing](evidence.md#documented-inferred-chosen).)
 
-The BARC story site embeds this recording with the asciinema player
-(https://github.com/asciinema/asciinema-player). A click-through from the
-embedded recording to a running instance of this reconstruction is possible
-because the corpus is hosted; see [Hosting](hosting.md).
+Ground and ink are the app's own neutral `#ffffff` and `#111111`: no CRT,
+scanline, phosphor, sound, or colour claim. Note that the cast header carries
+that theme but the embedding player does not read it: asciinema-player
+3.17.0's asciicast-v2 loader ignores a header `theme` object entirely (only
+its v3 loader parses one, from a different shape). The light ground is
+therefore set on the site side, by a CSS `--term-color-foreground` /
+`--term-color-background` override on the player element in
+`File60Player.astro`, not by the cast header.
+
+The BARC story site embeds both recordings with the asciinema player
+(https://github.com/asciinema/asciinema-player), each with a plain-language
+caption. A click-through from a recording to a running instance of this
+reconstruction is possible because the corpus is hosted; see
+[Hosting](hosting.md).
 
 ## Display modes
 
