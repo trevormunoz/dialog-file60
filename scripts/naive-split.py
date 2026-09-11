@@ -6,6 +6,7 @@ formatb.encoding.continuation_0xAC. No shared code with packages/cris-formatb.
 Usage: python3 scripts/naive-split.py data/RG164.CRIS.FY94.txt > fixtures/acceptance-fy94.json
 """
 import json, re, sys
+from collections import Counter
 
 def values(rec: bytes, tag: bytes) -> list[str]:
     out: list[bytearray] = []
@@ -128,6 +129,18 @@ def prox_w(text: str, a: str, b: str, distance: int = 1) -> bool:
 # by hand (GENE/TRANSFER 39, TISSUE/CULTURE 66, PEACH/TREE 9, FRESH/WATER 2, ... -- a zero count
 # proves nothing, so this is a pair actually present, not the corpus's absence of one).
 ti_fresh_w_water = [r for r in recs if any(prox_w(v, "FRESH", "WATER") for v in values(r, b"TI"))]
+# RANK: the per-set tally of ST values over the cy_beltsville set (already derived above),
+# counting each distinct value once per record (`set(values(...))`, the same per-record
+# dedup RetrievalEngine.rankValues reads straight off the already-built phrase index --
+# index-builder.ts's own `seen` set) -- Trevor's accepted decision (c): a per-set rank tally
+# over an acceptance set, not a corpus-wide rank, and not derived from the code under test.
+# Sorted by count descending, then term ascending -- the same order rankTally (src/dialog/
+# rank.ts) produces, derived independently here with no shared code.
+rank_st_over_belt = Counter()
+for r in belt:
+    for v in set(values(r, b"ST")):
+        rank_st_over_belt[v] += 1
+rank_st_over_cy_beltsville = sorted(rank_st_over_belt.items(), key=lambda kv: (-kv[1], kv[0]))
 rec_9049442 = next(r for r in recs if an(r) == "9049442")
 ti_9049442_words = " ".join(values(rec_9049442, b"TI")).split()
 ti_9049442_peach_idx = next(i for i, w in enumerate(ti_9049442_words) if kwic_word_match(w, "PEACH"))
@@ -147,4 +160,5 @@ print(json.dumps({
     "cy_beltsville_sorted_by_in": {"count": len(belt_by_in), "an": belt_by_in},
     "kwic_9049442_ti_peach_14": kwic_9049442_ti_peach_14,
     "ti_fresh_w_water": {"count": len(ti_fresh_w_water), "an": sorted(an(r) for r in ti_fresh_w_water)},
+    "rank_st_over_cy_beltsville": [[term, count] for term, count in rank_st_over_cy_beltsville],
 }, indent=1))

@@ -9,7 +9,7 @@ import type { RangeReader } from "./reader";
 import {
   collate, prefixPostings as prefixPostingsHelper, sortKey as sortKeyHelper, sortOrdinals as sortOrdinalsHelper,
   preparePositional as preparePositionalHelper, positionsOf as positionsOfHelper, evalProx,
-  intersect, union, difference,
+  intersect, union, difference, rankFieldValues,
 } from "./engine-helpers";
 export { near, UnimplementedProximityField } from "./engine-helpers";
 
@@ -84,19 +84,15 @@ export class RetrievalEngine {
   /** Sorted [term, postings.length] lists for a phrase field, cached per code since the
    * indexes never change during a session -- termList()'s phrase branch. */
   private phraseTerms = new Map<string, [string, number][]>();
-  /** The merged Basic Index browse list (BASIC_INDEX), built once and reused by every bare
-   * EXPAND. */
+  /** The merged Basic Index browse list (BASIC_INDEX), built once and reused by every bare EXPAND. */
   private basicIndexTerms: [string, number][] | null = null;
   /** Prefix-scan results for a "trunc" operand, resolved by prepare() and read by search()'s
-   * "trunc" case -- keyed `${resolved code}:${stem}` so search() stays synchronous, the same
-   * pattern `shards` gives the "word" case. */
+   * "trunc" case -- keyed `${resolved code}:${stem}`, the same pattern `shards` gives "word". */
   private truncCache = new Map<string, number[]>();
-  /** ordinal -> term reverse map per phrase code, built lazily once per code by sortKey()
-   * from this.indexes[code].terms and cached here. For an ordinal that shows up under more
-   * than one term of the same code (a repeating field carrying more than one distinct value,
-   * e.g. IN), the collation-first term wins -- see engine-helpers.ts's sortKey doc comment
-   * (proto.sort.multivalue_key), not the order distinct term strings were first created while
-   * building the index. */
+  /** ordinal -> term reverse map per phrase code, built lazily by sortKey() from
+   * this.indexes[code].terms and cached here. For an ordinal under more than one term of the
+   * same code (a repeating field, e.g. IN), the collation-first term wins -- see
+   * engine-helpers.ts's sortKey doc (proto.sort.multivalue_key), not first-write order. */
   private sortReverse = new Map<string, Map<number, string>>();
   /** Positional shards already fetched, keyed `${code}:${shard}` -- the proximity side of
    * `shards`, loaded and read via engine-helpers.ts's preparePositional/positionsOf. */
@@ -115,11 +111,10 @@ export class RetrievalEngine {
   /** Whether a PositionalSource was configured -- checked before attempting (W)/(N)/(F). */
   hasPositionalSource(): boolean { return this.posSource !== undefined; }
 
-  /** Walks `expr` for its "word" operands and loads any (code, shard) pair search() will
-   * need that is not already cached. Must run, and be awaited, before search() when expr may
-   * contain a word operand -- search() itself stays synchronous and only ever reads the
-   * cache. Throws UnknownSuffix for a code that is not one of WORD_CODES, before any fetch is
-   * attempted for it. */
+  /** Walks `expr` for its "word" operands and loads any (code, shard) pair search() will need
+   * that is not already cached. Must run, and be awaited, before search() when expr may
+   * contain a word operand -- search() stays synchronous, reading only the cache. Throws
+   * UnknownSuffix for a code outside WORD_CODES, before any fetch is attempted for it. */
   async prepare(expr: SearchExpression): Promise<void> {
     switch (expr.kind) {
       case "and": case "or": case "not":
@@ -156,11 +151,10 @@ export class RetrievalEngine {
   /** Every term the given field or suffix carries, paired with its postings count -- used by
    * the EXPAND browse list (not used by search()). BASIC_INDEX ("*") is the prebuilt merged
    * term list across /TX, /TI, /DE and /PB (proto.expand.display's note, src/loader/index-
-   * builder.ts): the count for each term is the real union of that term's postings across the
-   * four indexes, the same figure a SELECT on the row's E-number would retrieve, read whole
-   * from the loader's own artefact rather than assembled here from every code's shards. A word
-   * suffix code reads its prebuilt terms.json; a phrase field code (e.g. "IN", "CY") is derived
-   * from the loaded phrase index and sorted here, once, then cached. */
+   * builder.ts): each term's count is the real union of its postings across the four indexes,
+   * the same figure a SELECT on the row's E-number would retrieve, read whole from the
+   * loader's own artefact. A word suffix code reads its prebuilt terms.json; a phrase field
+   * code (e.g. "IN", "CY") is derived from the loaded phrase index and sorted here, cached. */
   async termList(code: string): Promise<[string, number][]> {
     if (code === "*") {
       if (this.basicIndexTerms) return this.basicIndexTerms;
@@ -283,6 +277,12 @@ export class RetrievalEngine {
   /** Ordinals of `ordinals`, ordered by `keys` -- see engine-helpers.ts's own doc comment. */
   sortOrdinals(ordinals: number[], keys: { field: string; descending: boolean }[]): number[] {
     return sortOrdinalsHelper((c, o) => this.sortKey(c, o), ordinals, keys);
+  }
+
+  /** RANK's tally -- thin wrapper, see engine-helpers.ts's rankFieldValues. */
+  rankValues(code: string, ordinals: number[]): [string, number][] {
+    if (!this.indexes[code]) throw new UnknownField(code, "");
+    return rankFieldValues(this.indexes[code]!, ordinals);
   }
 
   async record(ordinal: number): Promise<LogicalRecord> {

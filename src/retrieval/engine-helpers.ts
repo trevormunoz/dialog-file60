@@ -224,3 +224,19 @@ export function evalProx(
   perTerm.push({ display: echo, postings: sorted.length });
   return sorted;
 }
+
+/** RANK's raw tally: every value of a phrase-indexed field carried by any of `ordinals`,
+ * paired with how many of those ordinals carry it -- unsorted, zero-count terms excluded.
+ * `idx.terms` is already deduplicated per record (index-builder.ts's `seen` set), so a value
+ * repeated within one record's field never inflates its own count. Reads `idx` directly,
+ * never fetches record bytes -- RetrievalEngine.rankValues is a thin wrapper around this. */
+export function rankFieldValues(idx: Index, ordinals: number[]): [string, number][] {
+  const set = new Set(ordinals);
+  const out: [string, number][] = [];
+  for (const [term, postings] of Object.entries(idx.terms)) {
+    let n = 0;
+    for (const o of postings) if (set.has(o)) n++;
+    if (n > 0) out.push([term, n]);
+  }
+  return out;
+}

@@ -2203,5 +2203,71 @@
         "observedSystem": "DIALOG general"
       }
     ]
+  },
+  "proto.rank.command": {
+    "value": "RANK <field>",
+    "status": "documented",
+    "claim": "RANK tallies the values of a phrase- or numeric-indexed field across a set and lists the terms in descending order of frequency; it takes a field code and, optionally, a set number.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "RANK: 'All phrase- and numeric-indexed fields may be ranked.' -- EXAMPLES cell resolved against the raw HTML (bl0060_19980423153346.html, the RANK table's <td>) as two examples separated by a <br>, not run together: 'RANK ST<br>RANK FY S4'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "RANK: 'Command Format: RANK <field>' and 'RANK <field> <Sn> <range> CONT PERCENT ALPHA DESC DETAIL'; 'The Dialog system extracts terms from a specified field and lists them in ranked order. The term that appears most frequently is listed first, followed by the other terms, in descending order of frequency.'",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "The Blue Sheet's EXAMPLES cell OCRs, after tag-stripping, as the single run 'RANK STRANK FY S4' -- checked against the raw HTML before citing it (Task 10 Step 5): the source markup is '<td>RANK ST<br>RANK FY S4</td>', a <br> between two examples, not one run-together example. The hypothesis that the cell was two examples with a lost table-cell boundary was correct once the raw HTML was read; nothing here was invented. This build implements only the un-prompted single-field form ('RANK <field>', with an optional 'S<n>' naming the set, defaulting to the most recently created set when omitted) -- the option words (CONT PERCENT ALPHA DESC DETAIL), the prompted/menu interaction, multi-field RANK (RANK DE, ID) and partial-field RANK (RANK (IC 1-4)) are named in docs/not-implemented.md, not read from any narrower source than this one."
+  },
+  "proto.rank.display": {
+    "value": "RANK Results\n-------------\n\nRANK: S<n>/1-<N>  Field: <FF>=  File(s): <nnn>\n(<N> records - <M> terms)\n\nRANK  No.Items\nNo.   Ranked  Term\n---   -------- ----\n<rank>        <items>  <TERM>",
+    "status": "documented",
+    "claim": "RANK's results screen prints a header naming the ranked set and field, a count of records searched and terms found, a three-line column header (rank number, item count, term), and one row per ranked term.",
+    "sources": [
+      {
+        "source": "curso-1994",
+        "locator": "PDF p. 126 (printed 145), 'EJEMPLO DEL MANDATO RANK': rendered at 200 dpi (pdftoppm -r 200 -f 126 -l 126) and read fully legible on 2026-09-11. Transcribed: '?rank au' / '...Ranking 100 of 479 records' / '...Ranking 200 of 479 records' / '...Ranking 300 of 479 records' / '...Ranking 400 of 479 records' / 'Completed Ranking 479 records' / (blank) / 'RANK Results' / '-------------' / (blank) / 'RANK: S1/1-479  Field: AU=  File(s): 108' / '(479 records - 167 terms)' / (blank) / 'RANK  No.Items' / 'No.   Ranked  Term' / '---   -------- ----' / eight numbered rows (1 BOWLES, ROLAND L. through 8 BRITT, CHARLES L.) / then the prompted-menu block ('To save term(s), enter rank number(s): P = next page ... EXIT = exit RANK'), a saved-term acknowledgement, and on EXIT the erase prompt 'RANK results will be erased; have you saved all the terms of interest? (YES/NO)' -- already counted at display-evidence.md obs. 6.",
+        "sourceDate": "1994",
+        "observedSystem": "DIALOG general (File 108, AEROSPACE, worked example)"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "worked output block: 'Started processing RANK' / progress lines / 'Completed Ranking 646 records' / 'DIALOG RANK Results' / 'RANK: S1/1-646  Field: PA=  File(s): 340' / '(Rank fields found in 646 records - 261 unique terms)  Page 1 of 33' / 'RANK  No. Items  Term' / numbered rows",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general (File 340, worked example)"
+      }
+    ],
+    "note": "The 1994 page is this reconstruction's anchor-period source and the 2001 manual is not, so where the two disagree the 1994 page's own wording wins (Task 10 Step 1): 'RANK Results' (not 2001's 'DIALOG RANK Results'), no 'Started processing RANK' line before the progress lines, and the count line's plain '(N records - M terms)' with no 'Rank fields found in' prefix and no 'Page 1 of N' suffix -- none of those three 2001-only elements appear on the fully-legible 1994 page, so none is reproduced; this is a disagreement resolved by the anchor rule, not an illegibility. Both sources independently show exactly eight ranked rows on the first screen, corroborating RANK_PAGE=8 (proto.rank.display and the 2001 sentence 'the top eight terms are automatically displayed' agree). This reconstruction's own rankLines() (src/dialog/rank.ts) reproduces the header, count line, column header and rows; it does not reproduce the live per-hundred progress lines ('...Ranking N of M records') or the prompted save/EXIT menu and its erase confirmation -- those are named in docs/not-implemented.md alongside the rest of the prompted/menu RANK interaction, since this reconstruction has no live per-record processing to report progress on and no saved-term mechanism for a menu to serve."
+  },
+  "proto.rank.columns": {
+    "value": null,
+    "status": "chosen",
+    "claim": "The character positions of RANK's column header and rows are not evidence -- the one worked block held is typeset (2001) or a photocopy (1994's ERIC scan) -- so this reconstruction picks its own column layout rather than reproducing either source's spacing.",
+    "note": "Same rule Task 2 applied to format 6: the source documents that a rank number, an item count and a term appear, in that order, one row per term -- not the exact column widths. This reconstruction also collapses the 1994 page's own three-line stacked column header ('RANK  No.Items' / 'No.   Ranked  Term' / a dashed rule) to 2001's single-line form ('RANK  No. Items  Term'), since the stacking is that scan's own typesetting, not a difference in what RANK prints."
+  },
+  "proto.rank.wordfields": {
+    "value": "RANK does not work in any word-indexed fields.",
+    "status": "documented",
+    "claim": "RANK refuses a field this build only carries in a word index, because a word-indexed field's values are individual words, not the phrase- or numeric-indexed terms RANK tallies.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "RANK: 'RANK is designed to work with most phrase-indexed Additional Index fields, most numeric Additional Index fields, and phrase-indexed Descriptor (DE) and Identifier (ID) Basic Index fields... However, to minimize retrieval of inappropriate data, RANK does not work in any word-indexed fields.'",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "RANK: 'All phrase- and numeric-indexed fields may be ranked.' (the same restriction, stated the other way round)",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "This build carries DE only as a word index (WORD_FIELDS['/DE']), not the phrase index 2001 says DE also has elsewhere -- no phrase index for DE is built here, so RANK DE refuses in this reconstruction with this key's word-field message (src/dialog/rank.ts's isWordIndexedField recognizes '/DE' in WORD_CODES), not because DE was special-cased. ID carries no index of either kind in this build (not in WORD_FIELDS or PHRASE_PREFIX_TAGS), so RANK ID refuses too, but with the generic unknown-field message instead (proto.error.unknown_field, the same key SORT already uses for a field outside its own documented list) -- RetrievalEngine.rankValues finds no phrase index for it and isWordIndexedField says it is not a word-indexed field either, so it falls to that other, more generic refusal."
   }
 }

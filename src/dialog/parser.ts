@@ -270,6 +270,14 @@ export function parse(line: string): DialogCommand {
     });
     return { cmd: "sort", set: Number(m[1]), items: m[2]!.toUpperCase(), keys, echo: t.slice(5).trim().toUpperCase() };
   }
+  // RANK <field> <Sn>: the un-prompted single-field form (proto.rank.command). `Sn` is
+  // optional -- omitted, RANK targets the session's own most recently created set. A RANK
+  // carrying an option word (CONT PERCENT ALPHA DESC DETAIL), a range, or more than one field
+  // does not match this regex and falls through to the ordinary `unknown` path below --
+  // those forms are named, not implemented, in docs/not-implemented.md.
+  if ((m = /^rank\s+([A-Za-z]{2})(?:\s+s(\d+))?$/i.exec(t))) {
+    return { cmd: "rank", field: m[1]!.toUpperCase(), set: m[2] ? Number(m[2]) : null };
+  }
   // COMBINE <a>-<b>/<OP>: the 1978 File 60 session's range-and-operator form ("? COMBINE
   // 1-7/OR" printing "8 197 1-7/OR"). Folds the set numbers left-associatively into OP,
   // echoing "a-b/OP" uppercased. A reversed range (b < a) is not a range the 1978 transcript

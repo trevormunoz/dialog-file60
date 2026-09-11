@@ -3,7 +3,8 @@ import type { DialogCommand } from "./ast";
 import { parse } from "./parser";
 import { line, type OutputLine } from "./stream";
 import { registry } from "../registry";
-import type { RetrievalEngine, SearchExpression } from "../retrieval/engine";
+import { UnknownField, type RetrievalEngine, type SearchExpression } from "../retrieval/engine";
+import { rankTally, rankLines, isWordIndexedField } from "./rank";
 import type { ExpandState } from "./expand";
 import type { SessionClock } from "./accounting";
 import { setLine } from "./setline";
@@ -96,6 +97,7 @@ export class DialogSession {
       case "selectsteps": return runSelectSteps(this, cmd);
       case "type": return runType(this, cmd);
       case "sort": return runSort(this, cmd);
+      case "rank": return this.runRank(cmd);
       case "combine": return runCombine(this, cmd);
       case "print": return runPrint(this, cmd);
       case "expand": return runExpand(this, cmd);
@@ -118,5 +120,27 @@ export class DialogSession {
         return [line(token ? `? ${token}` : "?", { registryKeys: ["proto.error.unknown_command"] })];
       }
     }
+  }
+
+  /** RANK <field> <Sn>: refuses a word-indexed field (proto.rank.wordfields) or an unknown
+   * set/field (proto.error.unknown_set / proto.error.unknown_field, the same simulated `?`
+   * forms SORT already uses) before tallying; otherwise prints the RANK Results block
+   * (src/dialog/rank.ts's rankLines, over rankTally's ranked rows). No `Sn` (cmd.set === null)
+   * ranks this session's own most recently created set. */
+  private runRank(cmd: Extract<DialogCommand, { cmd: "rank" }>): OutputLine[] {
+    const set = cmd.set !== null ? this.sets.find(s => s.id === cmd.set) : this.sets[this.sets.length - 1];
+    if (cmd.set !== null && !set) return [line(`? S${cmd.set}`, { registryKeys: ["proto.error.unknown_set"] })];
+    if (!set) return [line("? RANK", { registryKeys: ["proto.error.unknown_command"] })];
+    if (isWordIndexedField(cmd.field)) return [line(`? ${cmd.field}`, { registryKeys: ["proto.rank.wordfields"] })];
+    let counts: [string, number][];
+    try { counts = this.engine.rankValues(cmd.field, set.ordinals); }
+    catch (e) {
+      if (e instanceof UnknownField) return [line(`? ${cmd.field}`, { registryKeys: ["proto.error.unknown_field"] })];
+      throw e;
+    }
+    const rows = rankTally(counts);
+    return rankLines({ setId: set.id, itemsSearched: set.ordinals.length, field: cmd.field, rows }).map(t =>
+      line(t, { registryKeys: ["proto.rank.command", "proto.rank.display", "proto.rank.columns"] }),
+    );
   }
 }

@@ -78,6 +78,9 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.print.ack
 - proto.prompt
 - proto.prompt.spacing
+- proto.rank.command
+- proto.rank.display
+- proto.rank.wordfields
 - proto.select.boolean
 - proto.select.echo_case
 - proto.select.per_term_postings
@@ -143,6 +146,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.expand.collation
 - proto.kwic.layout
 - proto.print.no_artefact
+- proto.rank.columns
 - proto.select.proximity.unimplemented
 - proto.session.clock
 - proto.session.user_number
@@ -241,3 +245,4 @@ mode (only the last 24 lines are kept; older lines are removed from the DOM,
 not merely hidden, so they cannot be scrolled to, selected, or copied).
 Switching into screen mode discards everything above the last screenful;
 switching back does not restore it.
+

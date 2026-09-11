@@ -46,6 +46,12 @@ export type DialogCommand =
    * effect until LOGOFF"). `size` is already validated to 2..50 -- a value outside that range
    * does not reach this variant, it parses to { cmd: "unknown" } instead (proto.kwic.window). */
   | { cmd: "setkwic"; size: number }
+  /** RANK <field> <Sn>: tallies the values of a phrase-indexed field across a set and lists
+   * the top terms by count (proto.rank.command). `set` is null when no `Sn` was typed -- the
+   * session ranks its own most recently created set in that case. The option words (CONT
+   * PERCENT ALPHA DESC DETAIL) are not implemented; a RANK carrying one falls through to
+   * `unknown` instead of reaching this variant (docs/not-implemented.md). */
+  | { cmd: "rank"; field: string; set: number | null }
   /** A command DIALOG documented for File 60 but outside this milestone's slice: TYPE by
    * accession number and PRINT by accession number. `command` names it
    * canonically (e.g. "LOGOFF"); `rest` is whatever followed the recognized command

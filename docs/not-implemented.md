@@ -8,12 +8,11 @@ implement, and what it prints when you try it.
 Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
 guard as a suffix, never tested against the SF field), SET DETAIL ON (the
-File column it adds to DISPLAY SETS' table is not printed), RANK (the
-relevance-ranking display over a set), the 1984 and 1988 fixtures,
-variant indexes, a database-owner copyright line after the banner
-(`proto.begin.copyright_line`, status `chosen` -- a different File's
-in-period BEGIN transcript shows one; File 60's is not held, so none is
-printed).
+File column it adds to DISPLAY SETS' table is not printed), the 1984 and
+1988 fixtures, variant indexes, a database-owner copyright line after the
+banner (`proto.begin.copyright_line`, status `chosen` -- a different
+File's in-period BEGIN transcript shows one; File 60's is not held, so
+none is printed).
 
 Format 1 (DIALOG Accession Number), format 5 (Full Record), format 6
 (Heading and Title), format K (KWIC, Key Word In Context), and
@@ -159,6 +158,33 @@ nineteen-code list (`SORT S1/ALL/OB`) is refused with the simulated `?
 `PRINT 16/5/1-35/AS/PN` both carry sort codes on PRINT itself; PRINT is now
 implemented, but those sort codes are echoed only, not applied -- see the
 PRINT paragraph below.
+
+RANK is implemented, in the un-prompted single-field form: `RANK <field> <Sn>` tallies the
+values a phrase-indexed field carries across a set and prints the RANK Results block --
+header, a count of records searched and terms found, a column header, and up to the top eight
+ranked terms by count, ties broken by collation (RANK_PAGE, `src/dialog/rank.ts`, corroborated
+by both held worked examples: 2001's "the top eight terms are automatically displayed" and
+Curso Introductorio DIALOG (1994) p.126's own RANK Results block, which also stops at row 8).
+Omitting `Sn` ranks the session's own most recently created set. A field this build carries
+only as a word index (`TI`, `OB`, `AP`, `DE`, `PR`, `PB`, `TX`, `PO`) is refused with the
+simulated `? <FIELD>` form, citing `proto.rank.wordfields` -- 2001's own restriction, "RANK ...
+does not work in any word-indexed fields" -- distinct from a field this build indexes by
+neither word nor phrase (`RANK ZZ`), which is refused the same way but cites the generic
+`proto.error.unknown_field`, the key SORT's own unknown-field refusal already uses. The Blue
+Sheet's RANK EXAMPLES cell OCRs, after tag-stripping, as the single run `RANK STRANK FY S4` --
+checked against the raw HTML before citing it (`bl0060_19980423153346.html`'s RANK table cell
+reads `RANK ST<br>RANK FY S4`, a `<br>` between two examples, not one example run together);
+the hypothesis was confirmed, not assumed. What RANK does not implement: the prompted/menu
+interaction (`P`/`P-`/`M`/`EXIT`, the "To save term(s), enter rank number(s)" prompt, and on
+EXIT the "RANK results will be erased; have you saved all the terms of interest? (YES/NO)"
+confirmation -- all shown on the 1994 anchor-period page and registered at
+`proto.rank.display`, none printed by this reconstruction, since there is no live per-record
+processing for a menu to serve); the option words (`CONT PERCENT ALPHA DESC DETAIL`); ranking
+more than one field in a statement (`RANK DE, ID`); partial-field ranking (`RANK (IC 1-4)`);
+and rank numbers saved for later use as SELECT operands, the way an EXPAND row's `E`-number can
+be. The live per-hundred progress lines the 1994 page shows while a real connection ranks
+("...Ranking 100 of 479 records") are also not reproduced, for the same reason as the menu:
+this reconstruction has no live per-record processing timeline to report against.
 
 COMBINE is implemented, in the two forms the 28 February 1978 File 60
 session shows (EPA *Chemical Information Resources Handbook*, January

@@ -239,8 +239,27 @@ test/archival/naive-rederive.test.ts's import-list pin was updated alongside it.
 the first thirteen fields are byte-for-byte unchanged; `ti_fresh_w_water` count 2, AN 9135868 and
 9145616.
 
+Added a fifteenth field, `rank_st_over_cy_beltsville`, for RANK: the per-set tally of ST
+(state) values over the `cy_beltsville` set, counting each distinct value once per record
+(`set(values(r, b"ST"))`, the same per-record dedup `RetrievalEngine.rankValues` reads
+straight off the already-built phrase index, whose own `seen` set -- index-builder.ts --
+already collapses a repeated value within one record before this script ever sees it), sorted
+by count descending then term ascending -- the same order `rankTally` (`src/dialog/rank.ts`)
+produces, derived independently here with no shared code. This is Trevor's accepted default
+for decision (c): a per-set rank tally over an acceptance set (never a corpus-wide rank, and
+never derived from the code under test). Adding `from collections import Counter` is the
+change to the script's own import list this field required -- matched by neither of
+`test/archival/naive-rederive.test.ts`'s two pinned checks (its sha256 pin, updated below, and
+its import-list pin, which only matches lines starting with `import `, not `from ... import
+...`, so it is unaffected and still reads `["json, re, sys"]`). Re-ran `python3
+scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus after adding it: the first
+fourteen fields are byte-for-byte unchanged; `rank_st_over_cy_beltsville` is
+`[["MARYLAND", 669]]` -- a single term, because every one of the 669 Beltsville records
+already carries ST=MARYLAND (Beltsville, Maryland is the Agricultural Research Center's own
+home county) -- a real, if unsurprising, result, not a fabricated one.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: 50e6a70b5a96859aede399d3c36b999f5866a84d541aafe95fb57f3635172fed
+sha256: f230080df17901352d39df6d1bad98147c386d7e7abde8f566f93a1d0131162b
 
 ## The corpus's own trailer line
 
