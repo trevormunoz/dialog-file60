@@ -1,6 +1,7 @@
 import type { DialogSession } from "../session";
 import { line, type OutputLine } from "../stream";
 import { hhmmss, logoffBlock, type Rates } from "../accounting";
+import { KWIC_DEFAULT } from "../kwic";
 import { registry } from "../../registry";
 
 registry.get("proto.logoff.template");
@@ -16,8 +17,9 @@ export async function runLogoff(session: DialogSession): Promise<OutputLine[]> {
         .map(t => line(t, { registryKeys: keys }))
     : [];
   out.push(line(`LOGOFF ${hhmmss(end)}`, { registryKeys: ["proto.logoff.template"] }));
-  // A disconnection: no current file, no sets, no open EXPAND display -- a following
+  // A disconnection: no current file, no sets, no open EXPAND display, and the KWIC window
+  // back to its default (2001: SET KWIC "remains in effect until LOGOFF") -- a following
   // SELECT prints the simulated error for a command issued before BEGIN.
-  session.currentFile = null; session.sets = []; session.expand = null;
+  session.currentFile = null; session.sets = []; session.expand = null; session.kwicSize = KWIC_DEFAULT;
   return out;
 }

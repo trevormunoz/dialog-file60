@@ -199,8 +199,18 @@ data/RG164.CRIS.FY94.txt` against the corpus after adding it: the first ten fiel
 byte-for-byte unchanged; `cy_beltsville_sorted_by_pn` count 669, the same 669 ANs
 `cy_beltsville` already has, reordered.
 
+Added a twelfth field, `kwic_9049442_ti_peach_14`, for KWIC (format K): the 14-word window
+`SET KWIC 14` builds around record AN 9049442's own TI-field PEACH, checking `kwicLines`
+(`src/dialog/kwic.ts`) against a centring-and-ellipsis calculation (`kwic_window`, `kwic_word_match`)
+written fresh inside the script, sharing no code with `kwic.ts`. Re-ran `python3
+scripts/naive-split.py data/RG164.CRIS.FY94.txt` against the corpus after adding it: the first
+eleven fields are byte-for-byte unchanged; `kwic_9049442_ti_peach_14` is the whole 13-word TI
+field ("GENE TRANSFER AND TISSUE CULTURE TECHNOLOGIES FOR IMPROVEMENT OF PEACH, SOYBEAN, AND
+TOBACCO") with no ellipsis on either side -- a 14-word window is wider than the 13-word field,
+so nothing is cut.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: ed43146336b8d47ecda0a628097c0c60e0bf0c6337bea3a9416b5d77f4bbbeb7
+sha256: 6d3ca1a5315177cd5f52214cd371af9e6cda33eb5a954bbd18e108581dfb2504
 
 ## The corpus's own trailer line
 

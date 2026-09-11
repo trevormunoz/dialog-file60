@@ -71,6 +71,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.expand.enumbers
 - proto.expand.page
 - proto.expand.window
+- proto.kwic.window
 - proto.logoff.template
 - proto.prompt
 - proto.prompt.spacing
@@ -82,6 +83,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.select.truncation
 - proto.selectsteps.processing
 - proto.selectsteps.sets
+- proto.setkwic.ack
 - proto.sort.command
 - proto.sort.fields
 - proto.sort.newset
@@ -132,6 +134,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.error.unknown_set
 - proto.error.unknown_suffix
 - proto.expand.collation
+- proto.kwic.layout
 - proto.session.clock
 - proto.session.user_number
 - render.format6.columns

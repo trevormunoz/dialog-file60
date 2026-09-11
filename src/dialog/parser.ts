@@ -1,6 +1,7 @@
 import type { DialogCommand } from "./ast";
 import type { SearchExpression } from "../retrieval/engine";
 import { BASIC_INDEX } from "./expand";
+import { KWIC_MIN, KWIC_MAX } from "./kwic";
 import { registry } from "../registry";
 
 registry.get("proto.select.echo_case"); // the echoed SELECT expression is uppercased
@@ -174,7 +175,6 @@ function parseOperand(tok: string): SearchExpression | null {
  */
 const CAPABILITY_WORDS: { pattern: RegExp; command: string }[] = [
   { pattern: /^(?:print|pr)(?:\s+(.*))?$/i, command: "PRINT" },
-  { pattern: /^kwic(?:\s+(.*))?$/i, command: "KWIC" },
 ];
 
 export function parse(line: string): DialogCommand {
@@ -222,6 +222,13 @@ export function parse(line: string): DialogCommand {
     return { cmd: "displaysets", from, to: m[2] ? Number(m[2]) : from };
   }
   if (/^logoff$/i.test(t)) return { cmd: "logoff" };
+  // SET KWIC nn (2001: "Command Format: SET KWIC nn"). A size outside 2..50 is not a
+  // recognized SET KWIC at all -- it falls through to { cmd: "unknown" } below, the same as
+  // any other unparseable command, rather than being silently clamped into range.
+  if ((m = /^set\s+kwic\s+(\d+)$/i.exec(t))) {
+    const n = Number(m[1]);
+    if (n >= KWIC_MIN && n <= KWIC_MAX) return { cmd: "setkwic", size: n };
+  }
   for (const { pattern, command } of CAPABILITY_WORDS) {
     if ((m = pattern.exec(t))) return { cmd: "unsupported", command, rest: (m[1] ?? "").toUpperCase() };
   }

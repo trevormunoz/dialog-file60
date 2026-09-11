@@ -126,7 +126,13 @@ test("a parenthesized group parses like its ungrouped contents", () => {
 test("capability-notice command words parse to unsupported, not unknown", () => {
   expect(parse("print s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
   expect(parse("pr s1/5/1-3")).toEqual({ cmd: "unsupported", command: "PRINT", rest: "S1/5/1-3" });
-  expect(parse("kwic s1/ti")).toEqual({ cmd: "unsupported", command: "KWIC", rest: "S1/TI" });
+});
+
+// KWIC is implemented as of Task 4 (test/regression/kwic-window.test.ts, test/evidence/kwic.test.ts):
+// there is no bare "KWIC" command to route to the capability-notice stub, only SET KWIC nn and
+// TYPE's format K.
+test("a bare 'kwic' line is not a recognized command", () => {
+  expect(parse("kwic s1/ti")).toEqual({ cmd: "unknown", text: "kwic s1/ti" });
 });
 
 test("LOGOFF parses to its own command, not the capability-notice stub", () => {

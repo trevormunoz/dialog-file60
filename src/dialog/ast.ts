@@ -25,8 +25,12 @@ export type DialogCommand =
   /** LOGOFF: ends the session and prints the accounting block (spec 7.9). Takes no
    * argument -- unlike the capability-notice words below, it is implemented, not stubbed. */
   | { cmd: "logoff" }
-  /** A command DIALOG documented for File 60 but outside this milestone's slice: PRINT,
-   * KWIC, and TYPE by accession number. `command` names it
+  /** SET KWIC nn: sets the KWIC window size for the rest of the session (2001: "remains in
+   * effect until LOGOFF"). `size` is already validated to 2..50 -- a value outside that range
+   * does not reach this variant, it parses to { cmd: "unknown" } instead (proto.kwic.window). */
+  | { cmd: "setkwic"; size: number }
+  /** A command DIALOG documented for File 60 but outside this milestone's slice: PRINT and
+   * TYPE by accession number. `command` names it
    * canonically (e.g. "LOGOFF"); `rest` is whatever followed the recognized command
    * word, unparsed. */
   | { cmd: "unsupported"; command: string; rest: string }

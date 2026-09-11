@@ -77,6 +77,31 @@ cy_beltsvill_trunc = [r for r in recs if any(v.startswith("BELTSVILL") for v in 
 # retrieval order -- this list is ORDERED, not resorted after this point: it is the answer
 # test/archival/sort-corpus.test.ts checks the engine's own sorted set against, item by item.
 belt_by_pn = [an(r) for r in sorted(belt, key=lambda r: ((values(r, b"PN") or [""])[0], an(r)))]
+# KWIC (format K): the 2001 manual's window rule -- nn words wide, centred on the match,
+# shifted rather than padded when the match sits near an edge, a leading space on any
+# ellipsis a cut side carries. Reimplemented fresh here (own word split, own centring math),
+# not imported from src/dialog/kwic.ts, the same independence rule every check above follows.
+def kwic_word_match(word: str, term: str) -> bool:
+    return "".join(ch for ch in word.upper() if ch.isalnum()) == term
+
+def kwic_window(words: list[str], match_idx: int, size: int) -> str:
+    before, after = -(-(size - 1) // 2), (size - 1) // 2  # ceil/floor split of size-1
+    start, end = match_idx - before, match_idx + after
+    if start < 0:
+        end += -start
+        start = 0
+    if end > len(words) - 1:
+        start -= end - (len(words) - 1)
+        end = len(words) - 1
+    start = max(0, start)
+    left = "... " if start > 0 else ""
+    right = " ..." if end < len(words) - 1 else ""
+    return left + " ".join(words[start:end + 1]) + right
+
+rec_9049442 = next(r for r in recs if an(r) == "9049442")
+ti_9049442_words = " ".join(values(rec_9049442, b"TI")).split()
+ti_9049442_peach_idx = next(i for i, w in enumerate(ti_9049442_words) if kwic_word_match(w, "PEACH"))
+kwic_9049442_ti_peach_14 = kwic_window(ti_9049442_words, ti_9049442_peach_idx, 14)
 print(json.dumps({
     "records": len(recs),
     "cy_beltsville": {"count": len(belt), "an": sorted(an(r) for r in belt)},
@@ -89,4 +114,5 @@ print(json.dumps({
     "ti_technolog": {"count": len(ti_technolog), "an": sorted(an(r) for r in ti_technolog)},
     "cy_beltsvill_trunc": {"count": len(cy_beltsvill_trunc), "an": sorted(an(r) for r in cy_beltsvill_trunc)},
     "cy_beltsville_sorted_by_pn": {"count": len(belt_by_pn), "an": belt_by_pn},
+    "kwic_9049442_ti_peach_14": kwic_9049442_ti_peach_14,
 }, indent=1))

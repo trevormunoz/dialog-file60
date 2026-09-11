@@ -1990,6 +1990,45 @@
     "claim": "The printed date and time are the reader's own and make no historical claim.",
     "note": "src/app/main.ts passes the system clock; the evidence-test harness and the recorded cast (scripts/cast.ts) pass a fixed clock instead, so their output stays reproducible."
   },
+  "proto.kwic.window": {
+    "value": { "default": 30, "min": 2, "max": 50, "ellipsis": " ..." },
+    "status": "documented",
+    "claim": "A KWIC window is a run of nn words around a match, 2 to 50 words, 30 by default, with a space before each cut-off's dots.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "SET KWIC: 'any window size between 2 and 50 words'; 'The system default for a KWIC window is 30 words. A space precedes the ellipses (...) to each window'",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      },
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "Predefined Format Options, row K; Special Features: 'KWIC and HILIGHT Available'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "proto.kwic.layout": {
+    "value": null,
+    "status": "chosen",
+    "claim": "How the windows inside one KWIC record are arranged is this reconstruction's own choice; no source shows a KWIC display.",
+    "note": "Statement of absence: no held source shows a rendered KWIC block, for File 60 or for any file -- not found by grepping KWIC across Successful_Searching_on_Dialog_2001_djvu.txt and the stripped text of the 1998 Blue Sheet, and by reading the 1988 DATABASE figures and the 1978 File 60 session, on 2026-09-10. This reconstruction prints one window per line, in field order, with no field label, header, or record separator beyond the existing item header TYPE already prints."
+  },
+  "proto.setkwic.ack": {
+    "value": "KWIC is set to ${n}.",
+    "status": "documented",
+    "claim": "SET KWIC nn answers \"KWIC is set to nn.\", the same words the 2001 manual's own worked example prints.",
+    "sources": [
+      {
+        "source": "successful-searching-2001",
+        "locator": "SET KWIC: '?set kwic 14' answered 'KWIC is set to 14.'",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ],
+    "note": "The 2001 entry also says the setting \"remains in effect until LOGOFF\"; src/dialog/commands/logoff.ts resets kwicSize to KWIC_DEFAULT."
+  },
   "render.format1.layout": {
     "value": "AN alone",
     "status": "documented",

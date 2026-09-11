@@ -18,22 +18,43 @@ in-period BEGIN transcript shows one; File 60's is not held, so none is
 printed).
 
 Format 1 (DIALOG Accession Number), format 5 (Full Record), format 6
-(Heading and Title), and user-defined formats built from display codes
-(`T S3/IN,OB/1-5`) are implemented (`src/dialog/formats.ts`). Ten other
+(Heading and Title), format K (KWIC, Key Word In Context), and
+user-defined formats built from display codes (`T S3/IN,OB/1-5`) are
+implemented (`src/dialog/formats.ts`, `src/dialog/kwic.ts`). Ten other
 predefined formats the Blue Sheet names are not, each for the same reason --
 its field set is documented, its layout is not: format 2 (Heading, Title,
-Keywords, Primary Headings, and Subfile Notation / Classification and
-Headings), format 3 (Heading, Title, Objectives, Primary Headings, and
-Subfile Notation / Classification and Headings), format 4 (Full Record with
-Tagged Fields), format 7 (Heading, Title, Text, and Publications), format 8
+Keywords, Primary Headings, and Subfile Notation / Classification and Headings),
+format 3 (Heading, Title, Objectives, Primary Headings, and Subfile
+Notation / Classification and Headings), format 4 (Full Record with Tagged
+Fields), format 7 (Heading, Title, Text, and Publications), format 8
 (Heading, Title, Objectives, and Publications), format 9 (Full Record),
 format 10 (Mailing Labels (Address of Performing Organization)), format 12
 (Full Format for HNRIMS Records), format 13 (Heading, Title, and
 Classification Codes and Headings), and format 14 (Heading, Title,
 Classification Codes, Text, Keywords, and Publications). Each of these
 prints the item header followed by `? /{format}`, and no record text.
-Format K (KWIC, Key Word In Context) is a documented format too, but is
-Task 4's subject, not this one's.
+
+KWIC (format K) and SET KWIC nn are implemented for the window mechanics
+the 2001 manual states: the window is a run of words, `nn` words wide
+(`SET KWIC nn`, 2 to 50, 30 by default), centred on the matched word and
+shifted rather than padded at a text edge, with a space before the ellipsis
+(` ...`) on each side the window is cut. `SET KWIC 14` answers `KWIC is set
+to 14.`, the manual's own worked example, and the setting remains in effect
+until LOGOFF. What is *not* implemented, because no held source shows it:
+the arrangement of windows inside one KWIC record -- what precedes each
+window, how multiple windows in one record are separated, whether a field
+label appears. No held source shows a rendered KWIC block, for File 60 or
+for any file -- not found by grepping `KWIC` across the 2001 manual text and
+the stripped 1998 Blue Sheet text, and by reading the 1988 *DATABASE*
+figures and the 1978 File 60 session, on 2026-09-10 (`proto.kwic.layout`,
+status `chosen`). This reconstruction prints one window per line, in field
+order, with no field label, header, or separator beyond the item header
+TYPE already prints -- a choice, not a reading of any source. HILIGHT,
+named alongside KWIC in the same Blue Sheet line ("KWIC and HILIGHT
+Available"), is documented for File 60 and not implemented at all. KWIC
+combined with another format in one TYPE (`T S2/5,K/1`), which the Blue
+Sheet's row K says is possible, is also not implemented -- this task's
+format dispatch only recognizes `K` alone.
 
 Word indexes and suffix search are implemented: `S PEACH/TI` and
 `S PEACH/TI,DE` search the word indexes described in
@@ -101,7 +122,7 @@ nineteen-code list (`SORT S1/ALL/OB`) is refused with the simulated `?
 later task's subject, not this one's.
 
 A capability notice exists as a stub, not the full mechanism:
-PRINT, KWIC, and TYPE by accession number
+PRINT and TYPE by accession number
 (`T 09143165/5`, distinct from the implemented `T S3/5/1-3` form) are
 recognized by the parser as documented commands outside version 1's slice.
 Recognizing one prints nothing into the character stream; one modern line

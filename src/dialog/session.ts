@@ -15,9 +15,11 @@ import { runExpand, runPage } from "./commands/expand";
 import { runDisplaySets } from "./commands/displaysets";
 import { runLogoff } from "./commands/logoff";
 import { runSort } from "./commands/sort";
+import { KWIC_DEFAULT } from "./kwic";
 
 const DEFAULT_USER = registry.get("proto.session.user_number").value as string;
 registry.get("proto.error.unknown_command");
+registry.get("proto.setkwic.ack");
 // proto.error.unmatched_parens is recorded, not printed: an unclosed bracket falls through
 // parseExpression to parse()'s ordinary { cmd: "unknown" } path and prints the same simulated
 // question-mark form as any other unparseable SELECT (proto.error.unknown_command) -- this
@@ -54,6 +56,12 @@ export class DialogSession {
   /** TYPE calls actually made (a valid item ordinal reached, format-render errors included),
    * counted per format string -- what LOGOFF's per-format cost lines price. */
   typeCounts: Record<string, number> = {};
+  /** The KWIC window size, in words -- SET KWIC nn sets it; the 2001 entry's own note says it
+   * "remains in effect until LOGOFF", so runLogoff resets it back to KWIC_DEFAULT rather than
+   * this field's initializer running again. Not `private`: commands/type.ts reads it directly
+   * to build format K's windows, the same access every other extracted handler has to this
+   * session's other state. */
+  kwicSize = KWIC_DEFAULT;
   constructor(
     public engine: RetrievalEngine,
     public render: (rec: LogicalRecord, format: string) => OutputLine[],
@@ -84,6 +92,12 @@ export class DialogSession {
       case "page": return runPage(this, cmd);
       case "displaysets": return runDisplaySets(this, cmd);
       case "logoff": return runLogoff(this);
+      case "setkwic": {
+        this.kwicSize = cmd.size;
+        // "KWIC is set to 14." -- the 2001 manual's own worked example's acknowledgement,
+        // verbatim, with this command's own size in place of its 14.
+        return [line(`KWIC is set to ${cmd.size}.`, { registryKeys: ["proto.setkwic.ack"] })];
+      }
       case "unsupported": {
         // The terminal prints nothing for this. this.lastNotice (set in submit(), above) is
         // the app's route to it, outside the stream this method returns.
