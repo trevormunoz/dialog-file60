@@ -63,3 +63,39 @@ test("a proximity SELECT over an unshipped code (e.g. /TX) is refused, not silen
   expect(out).toEqual([]); // routed to the capability-notice channel, outside the character stream
   expect(session.lastNotice).toEqual({ command: "(W)/(N)/(F) proximity over /TX" });
 });
+
+// A bare proximity operand with no /suffix (e.g. "S FRESH(W)WATER") carries BASIC_INDEX ("*")
+// as its code (parser.ts's own default); refused the same as any other unshipped positional
+// code, but the notice must read naturally rather than literally printing "proximity over *".
+test("a suffixless proximity SELECT names the merged Basic Index, not a bare *", async () => {
+  const session = mk();
+  await session.submit("b 60");
+  const out = await session.submit("s fresh(w)water");
+  expect(out).toEqual([]);
+  expect(session.lastNotice).toEqual({ command: "(W)/(N)/(F) proximity over the merged Basic Index (no suffix)" });
+});
+
+// /DF is the Blue Sheet's documented alias of /DE (src/loader/words.ts's WORD_ALIASES); /DE
+// ships a positional index but /DF has no index built under its own name, so the proximity
+// path must resolve /DF to /DE's shards the same way prepare()'s "word"/"trunc" cases already
+// do, rather than refusing it as an unshipped field.
+test("a proximity SELECT over /DF resolves to /DE's positional index, like /DE itself", async () => {
+  const deSource: PositionalSource = {
+    async positions(code, shard) {
+      if (code !== "/DE") return {};
+      if (shard === "F") return TI_SHARD_F;
+      if (shard === "W") return TI_SHARD_W;
+      return {};
+    },
+  };
+  const session = new DialogSession(
+    new RetrievalEngine(offsets, {}, reader, "fy1991plus", new MemoryWordIndex({}), deSource),
+    () => [],
+    { clock: FIXED_CLOCK },
+  );
+  await session.submit("b 60");
+  const out = (await session.submit("s fresh(w)water/df")).map(l => l.text);
+  expect(session.lastNotice).toBeNull(); // not refused as an unshipped field
+  expect(out.at(-1)).toBe(setLine(1, 1, "FRESH(W)WATER/DF"));
+  expect(session.sets[0]!.ordinals).toEqual([0]);
+});

@@ -4,6 +4,7 @@ import { line, type OutputLine } from "../stream";
 import { UnknownSet, UnknownField, UnknownSuffix, UnknownRef, UnimplementedProximityField, type SearchExpression } from "../../retrieval/engine";
 import { setLine } from "../setline";
 import { firstAndOperand, operands, echoOf } from "./shared";
+import { BASIC_INDEX } from "../expand";
 import { registry } from "../../registry";
 
 registry.get("proto.select.per_term_postings");
@@ -79,7 +80,11 @@ export async function addSet(
       // 60 search this reconstruction has not implemented (the positional index for every
       // other code was measured over the 150 MB ceiling and not shipped, decision (a)), not a
       // typo. Routed to the capability-notice channel, the same as UnknownField.documented.
-      session.lastNotice = { command: `(W)/(N)/(F) proximity over ${e.code}` };
+      // A bare proximity operand with no /suffix (e.g. `S FRESH(W)WATER`) carries BASIC_INDEX
+      // ("*") as its code -- named here rather than printed literally, since "proximity over
+      // *" reads as a stray character, not a field.
+      const over = e.code === BASIC_INDEX ? "the merged Basic Index (no suffix)" : e.code;
+      session.lastNotice = { command: `(W)/(N)/(F) proximity over ${over}` };
       return [];
     }
     if (e instanceof UnknownField) {
