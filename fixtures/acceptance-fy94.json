@@ -4096,5 +4096,2490 @@
    "009048",
    1
   ]
- ]
+ ],
+ "poultry_ti": {
+  "count": 377,
+  "an": [
+   "9001632",
+   "9001767",
+   "9002616",
+   "9003016",
+   "9003017",
+   "9004227",
+   "9007144",
+   "9008237",
+   "9008256",
+   "9011573",
+   "9027621",
+   "9030342",
+   "9034445",
+   "9034505",
+   "9034548",
+   "9034551",
+   "9057886",
+   "9058165",
+   "9066422",
+   "9068887",
+   "9069458",
+   "9070384",
+   "9071138",
+   "9073296",
+   "9076314",
+   "9077777",
+   "9078019",
+   "9078168",
+   "9079253",
+   "9080464",
+   "9081001",
+   "9082376",
+   "9083574",
+   "9084767",
+   "9087825",
+   "9087954",
+   "9088111",
+   "9088380",
+   "9089371",
+   "9090570",
+   "9090674",
+   "9091180",
+   "9091833",
+   "9092013",
+   "9092170",
+   "9092839",
+   "9093595",
+   "9094139",
+   "9097462",
+   "9098064",
+   "9098408",
+   "9098904",
+   "9099060",
+   "9099140",
+   "9099216",
+   "9099241",
+   "9099285",
+   "9099438",
+   "9099439",
+   "9099441",
+   "9099494",
+   "9099500",
+   "9099504",
+   "9099710",
+   "9099831",
+   "9099860",
+   "9099978",
+   "9120156",
+   "9120419",
+   "9120420",
+   "9130261",
+   "9130517",
+   "9130521",
+   "9130874",
+   "9130909",
+   "9131145",
+   "9131173",
+   "9131198",
+   "9131591",
+   "9131686",
+   "9132087",
+   "9132088",
+   "9132824",
+   "9133117",
+   "9133353",
+   "9133470",
+   "9133525",
+   "9133538",
+   "9133661",
+   "9133753",
+   "9133768",
+   "9133772",
+   "9133873",
+   "9133877",
+   "9134021",
+   "9134284",
+   "9134299",
+   "9134365",
+   "9134492",
+   "9134550",
+   "9134713",
+   "9134928",
+   "9135052",
+   "9135157",
+   "9135554",
+   "9135711",
+   "9135728",
+   "9135737",
+   "9135819",
+   "9135882",
+   "9135897",
+   "9136141",
+   "9137193",
+   "9137227",
+   "9137245",
+   "9137286",
+   "9137287",
+   "9137308",
+   "9137310",
+   "9137326",
+   "9137334",
+   "9137341",
+   "9137344",
+   "9137346",
+   "9137353",
+   "9137364",
+   "9137367",
+   "9137482",
+   "9137487",
+   "9137638",
+   "9137666",
+   "9137744",
+   "9137755",
+   "9137849",
+   "9137934",
+   "9138262",
+   "9138294",
+   "9138537",
+   "9138609",
+   "9138639",
+   "9138822",
+   "9139174",
+   "9139464",
+   "9139827",
+   "9141844",
+   "9142588",
+   "9142860",
+   "9142880",
+   "9142882",
+   "9142970",
+   "9143214",
+   "9143561",
+   "9143593",
+   "9143624",
+   "9143688",
+   "9143911",
+   "9144043",
+   "9144303",
+   "9144508",
+   "9144582",
+   "9144587",
+   "9144644",
+   "9144769",
+   "9145024",
+   "9145158",
+   "9145171",
+   "9145182",
+   "9145213",
+   "9145229",
+   "9145379",
+   "9145498",
+   "9145529",
+   "9145542",
+   "9145556",
+   "9145631",
+   "9145678",
+   "9145726",
+   "9145730",
+   "9145823",
+   "9146023",
+   "9146045",
+   "9146070",
+   "9146175",
+   "9146354",
+   "9146394",
+   "9146650",
+   "9146721",
+   "9146729",
+   "9146819",
+   "9146929",
+   "9146934",
+   "9146954",
+   "9147017",
+   "9147041",
+   "9147082",
+   "9147162",
+   "9147277",
+   "9147355",
+   "9147373",
+   "9147444",
+   "9147586",
+   "9147857",
+   "9147952",
+   "9147967",
+   "9148240",
+   "9148325",
+   "9148393",
+   "9148532",
+   "9148907",
+   "9149203",
+   "9149229",
+   "9149437",
+   "9150046",
+   "9150101",
+   "9150150",
+   "9150153",
+   "9150219",
+   "9150723",
+   "9150724",
+   "9150725",
+   "9150750",
+   "9150827",
+   "9150835",
+   "9150878",
+   "9150882",
+   "9150883",
+   "9151115",
+   "9151171",
+   "9151576",
+   "9151777",
+   "9151824",
+   "9151988",
+   "9152000",
+   "9152068",
+   "9152112",
+   "9152162",
+   "9152218",
+   "9152255",
+   "9152257",
+   "9152286",
+   "9152380",
+   "9152790",
+   "9152980",
+   "9153217",
+   "9153361",
+   "9153376",
+   "9153513",
+   "9153621",
+   "9153639",
+   "9153697",
+   "9153772",
+   "9154009",
+   "9154119",
+   "9154591",
+   "9154935",
+   "9155200",
+   "9155409",
+   "9155427",
+   "9155434",
+   "9155585",
+   "9155609",
+   "9155649",
+   "9155719",
+   "9155835",
+   "9155914",
+   "9156255",
+   "9156262",
+   "9156355",
+   "9156458",
+   "9156499",
+   "9156657",
+   "9157320",
+   "9157360",
+   "9157419",
+   "9157678",
+   "9157765",
+   "9157793",
+   "9157870",
+   "9157984",
+   "9158157",
+   "9158607",
+   "9158845",
+   "9158858",
+   "9158909",
+   "9159023",
+   "9159222",
+   "9159254",
+   "9159281",
+   "9159508",
+   "9159573",
+   "9159574",
+   "9159877",
+   "9159974",
+   "9160009",
+   "9160086",
+   "9160237",
+   "9160287",
+   "9160289",
+   "9160712",
+   "9160769",
+   "9160770",
+   "9160796",
+   "9160908",
+   "9160944",
+   "9160945",
+   "9160947",
+   "9160948",
+   "9160976",
+   "9161265",
+   "9161377",
+   "9161582",
+   "9161628",
+   "9161665",
+   "9161761",
+   "9161842",
+   "9162266",
+   "9162357",
+   "9162420",
+   "9162566",
+   "9162620",
+   "9162672",
+   "9162673",
+   "9162763",
+   "9162806",
+   "9162818",
+   "9163091",
+   "9163117",
+   "9163152",
+   "9163160",
+   "9163196",
+   "9163310",
+   "9163331",
+   "9163354",
+   "9163451",
+   "9163606",
+   "9163670",
+   "9163872",
+   "9163889",
+   "9164406",
+   "9164462",
+   "9164493",
+   "9164533",
+   "9164632",
+   "9164813",
+   "9165019",
+   "9165300",
+   "9165305",
+   "9165391",
+   "9165474",
+   "9165479",
+   "9165736",
+   "9165794",
+   "9165805",
+   "9165807",
+   "9166117",
+   "9166129",
+   "9166173",
+   "9166528",
+   "9166623",
+   "9166676",
+   "9166700",
+   "9167129",
+   "9167442",
+   "9167505",
+   "9167537",
+   "9167592",
+   "9167658",
+   "9167680",
+   "9167709",
+   "9167758",
+   "9167765",
+   "9167946",
+   "9168045",
+   "9168246",
+   "9168382",
+   "9168400",
+   "9168447"
+  ]
+ },
+ "rank_in_over_poultry": [
+  [
+   "HARGIS  B M",
+   6
+  ],
+  [
+   "DEATON  J W",
+   5
+  ],
+  [
+   "LILLARD  H S",
+   5
+  ],
+  [
+   "MAY  J D",
+   5
+  ],
+  [
+   "STERN  N J",
+   5
+  ],
+  [
+   "CREGER  C R",
+   4
+  ],
+  [
+   "DELOACH  J R",
+   4
+  ],
+  [
+   "SIMMONS  J D",
+   4
+  ],
+  [
+   "VACANT",
+   4
+  ],
+  [
+   "AXTELL  R C",
+   3
+  ],
+  [
+   "BOTTCHER  R W",
+   3
+  ],
+  [
+   "COOK  M E",
+   3
+  ],
+  [
+   "DANFORTH  HARRY D",
+   3
+  ],
+  [
+   "DAVIS  C E",
+   3
+  ],
+  [
+   "DAWSON  P L",
+   3
+  ],
+  [
+   "FORSYTHE  R H",
+   3
+  ],
+  [
+   "GLASS  S E",
+   3
+  ],
+  [
+   "HARVEY  R B",
+   3
+  ],
+  [
+   "HUFF  W E",
+   3
+  ],
+  [
+   "KUBENA  L F",
+   3
+  ],
+  [
+   "LOTT  B D",
+   3
+  ],
+  [
+   "MALONE  G W",
+   3
+  ],
+  [
+   "MATHER  F B",
+   3
+  ],
+  [
+   "MEINERSMANN  R J",
+   3
+  ],
+  [
+   "NESTOR  K E",
+   3
+  ],
+  [
+   "PETITTE  J N",
+   3
+  ],
+  [
+   "ROUSH             WB",
+   3
+  ],
+  [
+   "STEPHENS  J F",
+   3
+  ],
+  [
+   "TOWNSEND  W E",
+   3
+  ],
+  [
+   "VASILATOS-YOUNKEN  R",
+   3
+  ],
+  [
+   "WEIMAR  M",
+   3
+  ],
+  [
+   "ABAWI  F G",
+   2
+  ],
+  [
+   "ACTON  J C",
+   2
+  ],
+  [
+   "ANTHONY           NB",
+   2
+  ],
+  [
+   "BALOG  J M",
+   2
+  ],
+  [
+   "BARBATO           GF",
+   2
+  ],
+  [
+   "BARTELS  J E",
+   2
+  ],
+  [
+   "BAUGHMAN  G R",
+   2
+  ],
+  [
+   "BAYYARI  G R",
+   2
+  ],
+  [
+   "BISHOP  B",
+   2
+  ],
+  [
+   "BOTTCHER          RW",
+   2
+  ],
+  [
+   "BOTTJE            WG",
+   2
+  ],
+  [
+   "BOTTJE  W G",
+   2
+  ],
+  [
+   "BROOKS            CB",
+   2
+  ],
+  [
+   "CABRERA  M L",
+   2
+  ],
+  [
+   "CASON JR  J A",
+   2
+  ],
+  [
+   "CAUDLE  C",
+   2
+  ],
+  [
+   "CHEN  Y R",
+   2
+  ],
+  [
+   "CORRIER  D E",
+   2
+  ],
+  [
+   "CURTIS  P A",
+   2
+  ],
+  [
+   "FARR  A J",
+   2
+  ],
+  [
+   "FLETCHER  D L",
+   2
+  ],
+  [
+   "FOSTER  D N",
+   2
+  ],
+  [
+   "FRONING  G W",
+   2
+  ],
+  [
+   "GARLICH           JD",
+   2
+  ],
+  [
+   "GOLAN  F A",
+   2
+  ],
+  [
+   "GRIZZLE  J M",
+   2
+  ],
+  [
+   "HARRISON  M A",
+   2
+  ],
+  [
+   "HARRISON  P C",
+   2
+  ],
+  [
+   "HESTER  P Y",
+   2
+  ],
+  [
+   "HILLMAN  P E",
+   2
+  ],
+  [
+   "JANNI  K A",
+   2
+  ],
+  [
+   "KING  D J",
+   2
+  ],
+  [
+   "LEACH             RM",
+   2
+  ],
+  [
+   "LYON  C E",
+   2
+  ],
+  [
+   "MARKS  H L",
+   2
+  ],
+  [
+   "MCDANIEL  G R",
+   2
+  ],
+  [
+   "MITCHELL  B W",
+   2
+  ],
+  [
+   "MORANT            MA",
+   2
+  ],
+  [
+   "ODOM  T W",
+   2
+  ],
+  [
+   "PARSONS  C M",
+   2
+  ],
+  [
+   "PIERRO  L J",
+   2
+  ],
+  [
+   "REYNOLDS          DL",
+   2
+  ],
+  [
+   "REYNOLDS  D L",
+   2
+  ],
+  [
+   "RICKE  S",
+   2
+  ],
+  [
+   "RIMLER  R B",
+   2
+  ],
+  [
+   "ROTTINGHAUS       GE",
+   2
+  ],
+  [
+   "ROUSH  W B",
+   2
+  ],
+  [
+   "SHELDON  B W",
+   2
+  ],
+  [
+   "SLOAN  D R",
+   2
+  ],
+  [
+   "SMITH  D M",
+   2
+  ],
+  [
+   "STADELMAN  W J",
+   2
+  ],
+  [
+   "STALLINGS  K",
+   2
+  ],
+  [
+   "STANKER  L H",
+   2
+  ],
+  [
+   "STEELMAN  C D",
+   2
+  ],
+  [
+   "SULLIVAN  T W",
+   2
+  ],
+  [
+   "SUNDE  M L",
+   2
+  ],
+  [
+   "THAYER  D W",
+   2
+  ],
+  [
+   "TIMMONS  M B",
+   2
+  ],
+  [
+   "VACANCY",
+   2
+  ],
+  [
+   "VASILATOS-YOUNKEN R",
+   2
+  ],
+  [
+   "VILLEGAS  P",
+   2
+  ],
+  [
+   "WATKINS  B A",
+   2
+  ],
+  [
+   "WIDEMAN  R F",
+   2
+  ],
+  [
+   "WILSON  H R",
+   2
+  ],
+  [
+   "WYATT  C L",
+   2
+  ],
+  [
+   "ABELLO  J",
+   1
+  ],
+  [
+   "ABPLANALP  H",
+   1
+  ],
+  [
+   "ADAMS  R L",
+   1
+  ],
+  [
+   "AHN               DU",
+   1
+  ],
+  [
+   "AHN  D",
+   1
+  ],
+  [
+   "ALLEN             WH",
+   1
+  ],
+  [
+   "ALLEN  P C",
+   1
+  ],
+  [
+   "ALLEN  W H",
+   1
+  ],
+  [
+   "ALLISON  J R",
+   1
+  ],
+  [
+   "ANDREWS  A J",
+   1
+  ],
+  [
+   "ANTHONY  N B",
+   1
+  ],
+  [
+   "ARP  L H",
+   1
+  ],
+  [
+   "ASEM              EK",
+   1
+  ],
+  [
+   "AUGUSTINE  P C",
+   1
+  ],
+  [
+   "BACON  L D",
+   1
+  ],
+  [
+   "BACON  W L",
+   1
+  ],
+  [
+   "BAENZIGER  P S",
+   1
+  ],
+  [
+   "BAILEY            CA",
+   1
+  ],
+  [
+   "BAILEY  J S",
+   1
+  ],
+  [
+   "BAILEY  W C",
+   1
+  ],
+  [
+   "BAKER  M L",
+   1
+  ],
+  [
+   "BAKER  R C",
+   1
+  ],
+  [
+   "BANKOWSKI  R A",
+   1
+  ],
+  [
+   "BARBATO  G F",
+   1
+  ],
+  [
+   "BARNHART  H M",
+   1
+  ],
+  [
+   "BASARABA  R J",
+   1
+  ],
+  [
+   "BEASLEY  J N",
+   1
+  ],
+  [
+   "BECK  M M",
+   1
+  ],
+  [
+   "BEEDE  D K",
+   1
+  ],
+  [
+   "BEIER  R C",
+   1
+  ],
+  [
+   "BENTLEY           WE",
+   1
+  ],
+  [
+   "BERMUDEZ          AJ",
+   1
+  ],
+  [
+   "BERRY             IL",
+   1
+  ],
+  [
+   "BEYER             SR",
+   1
+  ],
+  [
+   "BILIGILI  S F",
+   1
+  ],
+  [
+   "BITGOOD  J J",
+   1
+  ],
+  [
+   "BIXBY  D E",
+   1
+  ],
+  [
+   "BLAGBURN  B L",
+   1
+  ],
+  [
+   "BLOUNT  T B",
+   1
+  ],
+  [
+   "BOKANYI  R P",
+   1
+  ],
+  [
+   "BOOREN  A M",
+   1
+  ],
+  [
+   "BOWERS  J",
+   1
+  ],
+  [
+   "BRAKE             JT",
+   1
+  ],
+  [
+   "BRAKE  J D",
+   1
+  ],
+  [
+   "BRANTON  S L",
+   1
+  ],
+  [
+   "BRAUNE  M O",
+   1
+  ],
+  [
+   "BRAY  D R",
+   1
+  ],
+  [
+   "BREKKE  C J",
+   1
+  ],
+  [
+   "BREWER            RN",
+   1
+  ],
+  [
+   "BREWER  R N",
+   1
+  ],
+  [
+   "BRILES  D E",
+   1
+  ],
+  [
+   "BROWN  T P",
+   1
+  ],
+  [
+   "BRUMBAUGH  J A",
+   1
+  ],
+  [
+   "BUCKLIN  R A",
+   1
+  ],
+  [
+   "BUHR  R J",
+   1
+  ],
+  [
+   "BURKE             WH",
+   1
+  ],
+  [
+   "BURKE  W H",
+   1
+  ],
+  [
+   "BUSHWAY  A",
+   1
+  ],
+  [
+   "BUSS  E G",
+   1
+  ],
+  [
+   "BUTCHER  G D",
+   1
+  ],
+  [
+   "CANTOR  A H",
+   1
+  ],
+  [
+   "CAPPS             SG",
+   1
+  ],
+  [
+   "CARR  L E",
+   1
+  ],
+  [
+   "CARROLL  J F",
+   1
+  ],
+  [
+   "CARTWRIGHT        AL",
+   1
+  ],
+  [
+   "CHAMBERS  J R",
+   1
+  ],
+  [
+   "CHAMBLEE  T N",
+   1
+  ],
+  [
+   "CHANG  T S",
+   1
+  ],
+  [
+   "CHAPLIN           J",
+   1
+  ],
+  [
+   "CHAPMAN  H D",
+   1
+  ],
+  [
+   "CHENG  H",
+   1
+  ],
+  [
+   "CHERRY  J A",
+   1
+  ],
+  [
+   "CHO  Y",
+   1
+  ],
+  [
+   "CHRISTENSEN  L",
+   1
+  ],
+  [
+   "CLANTON  C J",
+   1
+  ],
+  [
+   "CLARK  A J",
+   1
+  ],
+  [
+   "CLARKE  A D",
+   1
+  ],
+  [
+   "COCHRAN  M J",
+   1
+  ],
+  [
+   "COGBURN  L A III",
+   1
+  ],
+  [
+   "COHEN             ND",
+   1
+  ],
+  [
+   "COLLINS  E R",
+   1
+  ],
+  [
+   "CONNER  D E",
+   1
+  ],
+  [
+   "COOK              ME",
+   1
+  ],
+  [
+   "CORNFORTH  D P",
+   1
+  ],
+  [
+   "COWEN             BS",
+   1
+  ],
+  [
+   "COWEN  B S",
+   1
+  ],
+  [
+   "COX  N A",
+   1
+  ],
+  [
+   "COX JR  N A",
+   1
+  ],
+  [
+   "CRAIG  J V",
+   1
+  ],
+  [
+   "CRITTENDEN  L B",
+   1
+  ],
+  [
+   "CUPPETT  S L",
+   1
+  ],
+  [
+   "DAMRON  B L",
+   1
+  ],
+  [
+   "DARRE  M J",
+   1
+  ],
+  [
+   "DAVIS  M",
+   1
+  ],
+  [
+   "DAVISON  S",
+   1
+  ],
+  [
+   "DELORENZO  M A",
+   1
+  ],
+  [
+   "DENTON  J H",
+   1
+  ],
+  [
+   "DERR  D",
+   1
+  ],
+  [
+   "DESHAZER  J A",
+   1
+  ],
+  [
+   "DHILLON  A S",
+   1
+  ],
+  [
+   "DICKENS  J A",
+   1
+  ],
+  [
+   "DODGSON  J",
+   1
+  ],
+  [
+   "DODGSON  J B",
+   1
+  ],
+  [
+   "DOHMS             JE",
+   1
+  ],
+  [
+   "DOSTER  A R",
+   1
+  ],
+  [
+   "DOYLE  M P",
+   1
+  ],
+  [
+   "DUNCAN            IJ",
+   1
+  ],
+  [
+   "DUNNINGTON        EA",
+   1
+  ],
+  [
+   "DUNNINGTON  E A",
+   1
+  ],
+  [
+   "EARHART  D R",
+   1
+  ],
+  [
+   "EDENS             FW",
+   1
+  ],
+  [
+   "EDENS  F W",
+   1
+  ],
+  [
+   "EDWARDS  H M JR",
+   1
+  ],
+  [
+   "EPSTEIN  R",
+   1
+  ],
+  [
+   "FADLY  A M",
+   1
+  ],
+  [
+   "FAGERLAND  J A",
+   1
+  ],
+  [
+   "FLEGAL  C J",
+   1
+  ],
+  [
+   "FLETCHER  D",
+   1
+  ],
+  [
+   "FLOOD  JR         CA",
+   1
+  ],
+  [
+   "FLOOD JR  C A",
+   1
+  ],
+  [
+   "FOGLIA  T A",
+   1
+  ],
+  [
+   "FOIL  L D",
+   1
+  ],
+  [
+   "FORSYTHE          RH",
+   1
+  ],
+  [
+   "FOUTZ  T L",
+   1
+  ],
+  [
+   "FOX  J B",
+   1
+  ],
+  [
+   "FOX JR  J B",
+   1
+  ],
+  [
+   "FRANK  J",
+   1
+  ],
+  [
+   "FROMAN            DP",
+   1
+  ],
+  [
+   "GARDNER  F A",
+   1
+  ],
+  [
+   "GASCHO  G J",
+   1
+  ],
+  [
+   "GAST  R K",
+   1
+  ],
+  [
+   "GATES             RS",
+   1
+  ],
+  [
+   "GATES  R S",
+   1
+  ],
+  [
+   "GAVORA  J S",
+   1
+  ],
+  [
+   "GAY               CV",
+   1
+  ],
+  [
+   "GELB              J",
+   1
+  ],
+  [
+   "GEMPESAW, II      C",
+   1
+  ],
+  [
+   "GENTRY  R F",
+   1
+  ],
+  [
+   "GERRITS  R J",
+   1
+  ],
+  [
+   "GIAMBRONE  J J",
+   1
+  ],
+  [
+   "GILDERSLEEVE  R P",
+   1
+  ],
+  [
+   "GLANCEY  J L",
+   1
+  ],
+  [
+   "GLANCY            JL",
+   1
+  ],
+  [
+   "GLEAVES  E W",
+   1
+  ],
+  [
+   "GLISSON  J R",
+   1
+  ],
+  [
+   "GOLDBERG  N M",
+   1
+  ],
+  [
+   "GOODRIDGE  A G",
+   1
+  ],
+  [
+   "GRIMES  J L",
+   1
+  ],
+  [
+   "GROSSMAN  M",
+   1
+  ],
+  [
+   "GRUNDER  A A",
+   1
+  ],
+  [
+   "HABY  V A",
+   1
+  ],
+  [
+   "HAINES  J S",
+   1
+  ],
+  [
+   "HALVORSON         DA",
+   1
+  ],
+  [
+   "HAMILTON  P B",
+   1
+  ],
+  [
+   "HAMPSON  J W",
+   1
+  ],
+  [
+   "HARGIS            BM",
+   1
+  ],
+  [
+   "HARGIS  P H",
+   1
+  ],
+  [
+   "HARMS  R H",
+   1
+  ],
+  [
+   "HARPSTER          HW",
+   1
+  ],
+  [
+   "HARRISON  M",
+   1
+  ],
+  [
+   "HARTSOCK  T G",
+   1
+  ],
+  [
+   "HAU  L B",
+   1
+  ],
+  [
+   "HAYES  D A",
+   1
+  ],
+  [
+   "HAYES  D E",
+   1
+  ],
+  [
+   "HAYES  D K",
+   1
+  ],
+  [
+   "HEARNSBERGER  J",
+   1
+  ],
+  [
+   "HEATH  G",
+   1
+  ],
+  [
+   "HEATH  J L",
+   1
+  ],
+  [
+   "HENDRIX  P F",
+   1
+  ],
+  [
+   "HERALD  T",
+   1
+  ],
+  [
+   "HESTER            PY",
+   1
+  ],
+  [
+   "HITCHENS          GD",
+   1
+  ],
+  [
+   "HOERR  F J",
+   1
+  ],
+  [
+   "HOLT  J",
+   1
+  ],
+  [
+   "HOOVER            DG",
+   1
+  ],
+  [
+   "HSIEH  F H",
+   1
+  ],
+  [
+   "HSU  S Y",
+   1
+  ],
+  [
+   "HUANG  Y W",
+   1
+  ],
+  [
+   "HUDSPETH  J A",
+   1
+  ],
+  [
+   "HUGHES            BL",
+   1
+  ],
+  [
+   "HUGHES  B L",
+   1
+  ],
+  [
+   "HUME  M E",
+   1
+  ],
+  [
+   "INGRAM  D R",
+   1
+  ],
+  [
+   "JACKWOOD  M W",
+   1
+  ],
+  [
+   "JACOBSON  L D",
+   1
+  ],
+  [
+   "JAEGER  L A",
+   1
+  ],
+  [
+   "JANKY  D M",
+   1
+  ],
+  [
+   "JENSEN  L S",
+   1
+  ],
+  [
+   "JOHNSON  E A",
+   1
+  ],
+  [
+   "JOHNSON  J L",
+   1
+  ],
+  [
+   "JONES  F T",
+   1
+  ],
+  [
+   "JONES  P H",
+   1
+  ],
+  [
+   "KEELER  C L",
+   1
+  ],
+  [
+   "KEENER  H M",
+   1
+  ],
+  [
+   "KEIRS  R W",
+   1
+  ],
+  [
+   "KELLEY            MI",
+   1
+  ],
+  [
+   "KEMBLE  L J",
+   1
+  ],
+  [
+   "KEMP  M",
+   1
+  ],
+  [
+   "KENNEDY  G A",
+   1
+  ],
+  [
+   "KENYON  D F",
+   1
+  ],
+  [
+   "KINCAID  S A",
+   1
+  ],
+  [
+   "KING  A J",
+   1
+  ],
+  [
+   "KINGERY  W L",
+   1
+  ],
+  [
+   "KIRBY  J D",
+   1
+  ],
+  [
+   "KLASING  K C",
+   1
+  ],
+  [
+   "KLEVEN  S H",
+   1
+  ],
+  [
+   "KNABEL            SJ",
+   1
+  ],
+  [
+   "KNUTSON           RD",
+   1
+  ],
+  [
+   "KNUTSON  R D",
+   1
+  ],
+  [
+   "KOELKEBECK  K W",
+   1
+  ],
+  [
+   "KOGUT  M H",
+   1
+  ],
+  [
+   "KOON              JL",
+   1
+  ],
+  [
+   "KOON  J L",
+   1
+  ],
+  [
+   "KOOPS  W J",
+   1
+  ],
+  [
+   "KRAMER  T T",
+   1
+  ],
+  [
+   "KRUEGER  W F",
+   1
+  ],
+  [
+   "KUBENA  LEON F",
+   1
+  ],
+  [
+   "KUNKLE  R A",
+   1
+  ],
+  [
+   "LAKRITZ",
+   1
+  ],
+  [
+   "LAKRITZ  L",
+   1
+  ],
+  [
+   "LAMONT  S J",
+   1
+  ],
+  [
+   "LANCE  G C",
+   1
+  ],
+  [
+   "LATIMORE  M",
+   1
+  ],
+  [
+   "LATSHAW  J D",
+   1
+  ],
+  [
+   "LEACH  R M",
+   1
+  ],
+  [
+   "LEBLANC  M M",
+   1
+  ],
+  [
+   "LEDOUX            DR",
+   1
+  ],
+  [
+   "LEDOUX  D R",
+   1
+  ],
+  [
+   "LEE  S R",
+   1
+  ],
+  [
+   "LENZ  S",
+   1
+  ],
+  [
+   "LEONARD  J D",
+   1
+  ],
+  [
+   "LIEN  R J",
+   1
+  ],
+  [
+   "LILBURN           MS",
+   1
+  ],
+  [
+   "LILBURN  M S",
+   1
+  ],
+  [
+   "LIMP  W F",
+   1
+  ],
+  [
+   "LINDSAY  D S",
+   1
+  ],
+  [
+   "LOMAX  K M",
+   1
+  ],
+  [
+   "LUCIO  B",
+   1
+  ],
+  [
+   "LYON  BRENDA G",
+   1
+  ],
+  [
+   "MACNEIL           JH",
+   1
+  ],
+  [
+   "MACNEIL  J H",
+   1
+  ],
+  [
+   "MALONE            GW",
+   1
+  ],
+  [
+   "MANBECK           HB",
+   1
+  ],
+  [
+   "MANBECK  H B",
+   1
+  ],
+  [
+   "MANDIGO  R W",
+   1
+  ],
+  [
+   "MARCHIN  G L",
+   1
+  ],
+  [
+   "MARKS             HL",
+   1
+  ],
+  [
+   "MARKS  J S",
+   1
+  ],
+  [
+   "MARQUARDT  W W",
+   1
+  ],
+  [
+   "MARTIN  J",
+   1
+  ],
+  [
+   "MAST  M G",
+   1
+  ],
+  [
+   "MATSUMOTO  M",
+   1
+  ],
+  [
+   "MAURER  A J",
+   1
+  ],
+  [
+   "MC MURTRY  J P",
+   1
+  ],
+  [
+   "MCCAPES  R H",
+   1
+  ],
+  [
+   "MCCASKEY  T A",
+   1
+  ],
+  [
+   "MCCONNELL         JC",
+   1
+  ],
+  [
+   "MCCONNELL  J C",
+   1
+  ],
+  [
+   "MCCRACKEN  D V",
+   1
+  ],
+  [
+   "MCHAN  F",
+   1
+  ],
+  [
+   "MCKEITH  F K",
+   1
+  ],
+  [
+   "MEINERSMANN  R E",
+   1
+  ],
+  [
+   "MEINERSMANN  RICHARD",
+   1
+  ],
+  [
+   "MELLOR  D B",
+   1
+  ],
+  [
+   "MENCH             JA",
+   1
+  ],
+  [
+   "MENCH  J A",
+   1
+  ],
+  [
+   "MENDONCA  A",
+   1
+  ],
+  [
+   "MERKA  W C",
+   1
+  ],
+  [
+   "MILES  R D",
+   1
+  ],
+  [
+   "MILLER            J",
+   1
+  ],
+  [
+   "MILLER  R H",
+   1
+  ],
+  [
+   "MOON  H W",
+   1
+  ],
+  [
+   "MOORE  P A",
+   1
+  ],
+  [
+   "MOORE  R W",
+   1
+  ],
+  [
+   "MOORE JR  PHILIP A",
+   1
+  ],
+  [
+   "MORAN JR  E T",
+   1
+  ],
+  [
+   "MORGAN            GW",
+   1
+  ],
+  [
+   "MORGAN            RW",
+   1
+  ],
+  [
+   "MORGAN  A I",
+   1
+  ],
+  [
+   "MUIR  F V",
+   1
+  ],
+  [
+   "MUIR  W M",
+   1
+  ],
+  [
+   "MULLENS  B A",
+   1
+  ],
+  [
+   "MURPHY  D W",
+   1
+  ],
+  [
+   "MYERS  R K",
+   1
+  ],
+  [
+   "NAGARAJA  K V",
+   1
+  ],
+  [
+   "NAKAMURA  R M",
+   1
+  ],
+  [
+   "NAQI  S A",
+   1
+  ],
+  [
+   "NASEF  S",
+   1
+  ],
+  [
+   "NELSON  T S",
+   1
+  ],
+  [
+   "NESMITH  D S",
+   1
+  ],
+  [
+   "NEUWIRTH  L A",
+   1
+  ],
+  [
+   "NIEDZIELA         L",
+   1
+  ],
+  [
+   "NOBLET  R",
+   1
+  ],
+  [
+   "NOLL              SL",
+   1
+  ],
+  [
+   "NORAGE  A",
+   1
+  ],
+  [
+   "ODOM              TW",
+   1
+  ],
+  [
+   "OLSON             DG",
+   1
+  ],
+  [
+   "OLSON  D L",
+   1
+  ],
+  [
+   "OSBURN  B I",
+   1
+  ],
+  [
+   "OSCAR  T P",
+   1
+  ],
+  [
+   "OUART  M D",
+   1
+  ],
+  [
+   "OURSO  C",
+   1
+  ],
+  [
+   "OVERHULTS         DG",
+   1
+  ],
+  [
+   "OVERHULTS  D G",
+   1
+  ],
+  [
+   "PAIK              JS",
+   1
+  ],
+  [
+   "PARDUE  S L",
+   1
+  ],
+  [
+   "PATTERSON         PH",
+   1
+  ],
+  [
+   "PATTERSON  P H",
+   1
+  ],
+  [
+   "PATTON  W H",
+   1
+  ],
+  [
+   "PEEBLES           ED",
+   1
+  ],
+  [
+   "PEEBLES  E D",
+   1
+  ],
+  [
+   "PESCATORE  A J",
+   1
+  ],
+  [
+   "PICKENS  LAWRENCE",
+   1
+  ],
+  [
+   "POLIN  D",
+   1
+  ],
+  [
+   "POMEROY  B S",
+   1
+  ],
+  [
+   "PONCE DE LEON  A",
+   1
+  ],
+  [
+   "POPE              CR",
+   1
+  ],
+  [
+   "POPE  C W",
+   1
+  ],
+  [
+   "PORTER            RE",
+   1
+  ],
+  [
+   "PRATT  D L",
+   1
+  ],
+  [
+   "PRUSA  K J",
+   1
+  ],
+  [
+   "PUBOLS  M H",
+   1
+  ],
+  [
+   "PURI  V M",
+   1
+  ],
+  [
+   "RADCLIFFE  D E",
+   1
+  ],
+  [
+   "RAMSEY  R",
+   1
+  ],
+  [
+   "RATH  N C",
+   1
+  ],
+  [
+   "REGENSTEIN  J",
+   1
+  ],
+  [
+   "REGENSTEIN  J M",
+   1
+  ],
+  [
+   "RICHARDSON        JW",
+   1
+  ],
+  [
+   "RICHARDSON  J W",
+   1
+  ],
+  [
+   "RICKE             SC",
+   1
+  ],
+  [
+   "RIDLEY  S C",
+   1
+  ],
+  [
+   "ROBBINS  K R",
+   1
+  ],
+  [
+   "ROBENS  J F",
+   1
+  ],
+  [
+   "ROBERSON  R H",
+   1
+  ],
+  [
+   "ROLAND  D A",
+   1
+  ],
+  [
+   "ROTTINGHAUS  G E",
+   1
+  ],
+  [
+   "RUNNELS  T D",
+   1
+  ],
+  [
+   "RUNNELS  T O",
+   1
+  ],
+  [
+   "SAIF  L J",
+   1
+  ],
+  [
+   "SAIF  Y M",
+   1
+  ],
+  [
+   "SAMS  A R",
+   1
+  ],
+  [
+   "SANDER  J E",
+   1
+  ],
+  [
+   "SAYLOR  W W",
+   1
+  ],
+  [
+   "SCANES            CG",
+   1
+  ],
+  [
+   "SCANES  C G",
+   1
+  ],
+  [
+   "SCANLAN  C M",
+   1
+  ],
+  [
+   "SCARBOROUGH  J N",
+   1
+  ],
+  [
+   "SCHEIDELER  S E",
+   1
+  ],
+  [
+   "SCHMIDTMANN  E T",
+   1
+  ],
+  [
+   "SCHMITZ  J A",
+   1
+  ],
+  [
+   "SCHRIMPER  R A",
+   1
+  ],
+  [
+   "SCHULTZ  C D",
+   1
+  ],
+  [
+   "SCOTT  H D",
+   1
+  ],
+  [
+   "SCOTT  T R",
+   1
+  ],
+  [
+   "SEAL  B S",
+   1
+  ],
+  [
+   "SELL              JL",
+   1
+  ],
+  [
+   "SELL  J L",
+   1
+  ],
+  [
+   "SENTER  S D",
+   1
+  ],
+  [
+   "SHACKELFORD  A D",
+   1
+  ],
+  [
+   "SHARMA  J",
+   1
+  ],
+  [
+   "SHIROMA  J T",
+   1
+  ],
+  [
+   "SIEGEL            PB",
+   1
+  ],
+  [
+   "SIMS  J T",
+   1
+  ],
+  [
+   "SINGH  R K",
+   1
+  ],
+  [
+   "SKEELES  J K",
+   1
+  ],
+  [
+   "SMITH             MO",
+   1
+  ],
+  [
+   "SMITH             TW",
+   1
+  ],
+  [
+   "SMITH  D A",
+   1
+  ],
+  [
+   "SMITH  E",
+   1
+  ],
+  [
+   "SMITH  E J",
+   1
+  ],
+  [
+   "SMITH  J S",
+   1
+  ],
+  [
+   "SMITH  M O",
+   1
+  ],
+  [
+   "SMITH  R C",
+   1
+  ],
+  [
+   "SNYDER  D B",
+   1
+  ],
+  [
+   "SOARES  J H JR",
+   1
+  ],
+  [
+   "SOLLER  M",
+   1
+  ],
+  [
+   "SOMES  R G JR",
+   1
+  ],
+  [
+   "SPRINGER  W T",
+   1
+  ],
+  [
+   "STEELE  N C",
+   1
+  ],
+  [
+   "STETSON  L E",
+   1
+  ],
+  [
+   "STINNER  R E",
+   1
+  ],
+  [
+   "STONE  H D",
+   1
+  ],
+  [
+   "STRICKLIN  W R",
+   1
+  ],
+  [
+   "TABATABAI  L B",
+   1
+  ],
+  [
+   "THEIL  K W",
+   1
+  ],
+  [
+   "THOMPSON  S A",
+   1
+  ],
+  [
+   "THREADGILL  E D",
+   1
+  ],
+  [
+   "THURMAN  W N",
+   1
+  ],
+  [
+   "TILMON  H D",
+   1
+  ],
+  [
+   "TIZARD  I",
+   1
+  ],
+  [
+   "TRIPATHY  D",
+   1
+  ],
+  [
+   "TSAI  LEE S",
+   1
+  ],
+  [
+   "TURNER            LW",
+   1
+  ],
+  [
+   "TURNER  L W",
+   1
+  ],
+  [
+   "VAN ELSWYK        ME",
+   1
+  ],
+  [
+   "VAN ELSWYK  M E",
+   1
+  ],
+  [
+   "VAN WICKLEN  G L",
+   1
+  ],
+  [
+   "VANDEPOPULIERE    JM",
+   1
+  ],
+  [
+   "VANDEPOPULIERE  J M",
+   1
+  ],
+  [
+   "VASILAS           B",
+   1
+  ],
+  [
+   "VELLEMAN  S G",
+   1
+  ],
+  [
+   "VORHIES  M W",
+   1
+  ],
+  [
+   "VUKINA            T",
+   1
+  ],
+  [
+   "WAIBEL  P E",
+   1
+  ],
+  [
+   "WALDROUP  A L",
+   1
+  ],
+  [
+   "WALDROUP  P W",
+   1
+  ],
+  [
+   "WALSER  M M",
+   1
+  ],
+  [
+   "WALSER  M N",
+   1
+  ],
+  [
+   "WASHBURN          KL",
+   1
+  ],
+  [
+   "WEISS             WP",
+   1
+  ],
+  [
+   "WERBER  F X",
+   1
+  ],
+  [
+   "WILHELM           LR",
+   1
+  ],
+  [
+   "WILLIAMS          SK",
+   1
+  ],
+  [
+   "WILLIAMS  S",
+   1
+  ],
+  [
+   "WILLIS            WL",
+   1
+  ],
+  [
+   "WILLIS  W",
+   1
+  ],
+  [
+   "WITTER  R L",
+   1
+  ],
+  [
+   "WITUCKI  L",
+   1
+  ],
+  [
+   "WOLFORD           JH",
+   1
+  ],
+  [
+   "WOOD  C W",
+   1
+  ],
+  [
+   "WOODE  G N",
+   1
+  ],
+  [
+   "WU                W",
+   1
+  ],
+  [
+   "WYATT  R D",
+   1
+  ],
+  [
+   "XIN               H",
+   1
+  ],
+  [
+   "YAMAMOTO  R",
+   1
+  ],
+  [
+   "YASON  C V",
+   1
+  ],
+  [
+   "YOUNG  L L",
+   1
+  ],
+  [
+   "ZIPRIN  R L",
+   1
+  ]
+ ],
+ "kwic_9001632_ti_poultry_14": "POULTRY NUTRITION IN DISEASES AND IMMUNOLOGICAL RESPONSES"
 }

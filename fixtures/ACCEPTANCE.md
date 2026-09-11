@@ -305,6 +305,41 @@ and the per-operand-then-combined SS printing shape with an anchor-period (1994)
 `pnpm test`, `pnpm typecheck`, and `pnpm verify:acceptance` all ran clean after this session's
 changes.
 
+## Run record, 2026-09-11 (capability-clips plan, Task 1: poultry payoff answers)
+
+Question: what does `S POULTRY/TI` retrieve, what does `RANK IN` over that set show, and what
+does a KWIC window of POULTRY look like in one of those records -- the exact numbers the site's
+poultry payoff clip (a later task) will show, derived here from the real corpus before that clip
+exists. Three new keys in `fixtures/acceptance-fy94.json`, each derived independently in
+`scripts/naive-split.py`, never from the code under test:
+
+- `poultry_ti`: `S POULTRY/TI` retrieves **377** records (`poultry_ti.count`). `<FIELD>` was
+  checked against DE (1,179 records) and TX = AP+OB+PR (779 records) before picking TI -- the
+  only one of the three inside the brief's 100-800 "healthy set" range, and titles read cleanly
+  in KWIC.
+- `rank_in_over_poultry`: `RANK IN` over that set, `[term, count]` pairs sorted count-descending
+  then term-ascending. Top of the list: `HARGIS  B M` 6, `DEATON  J W` / `LILLARD  H S` /
+  `MAY  J D` / `STERN  N J` 5 each, then four investigators at 4, then a plateau at 3 -- a real
+  descending shape, checked by hand against the brief's legible-top gate (top count >= 3, a
+  visible descent, not a flat list) before this task continued past it. `<RANKFIELD>` stays the
+  brief's default, IN; the PS/ST fallback named in the brief was not needed.
+- `kwic_9001632_ti_poultry_14`: the 14-word KWIC window around POULTRY in AN 9001632 (the
+  alphabetically-first AN in the poultry set), TI = "POULTRY NUTRITION IN DISEASES AND
+  IMMUNOLOGICAL RESPONSES" -- 8 words, POULTRY first; a 14-word window is wider than the field,
+  so it is the whole title, no ellipsis, the same shape `kwic_9049442_ti_peach_14` already has.
+
+Checked end to end through `DialogSession`/`RetrievalEngine` (`test/archival/
+poultry-corpus.test.ts`): `S POULTRY/TI`'s own set line and ordinal count against `poultry_ti`;
+`RetrievalEngine.rankValues("IN", ...)` (via `rankTally`) against `rank_in_over_poultry`, in
+order, not just as a set; `kwicLines` on AN 9001632's own record against
+`kwic_9001632_ti_poultry_14`. One caveat carried forward, not fixed here: `VACANT` (a CRIS
+placeholder for an unfilled investigator slot, count 4) appears inside the top of
+`rank_in_over_poultry` -- real data, not a fabricated row, but Task 4 (the payoff clip's caption)
+should not present it as a named investigator.
+
+`pnpm test` (77 files, 435 tests), `pnpm typecheck`, and `pnpm verify:acceptance` all ran clean
+after this session's changes.
+
 ## Run record, 2026-09-11 (Task 11 closeout: truncation, SORT, RANK answer sets)
 
 Four more answer sets this plan derived, each in `fixtures/acceptance-fy94.json`, each checked

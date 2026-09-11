@@ -161,6 +161,34 @@ rec_9049442 = next(r for r in recs if an(r) == "9049442")
 ti_9049442_words = " ".join(values(rec_9049442, b"TI")).split()
 ti_9049442_peach_idx = next(i for i, w in enumerate(ti_9049442_words) if kwic_word_match(w, "PEACH"))
 kwic_9049442_ti_peach_14 = kwic_window(ti_9049442_words, ti_9049442_peach_idx, 14)
+
+# Task 1 (capability clips plan): the poultry payoff answers. <FIELD> pinned to /TI -- checked
+# against DE (1,179 records) and TX = AP+OB+PR (779 records) before picking TI: 377 records is
+# inside the 100-800 "healthy set" range the brief asks for, and title text reads cleanly in
+# KWIC (DE and TX would both overshoot toward the corpus's own upper bound, and PR/OB/AP text is
+# narrative rather than short titles). <RANKFIELD> pinned to IN (the brief's default): checked
+# by hand before this was trusted -- the top of rank_in_over_poultry descends 6, 5, 5, 5, 5,
+# then 4, 4, 4, 4, then a wide plateau at 3, a real investigator-level shape, not a flat list
+# where nearly everyone appears once, so the RANK-by-investigator risk this task exists to check
+# did not require the PS/ST fallback.
+poultry = [r for r in recs if any("POULTRY" in v for v in values(r, b"TI"))]
+poultry_ti = {"count": len(poultry), "an": sorted(an(r) for r in poultry)}
+
+rank_in_over_poultry_c = Counter()
+for r in poultry:
+    for v in set(values(r, b"IN")):
+        rank_in_over_poultry_c[v] += 1
+rank_in_over_poultry = sorted(rank_in_over_poultry_c.items(), key=lambda kv: (-kv[1], kv[0]))
+
+# KWIC record: AN 9001632, the alphabetically-first AN in the poultry set -- an arbitrary but
+# stable pick (same rule ti_peach's AN 9049442 has none; this one is just the set's own min()).
+# Its TI reads "POULTRY NUTRITION IN DISEASES AND IMMUNOLOGICAL RESPONSES" (8 words, POULTRY
+# first); a 14-word window is wider than the field, so it is the whole title, no ellipsis --
+# same shape as kwic_9049442_ti_peach_14 above.
+rec_9001632 = next(r for r in recs if an(r) == "9001632")
+ti_9001632_words = " ".join(values(rec_9001632, b"TI")).split()
+ti_9001632_poultry_idx = next(i for i, w in enumerate(ti_9001632_words) if kwic_word_match(w, "POULTRY"))
+kwic_9001632_ti_poultry_14 = kwic_window(ti_9001632_words, ti_9001632_poultry_idx, 14)
 print(json.dumps({
     "records": len(recs),
     "cy_beltsville": {"count": len(belt), "an": sorted(an(r) for r in belt)},
@@ -178,4 +206,7 @@ print(json.dumps({
     "ti_fresh_w_water": {"count": len(ti_fresh_w_water), "an": sorted(an(r) for r in ti_fresh_w_water)},
     "rank_st_over_cy_beltsville": [[term, count] for term, count in rank_st_over_cy_beltsville],
     "rank_oc_over_cy_beltsville": [[term, count] for term, count in rank_oc_over_cy_beltsville],
+    "poultry_ti": poultry_ti,
+    "rank_in_over_poultry": [[term, count] for term, count in rank_in_over_poultry],
+    "kwic_9001632_ti_poultry_14": kwic_9001632_ti_poultry_14,
 }, indent=1))

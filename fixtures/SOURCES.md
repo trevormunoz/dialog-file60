@@ -276,8 +276,27 @@ an arbitrary count. No new import was needed (`Counter` was already imported for
 first fifteen fields are byte-for-byte unchanged; `rank_oc_over_cy_beltsville` is the 20-entry
 list above.
 
+Added a seventeenth field, `poultry_ti`, and an eighteenth, `rank_in_over_poultry`, for the
+capability-clips plan's poultry payoff clip (Task 1): the set of records with POULTRY in TI
+(`any("POULTRY" in v for v in values(r, b"TI"))`, the same substring-over-raw-value rule
+`ti_technolog`'s brief text uses, not a tokenized match) and a per-set RANK IN tally over that
+set, counted and sorted the same way `rank_st_over_cy_beltsville` and `rank_oc_over_cy_
+beltsville` already are. `<FIELD>` was picked by comparing record counts before committing to
+TI: TI 377, DE 1,179, TX (AP+OB+PR) 779 -- TI is the only one inside the brief's 100-800 "healthy
+set" range, and title text reads cleanly in KWIC where DE (subject descriptors) and TX (narrative
+paragraphs) would not. `<RANKFIELD>` was checked against the brief's legible-top gate before this
+task continued: the top of `rank_in_over_poultry` is HARGIS B M 6, then four investigators at 5,
+four at 4, then a wide plateau at 3 -- a real descent, not a flat list, so RANK's PS/ST fallback
+was not needed. Added a nineteenth field, `kwic_9001632_ti_poultry_14`, for the KWIC window: AN
+9001632, the alphabetically-first AN in the poultry set, TI "POULTRY NUTRITION IN DISEASES AND
+IMMUNOLOGICAL RESPONSES" (8 words, POULTRY first); a 14-word window is wider than the field, so
+it is the whole title with no ellipsis, the same shape `kwic_9049442_ti_peach_14` already has. No
+new import was needed (`Counter` was already imported). Re-ran `python3 scripts/naive-split.py
+data/RG164.CRIS.FY94.txt` against the corpus after adding these three fields: the first sixteen
+fields are byte-for-byte unchanged.
+
 sha256 of `scripts/naive-split.py` after this change:
-sha256: ac6e708c4b4974b8530c9cf5771c30a0562f32ec4ea4db3e0ad8781b2a2522d2
+sha256: c619a172f235e8ef4a0ae196be70305dcdd1af16f0bf22c7b88425877db37ee8
 
 ## The corpus's own trailer line
 
