@@ -32,18 +32,20 @@ mkdir -p "${DEST}"
 cp -R dist/. "${DEST}/"
 echo "copied $(du -sh "${DEST}" | cut -f1) to ${DEST}"
 
-# The recording and its transcript fallback travel with the build, so the site page and the
-# app it links to are always the same version of the reconstruction. The transcript
-# (casts/first-session.poster.txt) is generated separately by scripts/poster.ts, so its copy
-# is guarded: without the guard this script would fail under set -euo pipefail whenever the
+# The recordings and their transcript fallbacks travel with the build, so the site page and
+# the app it links to are always the same version of the reconstruction. Each transcript
+# (casts/<name>.poster.txt) is generated separately by scripts/poster.ts, so its copy is
+# guarded: without the guard this script would fail under set -euo pipefail whenever the
 # transcript has not been generated.
 mkdir -p "${SITE}/apps/web/src/data"
-cp casts/first-session.cast "${SITE}/apps/web/src/data/first-session.cast"
-if [ -f casts/first-session.poster.txt ]; then
-  cp casts/first-session.poster.txt "${SITE}/apps/web/src/data/file60-poster.txt"
-  echo "copied casts/first-session.cast and its transcript to ${SITE}/apps/web/src/data/"
-else
-  echo "copied casts/first-session.cast to ${SITE}/apps/web/src/data/ (no poster transcript found)"
-fi
+for name in friction poultry; do
+  cp "casts/${name}.cast" "${SITE}/apps/web/src/data/${name}.cast"
+  if [ -f "casts/${name}.poster.txt" ]; then
+    cp "casts/${name}.poster.txt" "${SITE}/apps/web/src/data/${name}.poster.txt"
+    echo "copied casts/${name}.cast and its transcript to ${SITE}/apps/web/src/data/"
+  else
+    echo "copied casts/${name}.cast to ${SITE}/apps/web/src/data/ (no poster transcript found)"
+  fi
+done
 
 echo "done. Serve the site to check it."
