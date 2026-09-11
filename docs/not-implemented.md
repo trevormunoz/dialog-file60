@@ -8,17 +8,32 @@ implement, and what it prints when you try it.
 Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
 guard as a suffix, never tested against the SF field), SET DETAIL ON (the
-File column it adds to DISPLAY SETS' table is not printed), TYPE format 6
-and user-defined formats from display codes (only format 5 is implemented;
-every other format number or code list prints the item header followed by
-`? /{format}`, and no record text), RANK (the relevance-ranking display over
-a set), COMBINE (documented for File 60 in the 1978 EPA session; the set
-algebra it exposes is not reconstructed as its own command, only through
-SELECT's AND/OR/NOT), the 1984 and 1988 fixtures, variant
-indexes, a database-owner copyright line after the banner
+File column it adds to DISPLAY SETS' table is not printed), RANK (the
+relevance-ranking display over a set), COMBINE (documented for File 60 in
+the 1978 EPA session; the set algebra it exposes is not reconstructed as its
+own command, only through SELECT's AND/OR/NOT), the 1984 and 1988 fixtures,
+variant indexes, a database-owner copyright line after the banner
 (`proto.begin.copyright_line`, status `chosen` -- a different File's
 in-period BEGIN transcript shows one; File 60's is not held, so none is
 printed).
+
+Format 1 (DIALOG Accession Number), format 5 (Full Record), format 6
+(Heading and Title), and user-defined formats built from display codes
+(`T S3/IN,OB/1-5`) are implemented (`src/dialog/formats.ts`). Ten other
+predefined formats the Blue Sheet names are not, each for the same reason --
+its field set is documented, its layout is not: format 2 (Heading, Title,
+Keywords, Primary Headings, and Subfile Notation / Classification and
+Headings), format 3 (Heading, Title, Objectives, Primary Headings, and
+Subfile Notation / Classification and Headings), format 4 (Full Record with
+Tagged Fields), format 7 (Heading, Title, Text, and Publications), format 8
+(Heading, Title, Objectives, and Publications), format 9 (Full Record),
+format 10 (Mailing Labels (Address of Performing Organization)), format 12
+(Full Format for HNRIMS Records), format 13 (Heading, Title, and
+Classification Codes and Headings), and format 14 (Heading, Title,
+Classification Codes, Text, Keywords, and Publications). Each of these
+prints the item header followed by `? /{format}`, and no record text.
+Format K (KWIC, Key Word In Context) is a documented format too, but is
+Task 4's subject, not this one's.
 
 Word indexes and suffix search are implemented: `S PEACH/TI` and
 `S PEACH/TI,DE` search the word indexes described in

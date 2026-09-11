@@ -2,6 +2,7 @@ import { field, fields, type LogicalRecord } from "@barcstory/cris-formatb";
 import { line, type OutputLine } from "./stream";
 import { registry } from "../registry";
 import { MAP } from "./map";
+import { format1, format6, formatCodes, DISPLAY_CODES } from "./formats";
 
 const HEADER = registry.get("render.type.header").value as string[];
 const JUST = registry.get("render.text.justify").value as { width: number };
@@ -16,7 +17,7 @@ const vals = (rec: LogicalRecord, tag: string) => fields(rec, tag).flatMap(f => 
 const src = (t: string, valueIndex?: number) => valueIndex === undefined ? { tag: t } : { tag: t, valueIndex };
 /** `valueIndex`, when given, links every listed tag to its single value at that position
  * (a classification-grid row, an SC/SN row) instead of the whole field. */
-const L = (text: string, tags: string[], valueIndex?: number): OutputLine =>
+export const L = (text: string, tags: string[], valueIndex?: number): OutputLine =>
   line(text, { sources: tags.map(t => src(t, valueIndex)), registryKeys: tags.map(t => MAP[t]?.registry ?? "render.format5.layout") });
 /** Like L, but for a line justify() actually reflowed: render.text.justify (the 65-column
  * greedy-fill-and-stretch rule) shapes the line's own spacing, not just the source field's
@@ -29,7 +30,7 @@ const lit = (text: string): OutputLine => line(text, { registryKeys: ["render.fo
  * claim); cite that key directly rather than the generic render.format5.layout, so a reader
  * inspecting the one visibly anachronistic line in a 1990-1994 session is told why. */
 const hdr = (text: string): OutputLine => line(text, { registryKeys: ["render.type.header"] });
-const pad = (s: string, w: number) => s.length >= w ? s : s + " ".repeat(w - s.length);
+export const pad = (s: string, w: number) => s.length >= w ? s : s + " ".repeat(w - s.length);
 
 /**
  * Greedy fill to `width`. `stretch` (default true) full-justifies every line but the last
@@ -138,12 +139,20 @@ export function render5(rec: LogicalRecord): OutputLine[] {
 }
 
 /**
- * TYPE's format dispatch: format 5 is the only implemented layout; every other format number
- * or code list prints the simulated "? /<format>" error line, citing proto.error.bad_format.
+ * TYPE's format dispatch: format 5 (render5, above), format 1 and format 6 (formats.ts), and
+ * a user-defined display-code list (formats.ts's formatCodes, dispatched when every
+ * comma-separated code is a known display code) are implemented; every other format number
+ * prints the simulated "? /<format>" error line, citing proto.error.bad_format.
  * Exported so src/app/main.ts and scripts/cast.ts share one wiring instead of each writing
  * this fallback out by hand -- separate copies drifted, and scripts/cast.ts's copy dropped
  * the registry key, so an unimplemented format printed a line citing nothing in the cast
  * while the live app cited proto.error.bad_format.
  */
-export const renderFor = (rec: LogicalRecord, format: string): OutputLine[] =>
-  format === "5" ? render5(rec) : [line(`? /${format}`, { registryKeys: ["proto.error.bad_format"] })];
+export const renderFor = (rec: LogicalRecord, format: string): OutputLine[] => {
+  if (format === "5") return render5(rec);
+  if (format === "1") return format1(rec);
+  if (format === "6") return format6(rec);
+  const codes = format.split(",");
+  if (codes.every(c => c in DISPLAY_CODES)) return formatCodes(rec, codes);
+  return [line(`? /${format}`, { registryKeys: ["proto.error.bad_format"] })];
+};

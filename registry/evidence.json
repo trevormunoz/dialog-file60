@@ -1924,7 +1924,7 @@
         "observedSystem": "File 60"
       }
     ],
-    "note": "no 1990-1994 rate card is held -- statement of absence, not found in dataset-cards/research/cris-dialog/sources/ by the acquisition and review of 2026-09-09. Only format 5 is implemented, so typeByFormat's other entries never price anything this reconstruction actually prints; they are carried because the 1998 sheet documents them for the file as a whole."
+    "note": "no 1990-1994 rate card is held -- statement of absence, not found in dataset-cards/research/cris-dialog/sources/ by the acquisition and review of 2026-09-09. Formats 1, 5 and 6 are implemented, so LOGOFF now prices real TYPE lines for all three (1 and 6 both free); typeByFormat's remaining entries (2,3,4,7,8,9,10,12,13,14) never price anything this reconstruction actually prints, and are carried because the 1998 sheet documents them for the file as a whole. A user-defined display-code format is never priced from this table: the Rates section of bl0060_19980423153346.html has no row for a display-code list -- a statement of absence, not found there on 2026-09-10 -- so accounting.ts's typeByFormat lookup falls through to its own zero default for that format string."
   },
   "proto.accounting.combination": {
     "value": null,
@@ -1942,5 +1942,56 @@
     "status": "chosen",
     "claim": "The printed date and time are the reader's own and make no historical claim.",
     "note": "src/app/main.ts passes the system clock; the evidence-test harness and the recorded cast (scripts/cast.ts) pass a fixed clock instead, so their output stays reproducible."
+  },
+  "render.format1.layout": {
+    "value": "AN alone",
+    "status": "documented",
+    "claim": "Format 1 prints only the record's DIALOG accession number.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "PREDEFINED FORMAT OPTIONS table, row '1 DIALOG Accession Number'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      }
+    ]
+  },
+  "render.format6.labels": {
+    "value": ["AGENCY ID:", "PROJ NO:", "PERIOD:", "INVEST:", "PERF ORG:", "LOCATION:"],
+    "status": "documented",
+    "claim": "Format 6 prints six labelled fields, in this order: agency, project number, period, investigator, performing organization, and location.",
+    "sources": [
+      {
+        "source": "epa-session-1978",
+        "locator": "Sample Search/Output, p. 185: the `16/6/1` and `16/6/2` blocks",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "The 1978 EPA session predates this reconstruction's 1990-1994 anchor period; it is pre-anchor evidence for the six labels and their order, not for the corpus record itself."
+  },
+  "render.format6.columns": {
+    "value": null,
+    "status": "chosen",
+    "claim": "Where each label sits on the line is this reconstruction's choice; the one surviving example is typeset, so its columns are not evidence."
+  },
+  "render.userformat.codes": {
+    "value": "DISPLAY_CODES",
+    "status": "documented",
+    "claim": "A comma-separated list of display codes can be typed after TYPE to build a custom output, the same way TYPE S3/IN,OB/1-5 does.",
+    "sources": [
+      {
+        "source": "bluesheet-1998-text",
+        "locator": "USER-DEFINED FORMAT OPTIONS: 'Display codes listed in the Search Options tables can be used to customize output, e.g., TYPE S3/IN,OB/1-5'",
+        "sourceDate": "1998-03-02",
+        "observedSystem": "File 60"
+      },
+      {
+        "source": "successful-searching-2001",
+        "locator": "worked example `?type s2/ti,au/1-5` prints the item header `2/TI,AU/l` (the OCR's 'l' is '1')",
+        "sourceDate": "2001",
+        "observedSystem": "DIALOG general"
+      }
+    ]
   }
 }

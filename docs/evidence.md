@@ -84,9 +84,12 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.selectsteps.sets
 - proto.type.item_header
 - rates.file60_1998
+- render.format1.layout
 - render.format5.layout
+- render.format6.labels
 - render.setline.columns
 - render.type.header
+- render.userformat.codes
 
 ## inferred
 
@@ -128,6 +131,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.expand.collation
 - proto.session.clock
 - proto.session.user_number
+- render.format6.columns
 - render.record.order
 - terminal.backgroundColor
 - terminal.display_mode
