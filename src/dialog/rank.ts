@@ -34,6 +34,10 @@ export function rankTally(counts: [string, number][]): RankRow[] {
  * -- the same simulated `? <FIELD>` text -- cite different registry keys for two different
  * reasons a field can fail to rank. */
 export function isWordIndexedField(field: string): boolean {
+  // PO is special-cased rather than found in WORD_CODES: this build carries PO only via its
+  // PF/PI word decomposition (WORD_FIELDS["PO="], src/loader/words.ts), so it has no rankable
+  // phrase index here -- the Blue Sheet lists PO among rankable fields, but nothing this build
+  // built for PO can be ranked (proto.rank.wordfields's note).
   return WORD_CODES.includes(`/${field}`) || field === "PO";
 }
 
