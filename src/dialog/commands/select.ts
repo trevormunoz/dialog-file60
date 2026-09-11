@@ -49,9 +49,14 @@ async function resolveRefs(session: DialogSession, expr: SearchExpression): Prom
  * multi-term expression is the same information a second time, not new. `extraKeys` are
  * merged into the set line's own registryKeys -- SELECT STEPS adds proto.selectsteps.sets
  * there, since it is the same set line SELECT prints, just also evidence for SS's own
- * per-term-and-final numbering rule. */
+ * per-term-and-final numbering rule. `bareSetErrors` is false for SELECT and SELECT STEPS
+ * (an unknown-set operand echoes "S<n>", proto.error.unknown_set's documented form) and true
+ * for COMBINE, whose own operand grammar has no `S` prefix at all -- an unknown set there
+ * echoes the bare number it was named with, not SELECT's form (no source records COMBINE's
+ * own error text; see proto.combine.statement's note). */
 export async function addSet(
   session: DialogSession, expr: SearchExpression, echo: string, showPerTerm = true, extraKeys: string[] = [],
+  bareSetErrors = false,
 ): Promise<OutputLine[]> {
   let result; let resolved: SearchExpression;
   try {
@@ -66,7 +71,7 @@ export async function addSet(
     result = session.engine.search(resolved, new Map(session.sets.map(s => [s.id, s.ordinals])));
   }
   catch (e) {
-    if (e instanceof UnknownSet) return [line(`? S${e.id}`, { registryKeys: ["proto.error.unknown_set"] })];
+    if (e instanceof UnknownSet) return [line(`? ${bareSetErrors ? "" : "S"}${e.id}`, { registryKeys: ["proto.error.unknown_set"] })];
     if (e instanceof UnknownSuffix) return [line(`? ${e.code}`, { registryKeys: ["proto.error.unknown_suffix"] })];
     if (e instanceof UnknownRef) return [line(`? ${e.echo}`, { registryKeys: ["proto.error.unknown_field"] })];
     if (e instanceof UnknownField) {

@@ -6,7 +6,16 @@ import { MemoryWordIndex } from "../../src/retrieval/words";
 const fixture = new Uint8Array(readFileSync("packages/cris-formatb/fixtures/fy94-9049442.bin"));
 const reader: RangeReader = { async read(o, l) { return fixture.subarray(o - 6810182, o - 6810182 + l); } };
 const offsets = { file: "RG164.CRIS.FY94.txt", sha256: "x", records: [["9049442", 83052, 83173] as [string, number, number]] };
-const indexes = { CY: { code: "CY", terms: { BELTSVILLE: [0] } }, IN: { code: "IN", terms: { "HAMMERSCHLAG  F A": [0] } } };
+// GREENBELT and ST=MARYLAND (added for test/evidence/combine.test.ts) resolve to the same
+// ordinal 0 as CY=BELTSVILLE: this fixture holds one real record, so every set an evidence
+// test builds from it is that one record or the empty set -- never a fabricated count. The
+// real distinct Beltsville/Greenbelt/Maryland counts are asserted separately, against the
+// real corpus, in test/archival/combine-corpus.test.ts.
+const indexes = {
+  CY: { code: "CY", terms: { BELTSVILLE: [0], GREENBELT: [0] } },
+  IN: { code: "IN", terms: { "HAMMERSCHLAG  F A": [0] } },
+  ST: { code: "ST", terms: { MARYLAND: [0] } },
+};
 // The injected renderer records the format it receives (seenFormats), and
 // mirrors src/app/main.ts's actual handling of a format outside this milestone's slice (only
 // "5" is rendered; anything else prints the simulated "? /<format>" form, citing

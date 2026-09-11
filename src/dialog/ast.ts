@@ -14,6 +14,15 @@ export type DialogCommand =
   | { cmd: "sort"; set: number; items: string; keys: { field: string; descending: boolean }[]; echo: string }
   /** EXPAND, with the raw text after the command word: `PREFIX=value`, `PREFIX=` alone, or a
    * bare term to browse the Basic Index. Unparsed here -- the session splits it. */
+  /** COMBINE, in the two forms the 1978 File 60 session shows: `COMBINE <a>-<b>/<OP>` (range
+   * and operator) and `COMBINE <expr>` (parentheses/AND/OR/NOT over bare set numbers, no `S`
+   * prefix). `expr` is already read by the same `parseExpression` SELECT uses -- a range form's
+   * set numbers folded left-associatively into `OP`, an expression form's bare integers rewritten
+   * to `S<n>` first. `echo` is the statement as typed (a range form's own `a-b/OP`, an
+   * expression form's text unrewritten), uppercased, for the new set's description -- the 1978
+   * transcript's own set lines print it exactly this way, and COMBINE prints no per-term lines
+   * even for a multi-operand statement (see proto.combine.statement). */
+  | { cmd: "combine"; expr: SearchExpression; echo: string }
   | { cmd: "expand"; term: string }
   /** PAGE or P, and PAGE- or P- (`back`) to return to the page before the current one. */
   | { cmd: "page"; back: boolean }

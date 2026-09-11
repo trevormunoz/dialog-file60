@@ -9,9 +9,7 @@ Out of scope for version 1: the subfile limits
 (`/CRIS`, `/HNRIMS`, `/ICAR`, `/CZARIS`, rejected by the same out-of-slice
 guard as a suffix, never tested against the SF field), SET DETAIL ON (the
 File column it adds to DISPLAY SETS' table is not printed), RANK (the
-relevance-ranking display over a set), COMBINE (documented for File 60 in
-the 1978 EPA session; the set algebra it exposes is not reconstructed as its
-own command, only through SELECT's AND/OR/NOT), the 1984 and 1988 fixtures,
+relevance-ranking display over a set), the 1984 and 1988 fixtures,
 variant indexes, a database-owner copyright line after the banner
 (`proto.begin.copyright_line`, status `chosen` -- a different File's
 in-period BEGIN transcript shows one; File 60's is not held, so none is
@@ -120,6 +118,31 @@ nineteen-code list (`SORT S1/ALL/OB`) is refused with the simulated `?
 -- the Blue Sheet's own `PRINT S5/5/ZP` and the 1978 File 60 session's
 `PRINT 16/5/1-35/AS/PN` both carry sort codes on PRINT itself, which is a
 later task's subject, not this one's.
+
+COMBINE is implemented, in the two forms the 28 February 1978 File 60
+session shows (EPA *Chemical Information Resources Handbook*, January
+1981, pp. 184-185): `COMBINE <a>-<b>/<OP>`, folding a range of set numbers
+left-associatively into AND, OR or NOT (`COMBINE 1-7/OR`), and
+`COMBINE <expr>`, the same parentheses/AND/OR/NOT grammar SELECT uses,
+over bare set numbers -- no `S` prefix, the one syntax difference from a
+SELECT operand naming a set. COMBINE prints only its own set line, never a
+per-term breakdown, even for a multi-operand statement, and that line's
+description is the statement exactly as typed after the command word,
+uppercased -- all three read directly off the 1978 transcript's four
+COMBINE statements and their set lines. This is **pre-anchor** evidence:
+the 1978 session is twelve years before this reconstruction's 1990-1994
+anchor, and it is the only source in the collection that shows COMBINE at
+all -- no anchor-period source shows it, and the 2001 manual carries no
+COMBINE entry, a statement of absence (not found by grepping `COMBINE`
+across the 2001 manual text, the stripped 1998 Blue Sheet text and the
+extracted 1988 *DATABASE* figures on 2026-09-10). The range form's `/OP` is
+shown only as `/OR`; `/AND` and `/NOT` are accepted and left-associative
+here rather than refused, since refusing them would be a rule this
+reconstruction invented, not one the source states. A COMBINE naming a set
+number that does not exist prints the simulated `?` error with the bare
+number as typed (`COMBINE 1-2/OR` with no set 1 prints `? 1`), not
+SELECT's `? S<n>` form -- no source records COMBINE's own error text
+either.
 
 A capability notice exists as a stub, not the full mechanism:
 PRINT and TYPE by accession number

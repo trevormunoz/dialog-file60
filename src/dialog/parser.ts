@@ -213,6 +213,29 @@ export function parse(line: string): DialogCommand {
     });
     return { cmd: "sort", set: Number(m[1]), items: m[2]!.toUpperCase(), keys, echo: t.slice(5).trim().toUpperCase() };
   }
+  // COMBINE <a>-<b>/<OP>: the 1978 File 60 session's range-and-operator form ("? COMBINE
+  // 1-7/OR" printing "8 197 1-7/OR"). Folds the set numbers left-associatively into OP,
+  // echoing "a-b/OP" uppercased. A reversed range (b < a) is not a range the 1978 transcript
+  // ever shows and falls through to unknown, the same way parseItems refuses one for TYPE.
+  // Checked before the expression form below, so "1-7/OR" is never handed to the S<n>
+  // rewrite, which would misread it as one word/suffix operand ("1-7" word, "OR" suffix).
+  if ((m = /^combine\s+(\d+)-(\d+)\/(and|or|not)$/i.exec(t))) {
+    const a = Number(m[1]), b = Number(m[2]), op = m[3]!.toLowerCase() as "and" | "or" | "not";
+    if (b < a) return unknown(line);
+    let expr: SearchExpression = { kind: "set", id: a };
+    for (let n = a + 1; n <= b; n++) expr = { kind: op, left: expr, right: { kind: "set", id: n } };
+    return { cmd: "combine", expr, echo: `${a}-${b}/${op.toUpperCase()}` };
+  }
+  // COMBINE <expr>: the expression form over bare set numbers ("? COMBINE (8 AND 12) NOT
+  // 15"), read by the same parentheses/NOT/AND/OR grammar (parseExpression) SELECT uses.
+  // COMBINE's grammar has no bare-word operand the way SELECT's does -- every integer in a
+  // COMBINE statement is a set number -- so rewriting each standalone integer to S<n> before
+  // handing the text to parseExpression is safe here (and would not be for SELECT, where a
+  // bare integer could be a search term's own text, e.g. "S CY=1994").
+  if ((m = /^combine\s+(.+)$/i.exec(t))) {
+    const expr = parseExpression(m[1]!.replace(/\b(\d+)\b/g, "S$1"));
+    return expr ? { cmd: "combine", expr, echo: m[1]!.replace(/\s+$/, "").toUpperCase() } : unknown(line);
+  }
   if ((m = /^(?:e|expand)\s+(.+)$/i.exec(t))) return { cmd: "expand", term: m[1]!.trim() };
   if ((m = /^(?:p|page)(-)?$/i.exec(t))) return { cmd: "page", back: m[1] === "-" };
   // Both the bare (`DS 1-3`) and S-prefixed (`DS S1-S3`) range forms are documented; a single

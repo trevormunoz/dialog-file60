@@ -1178,7 +1178,7 @@
     "value": null,
     "status": "chosen",
     "claim": "No source records what DIALOG printed for a set number that did not exist; this reconstruction prints a question mark and the set.",
-    "note": "'Unknown set' is its own error case, distinct from 'bad field code' and from an item number past the end of a set that does exist. Covers both a SELECT operand naming an unset set number (e.g. 'S S7' with no S7, prints '? S7') and a TYPE naming an unset set number (e.g. 'T S9/5/1' with no S9, prints '? S9'); no error text for either case read from any source. One key covers the identical condition in both commands; proto.error.unknown_field is about a field code the engine cannot resolve and proto.error.type_range about an item number past the end of a set that does exist, so neither fits it."
+    "note": "'Unknown set' is its own error case, distinct from 'bad field code' and from an item number past the end of a set that does exist. Covers a SELECT operand naming an unset set number (e.g. 'S S7' with no S7, prints '? S7'), a TYPE naming an unset set number (e.g. 'T S9/5/1' with no S9, prints '? S9'), and a COMBINE naming an unset set number -- COMBINE's own operand grammar has no 'S' prefix (proto.combine.statement), so this case echoes the bare number as typed instead ('COMBINE 1-2/OR' with no S1, prints '? 1'); no error text for any of the three cases read from any source. One key covers the identical condition across commands; proto.error.unknown_field is about a field code the engine cannot resolve and proto.error.type_range about an item number past the end of a set that does exist, so neither fits it."
   },
   "proto.error.type_range": {
     "value": null,
@@ -1910,6 +1910,20 @@
       }
     ],
     "note": "whether a plain SELECT also printed Processing first is not recorded in any source held; this reconstruction's SELECT does not print it."
+  },
+  "proto.combine.statement": {
+    "value": { "operands": "bare set numbers", "description": "the statement as typed" },
+    "status": "documented",
+    "claim": "COMBINE builds a set from set numbers, and labels it with the statement you typed.",
+    "sources": [
+      {
+        "source": "epa-session-1978",
+        "locator": "Sample Search/Output, p. 185: '? COMBINE 1-7/OR' printing '8 197 1-7/OR', and '? COMBINE (8 AND 12) NOT 15' printing '16 35 (8 AND 12) NOT 15'",
+        "sourceDate": "1978-02-28",
+        "observedSystem": "File 60"
+      }
+    ],
+    "note": "Pre-anchor: the 28 February 1978 session is twelve years before this reconstruction's 1990-1994 anchor, and is the only source in the collection that shows COMBINE. Statement of absence: no anchor-period source showing COMBINE was found by grepping 'COMBINE' across the 2001 manual text, the stripped 1998 Blue Sheet text and the extracted 1988 DATABASE figures on 2026-09-10 -- the 2001 manual carries no COMBINE entry at all. The range form is shown only with /OR; /AND and /NOT are accepted here and left-associative, which the source does not show either way."
   },
   "proto.displaysets.table": {
     "value": true,

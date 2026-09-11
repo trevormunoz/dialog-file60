@@ -15,6 +15,7 @@ import { runExpand, runPage } from "./commands/expand";
 import { runDisplaySets } from "./commands/displaysets";
 import { runLogoff } from "./commands/logoff";
 import { runSort } from "./commands/sort";
+import { runCombine } from "./commands/combine";
 import { KWIC_DEFAULT } from "./kwic";
 
 const DEFAULT_USER = registry.get("proto.session.user_number").value as string;
@@ -88,6 +89,7 @@ export class DialogSession {
       case "selectsteps": return runSelectSteps(this, cmd);
       case "type": return runType(this, cmd);
       case "sort": return runSort(this, cmd);
+      case "combine": return runCombine(this, cmd);
       case "expand": return runExpand(this, cmd);
       case "page": return runPage(this, cmd);
       case "displaysets": return runDisplaySets(this, cmd);
