@@ -8,6 +8,50 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 
+// Parity trim. JS .trimEnd()/.trim() strip a different whitespace set than
+// Gleam's string.trim_end/trim: JS strips U+00A0 (NBSP — the Format B separator
+// lead byte) and not U+0085 (NEL); Gleam does the reverse. Input here is Latin-1,
+// so every codepoint is <= U+00FF and the only JS-whitespace characters that can
+// occur are the seven below (JS also strips U+2028/U+3000/U+FEFF etc., which no
+// Latin-1 byte can produce). Matching that set keeps the oracle byte-identical to
+// offsets.ts/record.ts without an FFI.
+fn is_js_ws(g: String) -> Bool {
+  case g {
+    "\t" | "\n" | "\u{000B}" | "\u{000C}" | "\r" | " " | "\u{00A0}" -> True
+    _ -> False
+  }
+}
+
+fn drop_leading_ws(graphemes: List(String)) -> List(String) {
+  case graphemes {
+    [g, ..rest] ->
+      case is_js_ws(g) {
+        True -> drop_leading_ws(rest)
+        False -> graphemes
+      }
+    [] -> []
+  }
+}
+
+fn js_trim_end(s: String) -> String {
+  s
+  |> string.to_graphemes
+  |> list.reverse
+  |> drop_leading_ws
+  |> list.reverse
+  |> string.concat
+}
+
+fn js_trim(s: String) -> String {
+  s
+  |> string.to_graphemes
+  |> drop_leading_ws
+  |> list.reverse
+  |> drop_leading_ws
+  |> list.reverse
+  |> string.concat
+}
+
 pub const line_bytes = 82
 
 pub const data_start = 3
@@ -238,20 +282,20 @@ fn split_segments(v: SourceValue, cfg: Pcfg) -> SourceValue {
   case string.split_once(v.raw, sep) {
     Error(_) -> v
     Ok(#(before, rest)) -> {
-      let code = string.trim_end(before)
+      let code = js_trim_end(before)
       case cfg.percent_in_block, string.split_once(rest, sep) {
         True, Ok(#(lbl, pct)) ->
           SourceValue(
             ..v,
             code: Some(code),
-            label: Some(string.trim_end(lbl)),
-            percent: Some(string.trim(pct)),
+            label: Some(js_trim_end(lbl)),
+            percent: Some(js_trim(pct)),
           )
         _, _ ->
           SourceValue(
             ..v,
             code: Some(code),
-            label: Some(string.trim_end(rest)),
+            label: Some(js_trim_end(rest)),
           )
       }
     }
@@ -367,7 +411,7 @@ pub fn parse_record(
       SourceField(
         ..f,
         values: list.map(f.values, fn(v) {
-          split_segments(SourceValue(..v, raw: string.trim_end(v.raw)), cfg)
+          split_segments(SourceValue(..v, raw: js_trim_end(v.raw)), cfg)
         }),
       )
     })

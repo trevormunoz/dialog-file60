@@ -36,7 +36,10 @@ const synthetic = new Uint8Array([
   // continuation (raw concat).
   ...line("$$ rec one"),
   ...fld("AN", "9000001"),
-  ...fld("SC", "CODE1", SEP_A, SEP_B, "LABEL ONE", SEP_A, SEP_B, "75"),
+  // CODE1 is followed by an NBSP (0xA0) then a space before the separator, so
+  // the code segment ends in NBSP at the trim edge — the exact case where JS
+  // .trimEnd() (strips NBSP) and Gleam string.trim_end (does not) diverge.
+  ...fld("SC", "CODE1", SEP_A, " ", SEP_A, SEP_B, "LABEL ONE", SEP_A, SEP_B, "75"),
   ...fld("  ", CONT, "SECOND VALUE", SEP_A, SEP_B, "LBL2"),
   ...fld("  ", "APPENDED-TO-SECOND"),
   // record two: an orphan continuation (blank tag before any field), then a
