@@ -130,6 +130,30 @@ test("search() throws when a word expression is evaluated without a prior prepar
   expect(() => unprepared.search(expr, new Map())).toThrow("prepare() was not called for /TI:P");
 });
 
+// A WordIndexSource whose shard omits a term its term list claims exists = drift.
+function driftedSource(): any {
+  return {
+    async shard() { return {}; },                       // shard is empty
+    async terms() { return [["APPLE", 1]] as [string, number][]; }, // but term list says APPLE exists
+    async mergedTerms() { return []; },
+  };
+}
+it("word search: term in the term list but missing from its shard throws IndexInconsistent", async () => {
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", driftedSource());
+  const expr = { kind: "word", term: "APPLE", codes: ["/TI"], echo: "APPLE/TI" } as any;
+  await eng.prepare(expr);
+  expect(() => eng.search(expr, new Map())).toThrowError(/reconstruction could not load/i);
+});
+it("word search: term absent from both shard and term list is a genuine zero", async () => {
+  const genuine = { async shard() { return {}; }, async terms() { return [] as [string, number][]; }, async mergedTerms() { return []; } } as any;
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", genuine);
+  const expr = { kind: "word", term: "ZZZZ", codes: ["/TI"], echo: "ZZZZ/TI" } as any;
+  await eng.prepare(expr);
+  const r = eng.search(expr, new Map());
+  expect(r.ordinals).toEqual([]);
+  expect(r.perTerm[0]?.postings).toBe(0);
+});
+
 // sortKey's own comment used to say it returns the record's first value, but it actually
 // walked idx.terms in index-insertion order ("first write wins") -- honest for a single-valued
 // field only. Ordinal 0 carries two IN values under a *reversed* insertion order (OWENS before

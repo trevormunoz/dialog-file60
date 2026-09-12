@@ -98,6 +98,10 @@ export class RetrievalEngine {
   /** Positional shards already fetched, keyed `${code}:${shard}` -- the proximity side of
    * `shards`, loaded and read via engine-helpers.ts's preparePositional/positionsOf. */
   private posShards = new Map<string, PositionalShard>();
+  /** Per word code: the set of phraseKey-normalized terms the code's term list vouches for.
+   * Preloaded by prepare() so the synchronous search() can tell a genuine zero (key not in
+   * the set) from shard drift (key in the set but absent from its shard). */
+  private wordTermSets = new Map<string, Set<string>>();
 
   constructor(
     private offsets: Offsets,
@@ -129,6 +133,10 @@ export class RetrievalEngine {
           if (!this.shards.has(key)) {
             if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
             this.shards.set(key, await this.wordSource.shard(resolved, shard));
+          }
+          if (!this.wordTermSets.has(resolved)) {
+            if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
+            this.wordTermSets.set(resolved, new Set((await this.wordSource.terms(resolved)).map(([t]) => t)));
           }
         }
         return;
@@ -238,7 +246,13 @@ export class RetrievalEngine {
             const resolved = resolveWordCode(c);
             const cached = this.shards.get(`${resolved}:${shard}`);
             if (!cached) throw new Error(`prepare() was not called for ${resolved}:${shard}`);
-            return cached[key] ?? [];
+            const hit = cached[key];
+            if (hit) return hit;
+            // Miss: genuine zero (key not vouched for) vs drift (vouched for but absent from shard).
+            if (this.wordTermSets.get(resolved)?.has(key)) {
+              throw new ReconstructionFailure("IndexInconsistent", { detail: `${resolved} term ${key} in term list but missing from shard ${shard}` });
+            }
+            return [];
           });
           const unique = [...new Set(ords)].sort((a, b) => a - b);
           const display = `${key}${e.codes[0]}${e.codes.slice(1).map(c => `,${c.slice(1)}`).join("")}`;
