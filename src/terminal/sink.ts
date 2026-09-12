@@ -119,8 +119,11 @@ export class DomSink {
     this.submitting = true;
     this.echo(this.prompt, l);
     this.moveCursor();
-    await this.onSubmit(l);
-    this.submitting = false;
+    try {
+      await this.onSubmit(l);
+    } finally {
+      this.submitting = false;
+    }
     const next = this.pendingLines.shift();
     if (next !== undefined) { void this.runSubmit(next); return; }
     this.input.focus();

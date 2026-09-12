@@ -59,6 +59,9 @@ console.log(
   "word terms: " + Object.entries(report.wordTerms).map(([c, n]) => `${c} ${n}`).join(", ")
 );
 console.log(
+  "phrase terms: " + Object.entries(report.phraseTerms).map(([c, n]) => `${c} ${n}`).join(", ")
+);
+console.log(
   `positional postings (computed for ${POSITIONAL_CODES.join(", ")} only -- decision (a), see ` +
   "docs/indexes.md): " + Object.entries(report.posPostings).map(([c, n]) => `${c} ${n}`).join(", ")
 );

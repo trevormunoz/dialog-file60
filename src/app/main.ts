@@ -6,28 +6,33 @@ import { renderFor } from "../dialog/render5";
 import { DomSink, type DisplayMode } from "../terminal/sink";
 import { reconstructionProse, setStatementHtml, sheetHeaderFragment, BAR_HEADING } from "./statement";
 import { PHRASE_FIELDS, indexUrls, offsetsUrl, corpusUrl, type Offsets, type Index } from "../loader/corpus-format";
+import { reportUrl } from "../loader/corpus-urls";
 import { mountInspect } from "../inspect/panel";
 import { registry } from "../registry";
 import { FY1994 } from "./corpora";
+import { fetchJsonArtifact, isOffsets, isIndex, isPhraseCounts } from "../retrieval/artifact";
+import { checkPhraseManifest } from "../retrieval/manifest";
+import { makeOnSubmit, type NoticeState } from "./onSubmit";
+import { renderStartupError } from "./startup-error";
+import { ReconstructionFailure, RECONSTRUCTION_FAILURE_MESSAGE } from "../retrieval/failures";
 // Vite emits registry/evidence.json as a build asset and gives back a
 // URL already prefixed with the configured base. The same file is imported for its *data* by
 // src/registry/index.ts; this import is only for the link in the bar, so a reader can open
 // the evidence the panels cite.
 import registryUrl from "../../registry/evidence.json?url";
 
-// The corpus and its indexes are served from Cloudflare R2 in the deployed build (GitHub
-// Pages cannot hold a 277,539,004-byte file: GitHub blocks any file over 100 MB). A missing
-// or forbidden object would otherwise surface as a JSON parse error naming nothing; this
-// names the URL and the status.
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`could not load ${url}: HTTP ${res.status} ${res.statusText}`);
-  return (await res.json()) as T;
-}
-
-const offsets = await fetchJson<Offsets>(offsetsUrl(import.meta.env));
+// Everything below reads or fetches corpus-derived state. Any load, shape-validation, or
+// manifest failure here is category D -- the reconstruction itself could not trust its own
+// data -- and must never reach the DIALOG layer or leave a blank page: renderStartupError
+// replaces the whole app with a modern panel instead. main() is the single guarded entry
+// point; nothing above it touches the DOM or the network.
+async function main(): Promise<void> {
+try {
+const offsets = await fetchJsonArtifact<Offsets>(offsetsUrl(import.meta.env), isOffsets);
 const indexes: Record<string, Index> = {};
-for (const [c, url] of indexUrls(PHRASE_FIELDS, import.meta.env)) indexes[c] = await fetchJson<Index>(url);
+for (const [c, url] of indexUrls(PHRASE_FIELDS, import.meta.env)) indexes[c] = await fetchJsonArtifact(url, isIndex);
+const report = await fetchJsonArtifact(reportUrl(import.meta.env), isPhraseCounts);
+checkPhraseManifest(indexes, report.phraseTerms);
 // The positional source is not yet read by anything this milestone ships -- Task 8's
 // proximity operators are its first reader -- but it is wired in now, alongside FetchWordIndex,
 // so that landing it later is not a RetrievalEngine constructor-shape change.
@@ -41,6 +46,7 @@ const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpus
 // fixed clock instead.
 let session = new DialogSession(engine, renderFor);
 registry.get("capability.notice"); // cited here; rendered below, outside the stream
+registry.get("capability.reconstruction_error"); // cited here; same notice element, the "reconstruction" class
 registry.get("terminal.restart"); // cited here; the button is wired below
 const noticeEl = document.getElementById("notice")!;
 const statementEl = document.getElementById("statement")!;
@@ -78,18 +84,25 @@ document.getElementById("sheet-header")!.innerHTML = sheetHeaderFragment(offsets
 // (documented): no trailing space -- any space after the prompt was typed by the searcher or
 // set by a compositor, so the mockup's "?s cy=beltsville" is right.
 const prompt = (registry.get("proto.prompt").value as string) + (registry.get("proto.prompt.spacing").value as string);
-const sink = new DomSink(document.getElementById("terminal")!, async (l) => {
-  const out = await session.submit(l);
-  // await: print() paces the characters (terminal.pacing) and resolves when the queue has
-  // drained. The prompt itself stays live throughout: sink.ts queues an Enter pressed
-  // during this drain rather than disabling input for it.
-  await sink.print(out);
-  // Outside the character stream entirely -- never appended to
-  // sink.printout, so it never reaches a copied selection.
-  noticeEl.textContent = session.lastNotice
-    ? `DIALOG documented \`${session.lastNotice.command}\` for File 60; this reconstruction does not implement it yet.`
-    : "";
-}, prompt);
+// Outside the character stream entirely -- never appended to sink.printout, so it never
+// reaches a copied selection. The "reconstruction" class is what index.html's paper-mode CSS
+// keeps visible: a category-D failure is a fault in the reconstruction, not period chrome
+// that paper mode may hide.
+const showNotice = (n: NoticeState) => {
+  noticeEl.classList.toggle("reconstruction", n?.kind === "reconstruction");
+  noticeEl.textContent =
+    n?.kind === "capability"
+      ? `DIALOG documented \`${n.command}\` for File 60; this reconstruction does not implement it yet.`
+      : n?.kind === "reconstruction"
+        ? RECONSTRUCTION_FAILURE_MESSAGE
+        : "";
+};
+// makeOnSubmit needs the sink it prints to, but the sink is constructed with the handler --
+// resolve the cycle with a thin wrapper that calls a `let handler`, then assign the real
+// handler immediately after.
+let handler: (line: string) => Promise<void> = async () => {};
+const sink = new DomSink(document.getElementById("terminal")!, (l) => handler(l), prompt);
+handler = makeOnSubmit(() => session, sink, showNotice);
 refresh();
 // Copied text is plain text; nothing is added to a selection on copy.
 // The aside collapses to a 28px rail. State lives on the aside's own classList (index.html's
@@ -132,7 +145,7 @@ setPanelCollapsed(readPanelCollapsed());
 function restart(): void {
   session = new DialogSession(engine, renderFor);
   sink.reset();
-  noticeEl.textContent = "";
+  showNotice(null);
   inspectEl.replaceChildren(inspectPlaceholder());
   // No refresh() here: reconstructionProse(offsets) reads only the corpus offsets captured
   // at startup, never session state -- restart changes nothing it would rewrite. refresh()
@@ -189,3 +202,10 @@ document.addEventListener("keydown", (e) => {
 // RetrievalEngine above was built with; FY1994.naid and offsets.sha256 name the holding and
 // the corpus's own fixity hash, neither of which the engine's constructor takes.
 mountInspect(document.getElementById("inspect")!, sink.printout, engine, { file: offsets.file, naid: FY1994.naid!, profile: FY1994.profile, sha256: offsets.sha256 }, () => sink.focusInput(), expandPanel);
+} catch (e) {
+  if (!(e instanceof ReconstructionFailure)) console.error(e);
+  renderStartupError(document.getElementById("app") ?? document.body);
+}
+}
+
+void main();

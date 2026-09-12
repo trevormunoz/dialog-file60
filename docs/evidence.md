@@ -129,6 +129,7 @@ rests on. This is the full registry, grouped by status, produced by
 ## chosen
 
 - capability.notice
+- capability.reconstruction_error
 - cast.pacing
 - index.format
 - index.word.hyphen
@@ -146,6 +147,7 @@ rests on. This is the full registry, grouped by status, produced by
 - proto.error.unknown_suffix
 - proto.expand.collation
 - proto.kwic.layout
+- proto.print.item_range
 - proto.print.no_artefact
 - proto.rank.columns
 - proto.select.proximity.unimplemented

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { FsRangeReader } from "../../src/retrieval/reader-node";
 import { FetchRangeReader } from "../../src/retrieval/reader";
+import { ReconstructionFailure } from "../../src/retrieval/failures";
 
 const FIXTURE_PATH = "packages/cris-formatb/fixtures/fy94-9049442.bin";
 const FIXTURE_OFFSET = 6810182; // byte offset of line 83052 in the FY94 corpus
@@ -15,7 +16,11 @@ test("FsRangeReader reads exactly the requested span", async () => {
 
 test("FsRangeReader rejects a read past the end of the file instead of returning NUL-padded bytes", async () => {
   const reader = new FsRangeReader(FIXTURE_PATH);
-  await expect(reader.read(0, fixture.length + 10000)).rejects.toThrow(/short read/);
+  await expect(reader.read(0, fixture.length + 10000)).rejects.toMatchObject({
+    code: "RangeReadFailed",
+    detail: expect.stringContaining("short read"),
+  });
+  await expect(reader.read(0, fixture.length + 10000)).rejects.toBeInstanceOf(ReconstructionFailure);
 });
 
 test("FetchRangeReader rejects a short 206 body", async () => {
@@ -26,7 +31,10 @@ test("FetchRangeReader rejects a short 206 body", async () => {
     new Response(short, { status: 206 })) as typeof fetch;
   try {
     const reader = new FetchRangeReader("https://example.test/corpus.txt");
-    await expect(reader.read(FIXTURE_OFFSET, requested)).rejects.toThrow(/short range response/);
+    await expect(reader.read(FIXTURE_OFFSET, requested)).rejects.toMatchObject({
+      code: "RangeReadFailed",
+      detail: expect.stringContaining("short range response"),
+    });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -37,7 +45,10 @@ test("FetchRangeReader rejects a non-206 response", async () => {
   globalThis.fetch = (async () => new Response(new Uint8Array(0), { status: 200 })) as typeof fetch;
   try {
     const reader = new FetchRangeReader("https://example.test/corpus.txt");
-    await expect(reader.read(FIXTURE_OFFSET, 100)).rejects.toThrow(/range request not honored/);
+    await expect(reader.read(FIXTURE_OFFSET, 100)).rejects.toMatchObject({
+      code: "RangeReadFailed",
+      detail: expect.stringContaining("range request not honored"),
+    });
   } finally {
     globalThis.fetch = originalFetch;
   }

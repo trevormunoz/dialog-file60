@@ -7,6 +7,7 @@ import { registry } from "../../registry";
 registry.get("proto.print.ack");
 registry.get("proto.print.no_artefact");
 registry.get("proto.error.unknown_set");
+registry.get("proto.print.item_range"); // cited here; the reversed-range zero-count normalization below
 
 export async function runPrint(session: DialogSession, cmd: Extract<DialogCommand, { cmd: "print" }>): Promise<OutputLine[]> {
   // An unknown set number is the same simulated error TYPE's own unknown-set branch prints
