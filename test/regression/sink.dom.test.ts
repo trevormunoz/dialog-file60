@@ -11,6 +11,8 @@ import { PaperPause } from "../../src/terminal/display-mode";
 import { DialogSession } from "../../src/dialog/session";
 import { RetrievalEngine, type RangeReader } from "../../src/retrieval/engine";
 import { registry } from "../../src/registry";
+import { makeOnSubmit } from "../../src/app/onSubmit";
+import { ReconstructionFailure } from "../../src/retrieval/failures";
 
 // Paced output (terminal.pacing): print() emits one character per 1000/cps milliseconds
 // through the scheduler the sink was built with. The tests below inject this fake clock
@@ -58,6 +60,21 @@ async function printAll(sink: DomSink, clock: FakeClock, lines: Parameters<DomSi
   const done = sink.print(lines);
   clock.runAll();
   await done;
+}
+
+/** Drive `p` to settlement, interleaving clock ticks with microtask flushes. Needed whenever
+ * the paced print() call the promise is waiting on is itself reached only after one or more
+ * awaits inside `p` (so nothing is on the clock yet at the moment this is called) -- a plain
+ * `clock.runAll()` called synchronously right after starting `p` runs before any of that has
+ * had a chance to schedule anything, and the promise never settles. */
+async function settle(p: Promise<unknown>, clock: FakeClock): Promise<void> {
+  let done = false;
+  p.finally(() => { done = true; });
+  let guard = 0;
+  while (!done) {
+    if (++guard > 100_000) throw new Error("did not settle");
+    if (!clock.step()) await Promise.resolve();
+  }
 }
 
 test("the happy-dom environment mounts a real DOM for DomSink", () => {
@@ -520,4 +537,21 @@ describe("paper mode", () => {
     const span = f.sink.printout.querySelector("span")!;
     expect(span.dataset.echo).toBeUndefined();
   });
+});
+
+test("a category-D failure renders the modern notice, not a ? line, and does not freeze", async () => {
+  const failingReader: RangeReader = { async read() { throw new ReconstructionFailure("RangeReadFailed", { detail: "x" }); } };
+  const session = new DialogSession(new RetrievalEngine(stubOffsets, stubIndexes, failingReader, "fy1991plus"), render);
+  let notice: string | null = "";
+  const showNotice = (n: any) => { notice = n?.kind === "reconstruction" ? "recon" : n?.kind === "capability" ? "cap" : null; };
+  const { clock, sink } = pacedSink();
+  const onSubmit = makeOnSubmit(() => session, sink, showNotice);
+  // reach the reader: open, build a set, then TYPE it.
+  for (const l of ["b 60", "s cy=beltsville"]) { await settle(onSubmit(l), clock); }
+  await settle(onSubmit("t s1/5/1"), clock);
+  expect(notice).toBe("recon");
+  expect(sink.printout.textContent ?? "").not.toMatch(/\?/);
+  // no freeze: a subsequent command still produces output.
+  await settle(onSubmit("ds"), clock);
+  expect(sink.printout.textContent ?? "").toMatch(/S1|SET/i);
 });
