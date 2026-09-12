@@ -2,7 +2,22 @@
 
 **Date:** 2026-09-12
 **Status:** design, revised after a feasibility spike + parallel adversarial
-review (PAR) + interop research. Awaiting review.
+review (PAR) + interop research.
+
+> **2026-09-12 course correction — Phase 1 is now an in-repo tidy, not a repo
+> extraction.** Building the sibling repo and PAR-reviewing it showed the package
+> and `dialog-file60` share an *evidence base* (corpus-pinned `.bin` fixtures
+> woven through ~14 test files; the registry key `formatb.encoding.continuation_0xAC`
+> cited by both the package and `dialog-file60`'s inspect panel + a script). The
+> code separates cleanly; the evidence does not, so a separate repo forces
+> duplicating it (fixture copies + SHA guards, a duplicated registry key, a
+> cross-repo `SOURCES.md` parse). For a 2-person project, before the Gleam rewrite
+> is greenlit, that cost isn't worth it. **Phase 1 now applies the swap-ready
+> interface tidy (cycle-free `bytes.ts`, explicit barrel, value+type surface lock)
+> to `packages/cris-formatb` in place.** The separate-repo extraction is folded
+> into the Phase-2 go/no-go. A standalone seed repo already exists at
+> `~/Code/barcstory/cris-formatb` for that decision. See the plan doc for details.
+> The extraction design below is retained as the Phase-2 reference.
 
 ## Goal
 
