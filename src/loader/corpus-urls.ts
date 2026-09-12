@@ -29,6 +29,7 @@ export function corpusBase(env: UrlEnv): string {
 }
 
 export const offsetsUrl = (env: UrlEnv): string => `${corpusBase(env)}offsets.json`;
+export const reportUrl = (env: UrlEnv): string => `${corpusBase(env)}report.json`;
 export const indexUrl = (code: string, env: UrlEnv): string => `${corpusBase(env)}index/${code}.json`;
 export const corpusUrl = (file: string, env: UrlEnv): string => `${corpusBase(env)}${file}`;
 export const indexUrls = (codes: readonly string[], env: UrlEnv): [string, string][] =>
