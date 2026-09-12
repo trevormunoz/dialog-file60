@@ -75,6 +75,19 @@ Everything else DIALOG documented for File 60 is listed in
 [docs/not-implemented.md](docs/not-implemented.md), with what the
 reconstruction prints when you try it.
 
+## Failure handling
+
+Two different kinds of failure are handled differently, on purpose. Malformed
+archival data -- a Format B record or offset the parser cannot make sense of
+-- is category C: the Format B parser (`packages/cris-formatb/src/record.ts`,
+`packages/cris-formatb/src/offsets.ts`) throws on a structural impossibility,
+and the reader surfaces it as an inspectable diagnostic, not a silent skip. A
+failure in the reconstruction's own machinery -- a missing or invalid loaded
+artifact, a failed byte-range read, or index/manifest drift -- is category D
+(`capability.reconstruction_error`): it renders as one modern notice outside
+the character stream, in every display mode, never as a simulated `?` line,
+because it is a fault in the reconstruction, not a DIALOG response.
+
 ## Copyright and licence
 
 Copyright Trevor Muñoz. No licence is granted yet; the code is published for

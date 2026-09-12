@@ -269,6 +269,14 @@ column of the Rates table in `bl0060_19980423153346.html` for the two KWIC
 rows on 2026-09-11 (the cells read `??`); and the **ERA/COPIES/REDIST/
 ARCHIVE options**.
 
+A reversed or otherwise malformed item range (`PRINT S1/5/35-1`) is not
+documented anywhere DIALOG's own File 60 materials describe PRINT: a
+statement of absence, not found in the repository documentation
+(`docs/*.md`, checked 2026-09-12); not verified against the primary source
+archive. This reconstruction normalizes it to zero items rather than
+throwing, so PRINT's own unconditional `Printed<echo>` acknowledgement still
+prints (`proto.print.item_range`, `chosen`).
+
 LOGOFF is implemented: it ends the session and prints the accounting block
 -- a date/time/user line, connect time at $0.25 a minute, one line per TYPE
 format actually used, one line per PRINT format actually used, and the

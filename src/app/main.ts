@@ -46,6 +46,7 @@ const engine = new RetrievalEngine(offsets, indexes, new FetchRangeReader(corpus
 // fixed clock instead.
 let session = new DialogSession(engine, renderFor);
 registry.get("capability.notice"); // cited here; rendered below, outside the stream
+registry.get("capability.reconstruction_error"); // cited here; same notice element, the "reconstruction" class
 registry.get("terminal.restart"); // cited here; the button is wired below
 const noticeEl = document.getElementById("notice")!;
 const statementEl = document.getElementById("statement")!;
