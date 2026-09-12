@@ -537,6 +537,14 @@ describe("paper mode", () => {
     const span = f.sink.printout.querySelector("span")!;
     expect(span.dataset.echo).toBeUndefined();
   });
+
+  test("a reconstruction notice stays visible in paper mode", () => {
+    const f = chromeFixture();
+    f.notice.classList.add("reconstruction");
+    f.notice.textContent = "This reconstruction could not load part of its data.";
+    f.sink.setDisplayMode("paper", { restored: true });
+    expect(getComputedStyle(f.notice).display).not.toBe("none");
+  });
 });
 
 test("a category-D failure renders the modern notice, not a ? line, and does not freeze", async () => {

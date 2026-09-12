@@ -138,6 +138,9 @@
   :root.paper aside{display:none}
   :root.paper .pane-label{display:none}
   :root.paper #notice{display:none}
+  /* A reconstruction (category-D) failure must remain visible in every display mode: it is a
+     fault in the reconstruction, not period chrome that paper mode may hide. */
+  :root.paper #notice.reconstruction{display:block}
   :root.paper .layout{display:block;min-height:100vh}
   :root.paper .terminal-pane{padding:2.5rem 1rem 3rem;display:flex;flex-direction:column;align-items:center;overflow:visible}
   /* The sheet is an object, not a region: a white rectangle, its own edges the 80-column
