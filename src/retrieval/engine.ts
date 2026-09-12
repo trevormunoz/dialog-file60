@@ -6,6 +6,7 @@ import type { WordIndexSource, PositionalSource } from "./words";
 import { registry } from "../registry";
 export type { RangeReader } from "./reader";
 import type { RangeReader } from "./reader";
+import { ReconstructionFailure } from "./failures";
 import {
   collate, prefixPostings as prefixPostingsHelper, sortKey as sortKeyHelper, sortOrdinals as sortOrdinalsHelper,
   preparePositional as preparePositionalHelper, positionsOf as positionsOfHelper, evalProx,
@@ -288,9 +289,12 @@ export class RetrievalEngine {
   async record(ordinal: number): Promise<LogicalRecord> {
     const rec = this.offsets.records[ordinal];
     if (!rec) {
-      throw new Error(`no record at ordinal ${ordinal} in ${this.offsets.file} (${this.offsets.records.length} records)`);
+      throw new ReconstructionFailure("CorpusRangeInvalid", { url: this.offsets.file, detail: `no record at ordinal ${ordinal} (${this.offsets.records.length} records)` });
     }
     const [an, firstLine, lastLine] = rec;
+    if (lastLine < firstLine) {
+      throw new ReconstructionFailure("CorpusRangeInvalid", { url: this.offsets.file, detail: `inverted offsets for ${an}: firstLine ${firstLine} > lastLine ${lastLine}` });
+    }
     const offset = lineToOffset(firstLine);
     const length = (lastLine - firstLine + 1) * LINE_BYTES;
     const bytes = await this.reader.read(offset, length);
