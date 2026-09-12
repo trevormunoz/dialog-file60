@@ -11,6 +11,8 @@ import { PaperPause } from "../../src/terminal/display-mode";
 import { DialogSession } from "../../src/dialog/session";
 import { RetrievalEngine, type RangeReader } from "../../src/retrieval/engine";
 import { registry } from "../../src/registry";
+import { makeOnSubmit } from "../../src/app/onSubmit";
+import { ReconstructionFailure } from "../../src/retrieval/failures";
 
 // Paced output (terminal.pacing): print() emits one character per 1000/cps milliseconds
 // through the scheduler the sink was built with. The tests below inject this fake clock
@@ -58,6 +60,21 @@ async function printAll(sink: DomSink, clock: FakeClock, lines: Parameters<DomSi
   const done = sink.print(lines);
   clock.runAll();
   await done;
+}
+
+/** Drive `p` to settlement, interleaving clock ticks with microtask flushes. Needed whenever
+ * the paced print() call the promise is waiting on is itself reached only after one or more
+ * awaits inside `p` (so nothing is on the clock yet at the moment this is called) -- a plain
+ * `clock.runAll()` called synchronously right after starting `p` runs before any of that has
+ * had a chance to schedule anything, and the promise never settles. */
+async function settle(p: Promise<unknown>, clock: FakeClock): Promise<void> {
+  let done = false;
+  p.finally(() => { done = true; });
+  let guard = 0;
+  while (!done) {
+    if (++guard > 100_000) throw new Error("did not settle");
+    if (!clock.step()) await Promise.resolve();
+  }
 }
 
 test("the happy-dom environment mounts a real DOM for DomSink", () => {
@@ -520,4 +537,65 @@ describe("paper mode", () => {
     const span = f.sink.printout.querySelector("span")!;
     expect(span.dataset.echo).toBeUndefined();
   });
+
+  test("a reconstruction notice stays visible in paper mode", () => {
+    const f = chromeFixture();
+    f.notice.classList.add("reconstruction");
+    f.notice.textContent = "This reconstruction could not load part of its data.";
+    f.sink.setDisplayMode("paper", { restored: true });
+    expect(getComputedStyle(f.notice).display).not.toBe("none");
+  });
+});
+
+test("a category-D failure renders the modern notice, not a ? line, and does not freeze", async () => {
+  const failingReader: RangeReader = { async read() { throw new ReconstructionFailure("RangeReadFailed", { detail: "x" }); } };
+  const session = new DialogSession(new RetrievalEngine(stubOffsets, stubIndexes, failingReader, "fy1991plus"), render);
+  let notice: string | null = "";
+  const showNotice = (n: any) => { notice = n?.kind === "reconstruction" ? "recon" : n?.kind === "capability" ? "cap" : null; };
+  const { clock, sink } = pacedSink();
+  const onSubmit = makeOnSubmit(() => session, sink, showNotice);
+  // reach the reader: open, build a set, then TYPE it.
+  for (const l of ["b 60", "s cy=beltsville"]) { await settle(onSubmit(l), clock); }
+  await settle(onSubmit("t s1/5/1"), clock);
+  expect(notice).toBe("recon");
+  expect(sink.printout.textContent ?? "").not.toMatch(/\?/);
+  // no freeze: a subsequent command still produces output.
+  await settle(onSubmit("ds"), clock);
+  expect(sink.printout.textContent ?? "").toMatch(/S1|SET/i);
+});
+
+// The test above drives the freeze fix through makeOnSubmit, which never rejects (Component
+// 3's try/catch always returns normally) -- so it never actually exercises sink.ts's own
+// try/finally (runSubmit, sink.ts:118-128). This one uses a raw onSubmit that rejects, and
+// drives it through the real Enter/keydown path (the same path chromeFixture's tests use),
+// to prove runSubmit itself resets `submitting` on a throw rather than relying on the caller
+// to catch. `runSubmit` is private; vi.spyOn on the real implementation (not a mock
+// replacement) both drives it through the actual keydown handler and hands back the promise
+// it returns, so the rejection can be awaited without going unhandled.
+test("DomSink.runSubmit resets `submitting` after a rejecting onSubmit, so a second submission still runs", async () => {
+  const seen: string[] = [];
+  const onSubmit = async (l: string): Promise<void> => {
+    seen.push(l);
+    if (l === "first") throw new Error("boom");
+  };
+  const { root, sink } = pacedSink(onSubmit);
+  const runSubmit = vi.spyOn(sink as unknown as { runSubmit(l: string): Promise<void> }, "runSubmit");
+  const input = root.querySelector("textarea")!;
+
+  input.value = "first";
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
+  // Attached in the same synchronous turn runSubmit was invoked in, so the rejection is never
+  // unhandled; awaiting it lets the scoped try/finally (sink.ts:122-126) run to completion.
+  await runSubmit.mock.results[0]!.value.catch(() => {});
+
+  input.value = "second";
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
+  // If `submitting` had stayed true after the first submission's throw, this second Enter
+  // would have queued into pendingLines instead of calling runSubmit again -- the terminal
+  // would be wedged, exactly as sink.ts:118-128's comment describes.
+  expect(runSubmit).toHaveBeenCalledTimes(2);
+  await runSubmit.mock.results[1]!.value;
+
+  expect(seen).toEqual(["first", "second"]);
+  expect(sink.printout.textContent).toBe("?first\n?second\n");
 });

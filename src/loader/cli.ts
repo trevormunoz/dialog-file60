@@ -50,6 +50,7 @@ for (const [code, byShard] of Object.entries(positions)) {
   if (!("_" in byShard)) writeFileSync(`${dir}/_.json`, JSON.stringify({}));
 }
 writeFileSync("public/corpus/report.json", JSON.stringify(report, null, 1));
+writeFileSync("public/corpus/phrase-counts.json", JSON.stringify({ phraseTerms: report.phraseTerms }));
 console.log(
   `records ${offsets.records.length}; composite mismatches ${report.compositeMismatches.length}; ` +
   `bad lines ${report.badLines}; orphan continuations ${report.orphanContinuations}; ` +
@@ -57,6 +58,9 @@ console.log(
 );
 console.log(
   "word terms: " + Object.entries(report.wordTerms).map(([c, n]) => `${c} ${n}`).join(", ")
+);
+console.log(
+  "phrase terms: " + Object.entries(report.phraseTerms).map(([c, n]) => `${c} ${n}`).join(", ")
 );
 console.log(
   `positional postings (computed for ${POSITIONAL_CODES.join(", ")} only -- decision (a), see ` +

@@ -21,7 +21,7 @@ import { createHash } from "node:crypto";
 import { checkFixity, type Fixity } from "../src/loader/fixity";
 import { PHRASE_FIELDS } from "../src/loader/corpus-format";
 import { WORD_CODES, POSITIONAL_CODES, shardOf } from "../src/loader/words";
-import { wordDir, MERGED_WORD_DIR } from "../src/loader/corpus-urls";
+import { wordDir, MERGED_WORD_DIR, phraseCountsUrl } from "../src/loader/corpus-urls";
 import { registry } from "../src/registry";
 
 const CORPUS_FILE = "RG164.CRIS.FY94.txt";
@@ -79,12 +79,44 @@ export async function verifyRemote(baseUrl: string, opts: VerifyOpts = {}): Prom
   }
 
   const indexes: RemoteReport["indexes"] = [];
+  const indexTermCounts: Record<string, number> = {};
   for (const url of [`${base}offsets.json`, ...PHRASE_FIELDS.map(c => `${base}index/${c}.json`)]) {
     const res = await f(url);
     if (!res.ok) throw new Error(`${url.slice(base.length)}: HTTP ${res.status} ${res.statusText}`);
     const body = await res.arrayBuffer();
     const code = url.endsWith("offsets.json") ? "offsets" : url.slice(-7, -5);
-    if (code !== "offsets") indexes.push({ code, status: res.status, bytes: body.byteLength });
+    if (code !== "offsets") {
+      indexes.push({ code, status: res.status, bytes: body.byteLength });
+      const parsed = JSON.parse(new TextDecoder().decode(body)) as { terms: Record<string, unknown> };
+      indexTermCounts[code] = Object.keys(parsed.terms).length;
+    }
+  }
+
+  // The deploy-time counterpart of the runtime's checkPhraseManifest: a stale or partial
+  // deploy where phrase-counts.json's phraseTerms disagrees with what the phrase indexes
+  // actually hold must fail here, not at first boot against a live phrase-counts.json the
+  // runtime hard-fails on. Same phraseCountsUrl() helper main.ts uses, same base the rest of
+  // this script already resolved every other URL against.
+  const phraseCountsFullUrl = phraseCountsUrl({ VITE_CORPUS_BASE_URL: base });
+  const phraseCountsRes = await f(phraseCountsFullUrl);
+  if (!phraseCountsRes.ok) {
+    throw new Error(`${phraseCountsFullUrl.slice(base.length)}: HTTP ${phraseCountsRes.status} ${phraseCountsRes.statusText}`);
+  }
+  const phraseCounts = JSON.parse(await phraseCountsRes.text()) as { phraseTerms?: Record<string, number> };
+  if (!phraseCounts.phraseTerms || typeof phraseCounts.phraseTerms !== "object") {
+    throw new Error(`${phraseCountsFullUrl.slice(base.length)}: missing phraseTerms`);
+  }
+  for (const code of Object.keys(indexTermCounts)) {
+    const expected = phraseCounts.phraseTerms[code];
+    const actual = indexTermCounts[code];
+    if (expected === undefined) {
+      throw new Error(`${phraseCountsFullUrl.slice(base.length)}: phraseTerms has no entry for index/${code}.json`);
+    }
+    if (actual !== expected) {
+      throw new Error(
+        `index/${code}.json: ${actual} terms loaded, ${phraseCountsFullUrl.slice(base.length)} phraseTerms expected ${expected}`,
+      );
+    }
   }
 
   // The word indexes are too many small files to list one by

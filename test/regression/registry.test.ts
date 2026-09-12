@@ -294,3 +294,8 @@ test("proto.prompt.spacing keeps its measured no-space value and records the 197
   expect(e.value).toBe("");
   expect(e.conflicts).toMatch(/typeset/);
 });
+
+test("registers the category-D reconstruction-error channel and the PRINT item-range choice as chosen", () => {
+  expect(registry.get("capability.reconstruction_error").value).toBeDefined();
+  expect(registry.get("proto.print.item_range").value).toBeDefined();
+});

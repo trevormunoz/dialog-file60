@@ -38,7 +38,14 @@ test("every fetched URL is built by the corpus-urls helpers", () => {
   expect(main).toMatch(/corpusUrl\(offsets\.file, import\.meta\.env\)/);
 });
 
+// main.ts now loads every artifact through fetchJsonArtifact (src/retrieval/artifact.ts),
+// which is where res.ok is checked and the URL + HTTP status are attached to a typed
+// ArtifactUnavailable -- so a failed load still names the URL and status rather than
+// surfacing an opaque JSON parse error. The behaviour moved out of main.ts's old
+// `fetchJson` helper into that shared, directly-tested validator (test/regression/artifact.test.ts).
+const artifact = readFileSync("src/retrieval/artifact.ts", "utf8");
 test("a failed load names the URL and the status rather than a JSON parse error", () => {
-  expect(main).toMatch(/async function fetchJson/);
-  expect(main).toMatch(/res\.ok/);
+  expect(main).toMatch(/fetchJsonArtifact\(/);
+  expect(artifact).toMatch(/res\.ok/);
+  expect(artifact).toMatch(/ArtifactUnavailable/);
 });

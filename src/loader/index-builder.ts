@@ -110,7 +110,7 @@ export function buildIndexes(bytes: Uint8Array, file: string, positionalCodes: r
   const positions: Record<string, PositionalIndex> = Object.fromEntries(WORD_CODES.map(c => [c, {}]));
   const report: Report = {
     compositeMismatches: [], badLines, orphanContinuations: 0, gcMismatches: [], scSnMismatches: [],
-    wordTerms: {}, wordPostings: {}, posPostings: {}, posBytes: {},
+    wordTerms: {}, wordPostings: {}, posPostings: {}, posBytes: {}, phraseTerms: {},
   };
   // Records one occurrence's packed position under (code, term)'s shard, for the given record
   // ordinal. A record can carry more than one occurrence of a term (a repeating field, or the
@@ -170,6 +170,7 @@ export function buildIndexes(bytes: Uint8Array, file: string, positionalCodes: r
     report.posPostings[code] = postings;
     report.posBytes[code] = posBytes;
   }
+  for (const code of PHRASE_FIELDS) report.phraseTerms[code] = Object.keys(indexes[code]!.terms).length;
   // The merged Basic Index term list: every term any of the four codes carries, paired with
   // the true union count of its postings across all four -- the same figure a SELECT on the
   // term's E-number retrieves, built once here rather than recomputed in the browser.

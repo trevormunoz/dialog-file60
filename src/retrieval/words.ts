@@ -1,5 +1,6 @@
 import { wordShardUrl, wordTermsUrl, mergedWordTermsUrl, posShardUrl, type UrlEnv } from "../loader/corpus-urls";
 import type { WordIndex, PositionalShard } from "../loader/corpus-format";
+import { fetchJsonArtifact, isWordShard, isTermList, isPositionalShard } from "./artifact";
 
 /** One suffix code's word index, loaded a shard at a time. `shard` returns the term ->
  * postings map for one first-character shard (src/loader/words.ts's shardOf); `terms`
@@ -21,16 +22,13 @@ export interface WordIndexSource {
 export class FetchWordIndex implements WordIndexSource {
   constructor(private env: UrlEnv) {}
   async shard(code: string, shard: string): Promise<Record<string, number[]>> {
-    const res = await fetch(wordShardUrl(code, shard, this.env));
-    return (await res.json()) as Record<string, number[]>;
+    return fetchJsonArtifact(wordShardUrl(code, shard, this.env), isWordShard);
   }
   async terms(code: string): Promise<[string, number][]> {
-    const res = await fetch(wordTermsUrl(code, this.env));
-    return (await res.json()) as [string, number][];
+    return fetchJsonArtifact(wordTermsUrl(code, this.env), isTermList);
   }
   async mergedTerms(): Promise<[string, number][]> {
-    const res = await fetch(mergedWordTermsUrl(this.env));
-    return (await res.json()) as [string, number][];
+    return fetchJsonArtifact(mergedWordTermsUrl(this.env), isTermList);
   }
 }
 
@@ -49,8 +47,7 @@ export interface PositionalSource {
 export class FetchPositional implements PositionalSource {
   constructor(private env: UrlEnv) {}
   async positions(code: string, shard: string): Promise<PositionalShard> {
-    const res = await fetch(posShardUrl(code, shard, this.env));
-    return (await res.json()) as PositionalShard;
+    return fetchJsonArtifact(posShardUrl(code, shard, this.env), isPositionalShard) as Promise<PositionalShard>;
   }
 }
 

@@ -2289,5 +2289,17 @@
       }
     ],
     "note": "This build carries DE only as a word index (WORD_FIELDS['/DE']), not the phrase index 2001 says DE also has elsewhere -- no phrase index for DE is built here, so RANK DE refuses in this reconstruction with this key's word-field message (src/dialog/rank.ts's isWordIndexedField recognizes '/DE' in WORD_CODES), not because DE was special-cased. ID carries no index of either kind in this build (not in WORD_FIELDS or PHRASE_PREFIX_TAGS), so RANK ID refuses too, but with the generic unknown-field message instead (proto.error.unknown_field, the same key SORT already uses for a field outside its own documented list) -- RetrievalEngine.rankValues finds no phrase index for it and isWordIndexedField says it is not a word-indexed field either, so it falls to that other, more generic refusal. PO refuses with this same word-field message for a third, different reason: isWordIndexedField special-cases field === 'PO' (it is not in WORD_CODES), because this build carries PO only via its PF/PI word decomposition (WORD_FIELDS['PO=']) and has no rankable phrase index for it -- the Blue Sheet lists PO among rankable fields, but nothing this build built for PO can be ranked, so the refusal is consistent with this build even though it disagrees with that Blue Sheet listing."
+  },
+  "capability.reconstruction_error": {
+    "value": "one modern notice, outside the character stream, kept visible in every display mode",
+    "status": "chosen",
+    "claim": "A category-D reconstruction failure (a missing or invalid loaded artifact, a byte-range read failure, or index/manifest drift) renders as a modern notice outside the character stream, never as a simulated `?` line; DIALOG printed no such notice.",
+    "note": "Category-D failures (src/retrieval/failures.ts's ReconstructionFailureCode: ArtifactUnavailable, ArtifactInvalid, IndexInconsistent, RangeReadFailed, CorpusRangeInvalid) are a fault in the reconstruction itself, not a historical DIALOG response, so they are never rendered into the simulated character stream the way proto.error.* lines are. The notice element carries the `reconstruction` class (src/app/main.ts's showNotice), which index.html's paper-mode CSS keeps visible even when paper mode hides the rest of the notice bar -- a category-D failure is a fault in the reconstruction, not period chrome a reader can dismiss by switching display mode."
+  },
+  "proto.print.item_range": {
+    "value": "a reversed or otherwise malformed item range counts zero items and PRINT still acknowledges",
+    "status": "chosen",
+    "claim": "PRINT given a reversed item range (e.g. \"35-1\") normalizes it to zero items rather than throwing or refusing, and still prints its unconditional `Printed<echo>` acknowledgement.",
+    "note": "not found in the repository documentation (`docs/*.md`, checked 2026-09-12); not verified against the primary source archive. src/dialog/commands/print.ts: parseItems (src/dialog/parser.ts) can refuse a reversed range and return no items for it; counting zero items for that case, rather than throwing, keeps PRINT's own acknowledgement line -- unconditional in every source held -- from failing on a request LOGOFF simply prices at nothing."
   }
 }

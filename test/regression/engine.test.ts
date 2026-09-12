@@ -49,7 +49,16 @@ test("record() reads bytes by offset and parses", async () => {
 });
 
 test("record() throws a named error for an out-of-range ordinal", async () => {
-  await expect(engine.record(99)).rejects.toThrow(/no record at ordinal/);
+  await expect(engine.record(99)).rejects.toMatchObject({
+    code: "CorpusRangeInvalid",
+    detail: expect.stringContaining("no record at ordinal"),
+  });
+});
+
+test("record() rejects an inverted offset pair as CorpusRangeInvalid", async () => {
+  const offsets = { file: "f", sha256: "x", records: [["A", 10, 5] as [string, number, number]] };
+  const eng = new RetrievalEngine(offsets, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus");
+  await expect(eng.record(0)).rejects.toMatchObject({ code: "CorpusRangeInvalid" });
 });
 
 // A word SELECT's expression, taken from parse()'s own output rather than hand-built: the
@@ -119,6 +128,41 @@ test("search() throws when a word expression is evaluated without a prior prepar
   const expr = parseExpression("peach/ti")!;
   const unprepared = new RetrievalEngine(offsets, indexes, reader, "fy1991plus", new MemoryWordIndex(words));
   expect(() => unprepared.search(expr, new Map())).toThrow("prepare() was not called for /TI:P");
+});
+
+// A WordIndexSource whose shard omits a term its term list claims exists = drift.
+function driftedSource(): any {
+  return {
+    async shard() { return {}; },                       // shard is empty
+    async terms() { return [["APPLE", 1]] as [string, number][]; }, // but term list says APPLE exists
+    async mergedTerms() { return []; },
+  };
+}
+it("word search: term in the term list but missing from its shard throws IndexInconsistent", async () => {
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", driftedSource());
+  const expr = { kind: "word", term: "APPLE", codes: ["/TI"], echo: "APPLE/TI" } as any;
+  await eng.prepare(expr);
+  expect(() => eng.search(expr, new Map())).toThrowError(/reconstruction could not load/i);
+});
+it("word search: term absent from both shard and term list is a genuine zero", async () => {
+  const genuine = { async shard() { return {}; }, async terms() { return [] as [string, number][]; }, async mergedTerms() { return []; } } as any;
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", genuine);
+  const expr = { kind: "word", term: "ZZZZ", codes: ["/TI"], echo: "ZZZZ/TI" } as any;
+  await eng.prepare(expr);
+  const r = eng.search(expr, new Map());
+  expect(r.ordinals).toEqual([]);
+  expect(r.perTerm[0]?.postings).toBe(0);
+});
+
+it("termOrdinals: term in the term list but missing from its shard throws IndexInconsistent", async () => {
+  const drifted = { async shard() { return {}; }, async terms() { return [["APPLE", 1]] as [string, number][]; }, async mergedTerms() { return []; } } as any;
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", drifted);
+  await expect(eng.termOrdinals("/TI", "APPLE")).rejects.toMatchObject({ code: "IndexInconsistent" });
+});
+it("termOrdinals: term absent from both shard and term list is a genuine zero", async () => {
+  const genuine = { async shard() { return {}; }, async terms() { return [] as [string, number][]; }, async mergedTerms() { return []; } } as any;
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", genuine);
+  expect(await eng.termOrdinals("/TI", "ZZZZ")).toEqual([]);
 });
 
 // sortKey's own comment used to say it returns the record's first value, but it actually
