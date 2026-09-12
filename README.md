@@ -77,16 +77,21 @@ reconstruction prints when you try it.
 
 ## Failure handling
 
-Two different kinds of failure are handled differently, on purpose. Malformed
-archival data -- a Format B record or offset the parser cannot make sense of
--- is category C: the Format B parser (`packages/cris-formatb/src/record.ts`,
-`packages/cris-formatb/src/offsets.ts`) throws on a structural impossibility,
-and the reader surfaces it as an inspectable diagnostic, not a silent skip. A
-failure in the reconstruction's own machinery -- a missing or invalid loaded
-artifact, a failed byte-range read, or index/manifest drift -- is category D
-(`capability.reconstruction_error`): it renders as one modern notice outside
-the character stream, in every display mode, never as a simulated `?` line,
-because it is a fault in the reconstruction, not a DIALOG response.
+Two different kinds of failure are handled differently, on purpose. A
+structural impossibility in the Format B parser -- a buffer whose byte length
+is not a whole number of physical records, or a record span that falls
+outside the supplied buffer -- is a reconstruction failure, category D, and
+throws (`packages/cris-formatb/src/record.ts`,
+`packages/cris-formatb/src/offsets.ts`). Malformed archival data that can
+still be read past -- an orphan continuation line, a bad or missing CRLF, a
+field mismatch -- is category C: it is not thrown but accumulated as an
+inspectable diagnostic in `report.json` (`badLines`, `orphanContinuations`,
+the `*Mismatches`), not a silent skip. At runtime, category D also has its
+own out-of-stream notice channel (`capability.reconstruction_error`): a
+failed, invalid, or empty loaded artifact, a failed byte-range read, or
+index/manifest drift renders as one modern notice outside the character
+stream, in every display mode, never as a simulated `?` line, because it is a
+fault in the reconstruction, not a DIALOG response.
 
 ## Copyright and licence
 

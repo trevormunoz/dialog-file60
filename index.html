@@ -122,6 +122,10 @@
      prints this way" -- see src/inspect/panel.ts. */
   .card .gloss{color:var(--muted);font-size:11px;margin-top:2px}
   p.modern{color:var(--muted);font-style:italic;font-size:11px}
+  /* The whole-app startup failure panel (renderStartupError): modern chrome, deliberately
+     plain -- not a DIALOG banner or `?` line, just enough structure to read as intentional. */
+  .reconstruction-error{max-width:60ch;margin:2.5rem auto;padding:1rem 1.25rem;color:var(--ink);font:14px/1.5 var(--mono);border:1px solid var(--rule);border-radius:6px;background:var(--card-bg)}
+  .reconstruction-error p{margin:0}
   /* status pills: one class per Status union member (src/registry/index.ts) */
   .pill{display:inline-block;font:9.5px var(--sans);text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:8px;color:#fff}
   .pill-documented{background:#3f7d4f}
@@ -178,6 +182,9 @@
     aside{display:none}
     .pane-label{display:none}
     #notice{display:none}
+    /* A reconstruction (category-D) failure must remain visible under print too: it is a
+       fault in the reconstruction, not period chrome that print may hide. */
+    #notice.reconstruction{display:block}
     .layout{display:block}
     .terminal-pane{padding:2.5rem 1rem 3rem;display:flex;flex-direction:column;align-items:center}
     #sheet{width:calc(80ch + 6.5rem);background:var(--ground);color:var(--ink);position:relative;padding:2.25rem 1.75rem 2rem 4.75rem;background-image:repeating-linear-gradient(to bottom, transparent 0 .55rem, var(--sprocket) .55rem 1.05rem, transparent 1.05rem 1.6rem);background-size:.6rem 1.6rem;background-repeat:repeat-y;background-position:1.15rem 0}

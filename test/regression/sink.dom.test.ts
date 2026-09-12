@@ -563,3 +563,39 @@ test("a category-D failure renders the modern notice, not a ? line, and does not
   await settle(onSubmit("ds"), clock);
   expect(sink.printout.textContent ?? "").toMatch(/S1|SET/i);
 });
+
+// The test above drives the freeze fix through makeOnSubmit, which never rejects (Component
+// 3's try/catch always returns normally) -- so it never actually exercises sink.ts's own
+// try/finally (runSubmit, sink.ts:118-128). This one uses a raw onSubmit that rejects, and
+// drives it through the real Enter/keydown path (the same path chromeFixture's tests use),
+// to prove runSubmit itself resets `submitting` on a throw rather than relying on the caller
+// to catch. `runSubmit` is private; vi.spyOn on the real implementation (not a mock
+// replacement) both drives it through the actual keydown handler and hands back the promise
+// it returns, so the rejection can be awaited without going unhandled.
+test("DomSink.runSubmit resets `submitting` after a rejecting onSubmit, so a second submission still runs", async () => {
+  const seen: string[] = [];
+  const onSubmit = async (l: string): Promise<void> => {
+    seen.push(l);
+    if (l === "first") throw new Error("boom");
+  };
+  const { root, sink } = pacedSink(onSubmit);
+  const runSubmit = vi.spyOn(sink as unknown as { runSubmit(l: string): Promise<void> }, "runSubmit");
+  const input = root.querySelector("textarea")!;
+
+  input.value = "first";
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
+  // Attached in the same synchronous turn runSubmit was invoked in, so the rejection is never
+  // unhandled; awaiting it lets the scoped try/finally (sink.ts:122-126) run to completion.
+  await runSubmit.mock.results[0]!.value.catch(() => {});
+
+  input.value = "second";
+  input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", cancelable: true }));
+  // If `submitting` had stayed true after the first submission's throw, this second Enter
+  // would have queued into pendingLines instead of calling runSubmit again -- the terminal
+  // would be wedged, exactly as sink.ts:118-128's comment describes.
+  expect(runSubmit).toHaveBeenCalledTimes(2);
+  await runSubmit.mock.results[1]!.value;
+
+  expect(seen).toEqual(["first", "second"]);
+  expect(sink.printout.textContent).toBe("?first\n?second\n");
+});
