@@ -203,7 +203,7 @@ document.addEventListener("keydown", (e) => {
 // the corpus's own fixity hash, neither of which the engine's constructor takes.
 mountInspect(document.getElementById("inspect")!, sink.printout, engine, { file: offsets.file, naid: FY1994.naid!, profile: FY1994.profile, sha256: offsets.sha256 }, () => sink.focusInput(), expandPanel);
 } catch (e) {
-  if (!(e instanceof ReconstructionFailure)) console.error(e);
+  console.error(e instanceof ReconstructionFailure ? `Reconstruction failure [${e.code}]: ${e.detail ?? ""}` : e);
   renderStartupError(document.getElementById("app") ?? document.body);
 }
 }
