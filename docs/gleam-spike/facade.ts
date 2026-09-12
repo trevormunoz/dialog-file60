@@ -170,6 +170,16 @@ export function parseRecord(
   profile: Profile,
   bufferBaseLine: number,
 ): LogicalRecord {
+  // Parity with record.ts:44-50 — a span falling outside the buffer throws there;
+  // reproduce it at the boundary so the oracle matches. (record.ts's other throw,
+  // the missing-bufferBaseLine size check, is unreachable here: the Gleam engine
+  // makes bufferBaseLine mandatory, so the facade always supplies it.)
+  const start = (span.firstLine - bufferBaseLine) * LINE_BYTES;
+  if (start < 0 || start + span.length > bytes.length)
+    throw new Error(
+      `span lines ${span.firstLine}-${span.lastLine} (an ${span.an || "?"}) fall outside the buffer: ` +
+        `buffer starts at line ${bufferBaseLine} and is ${bytes.length} bytes`,
+    );
   const gSpan = makeSpan(
     span.firstLine,
     span.lastLine,

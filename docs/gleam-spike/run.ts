@@ -108,5 +108,13 @@ check(
   thrown(() => facadeScan(bad, 1)),
 );
 
+// parseRecord: a span that falls outside the buffer throws (record.ts:44-50).
+const outOfRange = { firstLine: 10000, lastLine: 10000, offset: (10000 - 1) * 82, length: 82, an: "ZZ" };
+check(
+  "throw on span outside buffer",
+  thrown(() => oracleParse(synthetic, outOfRange, "synthetic", "fy1991plus", 1)),
+  thrown(() => facadeParse(synthetic, outOfRange, "synthetic", "fy1991plus", 1)),
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

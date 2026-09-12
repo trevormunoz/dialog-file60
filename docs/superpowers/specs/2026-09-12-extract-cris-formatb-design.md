@@ -209,6 +209,19 @@ intentionally identified and tested.
   diagnostics richer than `bad_lines: Int` — valuable for DIALOG as inspectable
   evidence — but expose `bad_lines` at the compatibility facade only if it
   preserves semantics. (Not for the spike; a domain-implementation consideration.)
+- **Strict-parity hazards (review-found).** Two traps the rewrite must honor:
+  (a) **Trim whitespace set.** JS `.trimEnd()`/`.trim()` strip a *different* set
+  than Gleam's `string.trim_end`/`trim` — JS strips U+00A0 (NBSP, the Format B
+  separator lead byte) and not U+0085 (NEL); Gleam does the reverse. The engine
+  must match JS's set, not reach for the stdlib. The spike fixes this with a
+  pure-Gleam trim over the seven JS-whitespace characters reachable in Latin-1
+  (codepoints ≤ U+00FF), no FFI; a harness case with an NBSP at the trim edge
+  guards it. (b) **Guards are throws at the boundary.** The out-of-range/malformed
+  guards `offsets.ts:36` and `record.ts:44-50` express as throws are reproduced at
+  the JS facade (where the public contract lives, and where input is validated
+  before the scanner sees it), keeping the Gleam engine pure. `record.ts`'s
+  missing-`bufferBaseLine` size check is not reproduced: the engine makes
+  `buffer_base_line` mandatory, so the facade always supplies it.
 
 ### Do NOT over-functionalize
 
