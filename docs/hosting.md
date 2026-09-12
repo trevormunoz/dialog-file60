@@ -22,6 +22,9 @@ the loader grew from 6 phrase prefixes to 29, go under the same prefix):
 ```
 v1/RG164.CRIS.FY94.txt   277,539,004 bytes, byte-identical to data/RG164.CRIS.FY94.txt
 v1/offsets.json              933,038 bytes
+v1/phrase-counts.json        a small per-phrase-code term-count manifest the app
+                             fetches at startup to detect a drifted/empty phrase
+                             index
 v1/index/<PREFIX>.json       one per phrase prefix, 29 in all (every documented
                              prefix but SP, which has no values in this corpus);
                              AN 602,533, CY 204,370, DS 197,223, IN 825,444,
@@ -45,7 +48,10 @@ v1/pos/<CODE>/<A-Z,0-9,_>.json      the positional index shards, /TI and /DE onl
 ```
 
 `public/corpus/report.json` (a derived QC artifact that no reader or the app
-ever fetches) is deliberately not uploaded.
+ever fetches) is deliberately not uploaded. `phrase-counts.json` is a small
+slice of that same report (just `phraseTerms`), written as its own artifact
+and uploaded, unlike report.json, because the app's startup manifest check
+needs it.
 
 **Uploading.** `scripts/upload-corpus.sh` puts each object with `wrangler r2
 object put <bucket>/<key> --file <path> --remote --content-type ... --cache-control

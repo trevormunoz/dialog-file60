@@ -6,7 +6,7 @@ import { renderFor } from "../dialog/render5";
 import { DomSink, type DisplayMode } from "../terminal/sink";
 import { reconstructionProse, setStatementHtml, sheetHeaderFragment, BAR_HEADING } from "./statement";
 import { PHRASE_FIELDS, indexUrls, offsetsUrl, corpusUrl, type Offsets, type Index } from "../loader/corpus-format";
-import { reportUrl } from "../loader/corpus-urls";
+import { phraseCountsUrl } from "../loader/corpus-urls";
 import { mountInspect } from "../inspect/panel";
 import { registry } from "../registry";
 import { FY1994 } from "./corpora";
@@ -31,8 +31,8 @@ try {
 const offsets = await fetchJsonArtifact<Offsets>(offsetsUrl(import.meta.env), isOffsets);
 const indexes: Record<string, Index> = {};
 for (const [c, url] of indexUrls(PHRASE_FIELDS, import.meta.env)) indexes[c] = await fetchJsonArtifact(url, isIndex);
-const report = await fetchJsonArtifact(reportUrl(import.meta.env), isPhraseCounts);
-checkPhraseManifest(indexes, report.phraseTerms);
+const counts = await fetchJsonArtifact(phraseCountsUrl(import.meta.env), isPhraseCounts);
+checkPhraseManifest(indexes, counts.phraseTerms);
 // The positional source is not yet read by anything this milestone ships -- Task 8's
 // proximity operators are its first reader -- but it is wired in now, alongside FetchWordIndex,
 // so that landing it later is not a RetrievalEngine constructor-shape change.

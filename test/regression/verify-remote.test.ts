@@ -62,13 +62,13 @@ const wordUrls = WORD_CODES.flatMap(code => {
 const posUrls = POSITIONAL_CODES.map(code =>
   [`https://corpus.example/v1/pos/${wordDir(code)}/A.json`, '{"A":{"0":[9]}}'] as [string, string],
 );
-// Every phrase index stub above has zero terms, so a matching report.json records zero for
-// every code too -- the same "manifest silent" shape checkPhraseManifest's own doc comment
+// Every phrase index stub above has zero terms, so a matching phrase-counts.json records zero
+// for every code too -- the same "manifest silent" shape checkPhraseManifest's own doc comment
 // treats as a legitimate zero, not a mismatch.
 const matchingPhraseTerms = Object.fromEntries(INDEX_CODES.map(c => [c, 0]));
 const okIndexes = Object.fromEntries([
   ["https://corpus.example/v1/offsets.json", '{"file":"RG164.CRIS.FY94.txt","sha256":"x","records":[]}'],
-  ["https://corpus.example/v1/report.json", JSON.stringify({ phraseTerms: matchingPhraseTerms })],
+  ["https://corpus.example/v1/phrase-counts.json", JSON.stringify({ phraseTerms: matchingPhraseTerms })],
   ...INDEX_CODES.map(c => [`https://corpus.example/v1/index/${c}.json`, `{"code":"${c}","terms":{}}`]),
   ...wordUrls,
   [`https://corpus.example/v1/word/${MERGED_WORD_DIR}/terms.json`, '[["A",1]]'],
@@ -188,20 +188,20 @@ test("the default expected fixity is the registry's, not a hand-typed hash", asy
 });
 
 // The deploy-time counterpart of checkPhraseManifest (src/retrieval/manifest.ts): the runtime
-// hard-fails when a loaded phrase index disagrees with report.json's phraseTerms, so this
-// catches that disagreement before it ships instead of at first boot.
-test("a live report.json missing phraseTerms fails verify", async () => {
+// hard-fails when a loaded phrase index disagrees with phrase-counts.json's phraseTerms, so
+// this catches that disagreement before it ships instead of at first boot.
+test("a live phrase-counts.json missing phraseTerms fails verify", async () => {
   const missingPhraseTerms = { ...okIndexes };
-  missingPhraseTerms["https://corpus.example/v1/report.json"] = '{"file":"RG164.CRIS.FY94.txt"}';
+  missingPhraseTerms["https://corpus.example/v1/phrase-counts.json"] = '{"file":"RG164.CRIS.FY94.txt"}';
   await expect(verifyRemote("https://corpus.example/v1/", {
     fetchImpl: stubFetch(synthetic, missingPhraseTerms),
     expected: syntheticFixity,
     fixture: FIXTURE,
     fixtureOffset: FIXTURE_OFFSET,
-  })).rejects.toThrow(/report\.json: missing phraseTerms/);
+  })).rejects.toThrow(/phrase-counts\.json: missing phraseTerms/);
 });
 
-test("a phrase index whose term count disagrees with report.json's phraseTerms fails verify", async () => {
+test("a phrase index whose term count disagrees with phrase-counts.json's phraseTerms fails verify", async () => {
   const disagreeing = { ...okIndexes };
   const code = INDEX_CODES[0]!;
   disagreeing[`https://corpus.example/v1/index/${code}.json`] = `{"code":"${code}","terms":{"A":1}}`;
@@ -210,10 +210,10 @@ test("a phrase index whose term count disagrees with report.json's phraseTerms f
     expected: syntheticFixity,
     fixture: FIXTURE,
     fixtureOffset: FIXTURE_OFFSET,
-  })).rejects.toThrow(new RegExp(`index/${code}\\.json: 1 terms loaded, report\\.json phraseTerms expected 0`));
+  })).rejects.toThrow(new RegExp(`index/${code}\\.json: 1 terms loaded, phrase-counts\\.json phraseTerms expected 0`));
 });
 
-test("matching report.json phraseTerms and index term counts pass verify", async () => {
+test("matching phrase-counts.json phraseTerms and index term counts pass verify", async () => {
   await expect(verifyRemote("https://corpus.example/v1/", {
     fetchImpl: stubFetch(synthetic, okIndexes),
     expected: syntheticFixity,

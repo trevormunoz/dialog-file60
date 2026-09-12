@@ -18,6 +18,7 @@ cd "$(dirname "$0")/.."
 
 test -f data/RG164.CRIS.FY94.txt || { echo "data/RG164.CRIS.FY94.txt is missing; see data/README.md" >&2; exit 1; }
 test -f public/corpus/offsets.json || { echo "public/corpus/offsets.json is missing; run pnpm load" >&2; exit 1; }
+test -f public/corpus/phrase-counts.json || { echo "public/corpus/phrase-counts.json is missing; run pnpm load" >&2; exit 1; }
 
 echo "uploading the corpus (277,539,004 bytes)"
 wrangler r2 object put "${BUCKET}/${PREFIX}/RG164.CRIS.FY94.txt" \
@@ -29,6 +30,12 @@ echo "uploading offsets.json"
 wrangler r2 object put "${BUCKET}/${PREFIX}/offsets.json" \
   --file public/corpus/offsets.json --remote \
   --content-type "application/json" \
+  --cache-control "${CACHE}"
+
+echo "uploading phrase-counts.json"
+wrangler r2 object put "${BUCKET}/${PREFIX}/phrase-counts.json" \
+  --file public/corpus/phrase-counts.json --remote \
+  --content-type application/json \
   --cache-control "${CACHE}"
 
 echo "uploading the phrase indexes"

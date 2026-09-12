@@ -50,6 +50,7 @@ for (const [code, byShard] of Object.entries(positions)) {
   if (!("_" in byShard)) writeFileSync(`${dir}/_.json`, JSON.stringify({}));
 }
 writeFileSync("public/corpus/report.json", JSON.stringify(report, null, 1));
+writeFileSync("public/corpus/phrase-counts.json", JSON.stringify({ phraseTerms: report.phraseTerms }));
 console.log(
   `records ${offsets.records.length}; composite mismatches ${report.compositeMismatches.length}; ` +
   `bad lines ${report.badLines}; orphan continuations ${report.orphanContinuations}; ` +

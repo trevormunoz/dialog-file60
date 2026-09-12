@@ -21,7 +21,7 @@ import { createHash } from "node:crypto";
 import { checkFixity, type Fixity } from "../src/loader/fixity";
 import { PHRASE_FIELDS } from "../src/loader/corpus-format";
 import { WORD_CODES, POSITIONAL_CODES, shardOf } from "../src/loader/words";
-import { wordDir, MERGED_WORD_DIR, reportUrl } from "../src/loader/corpus-urls";
+import { wordDir, MERGED_WORD_DIR, phraseCountsUrl } from "../src/loader/corpus-urls";
 import { registry } from "../src/registry";
 
 const CORPUS_FILE = "RG164.CRIS.FY94.txt";
@@ -93,28 +93,28 @@ export async function verifyRemote(baseUrl: string, opts: VerifyOpts = {}): Prom
   }
 
   // The deploy-time counterpart of the runtime's checkPhraseManifest: a stale or partial
-  // deploy where report.json's phraseTerms disagrees with what the phrase indexes actually
-  // hold must fail here, not at first boot against a live report.json the runtime hard-fails
-  // on. Same reportUrl() helper main.ts uses, same base the rest of this script already
-  // resolved every other URL against.
-  const reportFullUrl = reportUrl({ VITE_CORPUS_BASE_URL: base });
-  const reportRes = await f(reportFullUrl);
-  if (!reportRes.ok) {
-    throw new Error(`${reportFullUrl.slice(base.length)}: HTTP ${reportRes.status} ${reportRes.statusText}`);
+  // deploy where phrase-counts.json's phraseTerms disagrees with what the phrase indexes
+  // actually hold must fail here, not at first boot against a live phrase-counts.json the
+  // runtime hard-fails on. Same phraseCountsUrl() helper main.ts uses, same base the rest of
+  // this script already resolved every other URL against.
+  const phraseCountsFullUrl = phraseCountsUrl({ VITE_CORPUS_BASE_URL: base });
+  const phraseCountsRes = await f(phraseCountsFullUrl);
+  if (!phraseCountsRes.ok) {
+    throw new Error(`${phraseCountsFullUrl.slice(base.length)}: HTTP ${phraseCountsRes.status} ${phraseCountsRes.statusText}`);
   }
-  const report = JSON.parse(await reportRes.text()) as { phraseTerms?: Record<string, number> };
-  if (!report.phraseTerms || typeof report.phraseTerms !== "object") {
-    throw new Error(`${reportFullUrl.slice(base.length)}: missing phraseTerms`);
+  const phraseCounts = JSON.parse(await phraseCountsRes.text()) as { phraseTerms?: Record<string, number> };
+  if (!phraseCounts.phraseTerms || typeof phraseCounts.phraseTerms !== "object") {
+    throw new Error(`${phraseCountsFullUrl.slice(base.length)}: missing phraseTerms`);
   }
   for (const code of Object.keys(indexTermCounts)) {
-    const expected = report.phraseTerms[code];
+    const expected = phraseCounts.phraseTerms[code];
     const actual = indexTermCounts[code];
     if (expected === undefined) {
-      throw new Error(`${reportFullUrl.slice(base.length)}: phraseTerms has no entry for index/${code}.json`);
+      throw new Error(`${phraseCountsFullUrl.slice(base.length)}: phraseTerms has no entry for index/${code}.json`);
     }
     if (actual !== expected) {
       throw new Error(
-        `index/${code}.json: ${actual} terms loaded, ${reportFullUrl.slice(base.length)} phraseTerms expected ${expected}`,
+        `index/${code}.json: ${actual} terms loaded, ${phraseCountsFullUrl.slice(base.length)} phraseTerms expected ${expected}`,
       );
     }
   }
