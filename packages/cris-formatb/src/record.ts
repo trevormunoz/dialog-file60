@@ -1,4 +1,4 @@
-import { LINE_BYTES, DATA_START, DATA_END, latin1 } from "./index";
+import { LINE_BYTES, DATA_START, DATA_END, latin1 } from "./bytes";
 import type { RecordSpan } from "./offsets";
 import { PROFILES, type Profile } from "./profiles";
 

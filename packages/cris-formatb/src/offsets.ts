@@ -1,4 +1,4 @@
-import { LINE_BYTES, DATA_START, latin1 } from "./index";
+import { LINE_BYTES, DATA_START, latin1 } from "./bytes";
 
 export interface RecordSpan {
   firstLine: number;
