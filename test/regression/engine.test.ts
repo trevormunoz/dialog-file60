@@ -154,6 +154,17 @@ it("word search: term absent from both shard and term list is a genuine zero", a
   expect(r.perTerm[0]?.postings).toBe(0);
 });
 
+it("termOrdinals: term in the term list but missing from its shard throws IndexInconsistent", async () => {
+  const drifted = { async shard() { return {}; }, async terms() { return [["APPLE", 1]] as [string, number][]; }, async mergedTerms() { return []; } } as any;
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", drifted);
+  await expect(eng.termOrdinals("/TI", "APPLE")).rejects.toMatchObject({ code: "IndexInconsistent" });
+});
+it("termOrdinals: term absent from both shard and term list is a genuine zero", async () => {
+  const genuine = { async shard() { return {}; }, async terms() { return [] as [string, number][]; }, async mergedTerms() { return []; } } as any;
+  const eng = new RetrievalEngine({ file: "f", sha256: "x", records: [] }, {}, { async read() { return new Uint8Array(0); } }, "fy1991plus", genuine);
+  expect(await eng.termOrdinals("/TI", "ZZZZ")).toEqual([]);
+});
+
 // sortKey's own comment used to say it returns the record's first value, but it actually
 // walked idx.terms in index-insertion order ("first write wins") -- honest for a single-valued
 // field only. Ordinal 0 carries two IN values under a *reversed* insertion order (OWENS before

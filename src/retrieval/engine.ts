@@ -213,7 +213,16 @@ export class RetrievalEngine {
         if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
         this.shards.set(cacheKey, await this.wordSource.shard(resolved, shard));
       }
-      return this.shards.get(cacheKey)![key] ?? [];
+      const hit = this.shards.get(cacheKey)![key];
+      if (hit) return hit;
+      if (!this.wordTermSets.has(resolved)) {
+        if (!this.wordSource) throw new Error(`no word index source configured for ${resolved}`);
+        this.wordTermSets.set(resolved, new Set((await this.wordSource.terms(resolved)).map(([t]) => t)));
+      }
+      if (this.wordTermSets.get(resolved)!.has(key)) {
+        throw new ReconstructionFailure("IndexInconsistent", { url: `word/${resolved}`, detail: `${resolved} term ${key} in term list but missing from shard ${shard}` });
+      }
+      return [];
     }
     const idx = this.indexes[code];
     if (!idx) throw new UnknownField(code, term);
@@ -250,7 +259,7 @@ export class RetrievalEngine {
             if (hit) return hit;
             // Miss: genuine zero (key not vouched for) vs drift (vouched for but absent from shard).
             if (this.wordTermSets.get(resolved)?.has(key)) {
-              throw new ReconstructionFailure("IndexInconsistent", { detail: `${resolved} term ${key} in term list but missing from shard ${shard}` });
+              throw new ReconstructionFailure("IndexInconsistent", { url: `word/${resolved}`, detail: `${resolved} term ${key} in term list but missing from shard ${shard}` });
             }
             return [];
           });
