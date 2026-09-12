@@ -29,6 +29,9 @@ export interface Report {
    * public/corpus/pos/<CODE>. */
   posPostings: Record<string, number>;
   posBytes: Record<string, number>;
+  /** Per-phrase-code distinct-term count, the load-time manifest the app checks each served
+   * phrase index against (an empty served index is drift unless this count is 0). */
+  phraseTerms: Record<string, number>;
 }
 
 /**
