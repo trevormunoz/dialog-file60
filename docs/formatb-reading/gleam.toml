@@ -1,0 +1,13 @@
+name = "formatb_reading"
+version = "0.1.0"
+target = "javascript"
+
+# A whole-record reading of CRIS Format B, expressed in Gleam. This is a
+# research reading, not the parser API; see README.md. Only accession.parse
+# is implemented. Targets JavaScript to match the TypeScript pipeline it reads.
+
+[dependencies]
+gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+
+[dev_dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
