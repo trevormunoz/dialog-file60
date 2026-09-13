@@ -33,8 +33,10 @@ pub type Witness {
 /// `card_image.classify` reads columns 1-2 into a coarse LineKind (separator,
 /// tagged, continuation), and `card_image.continuation_kind` reads a
 /// continuation as Wrapped (this WrappedText) or Marked (this MarkedValueStart)
-/// against the profile marker byte. Assembling these classified lines into
-/// FieldOccurrences carrying Witness/Location is not yet implemented.
+/// against the profile marker byte. `assembly.gleam` walks the classified lines
+/// into these Fragments and the FieldOccurrences/SuppliedRecord that hold them,
+/// each carrying a Witness/Location. Joining a field's fragments into one
+/// lexical value is still separate and not yet implemented.
 pub type Fragment {
   TaggedStart(witness: Witness)
   WrappedText(witness: Witness)

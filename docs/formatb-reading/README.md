@@ -91,18 +91,33 @@ range 0-71, every A-Z two-letter tag, 0-40-line records, and every column-4 byte
 PN, the "$$" separator, and both a wrapped and a marked continuation). Run all
 tests with `gleam test` from this directory.
 
-What the reading layer does not yet do: assemble the classified lines into the
-model's `FieldOccurrence`s (each a tagged line plus its continuation Fragments,
-with a `Witness`/`Location`) and a `SuppliedRecord`; join a field's fragments
-into one lexical value (concatenating raw columns 4-72 and dropping the trailing
-pad once at the end, so an interior nonconformance is not silently repaired);
-and detect record boundaries and file header/trailer within a multi-record
-buffer. Nothing constructs toward `Project`. See "Remaining source-based
-specification work" below.
+Assembly: `src/assembly.gleam` walks a record's lines into the model's own
+types. `line_location` gives a line's file-absolute `Location` from a
+`SourceBase`; `line_role` interprets one line as opening a field, continuing
+one (wrapped or marked), or the "$$" boundary, building the `Witness`/`Fragment`;
+`parts_of` folds the lines into ordered `RecordPart`s (a tagged line opens a
+`FieldOccurrence`, continuations attach as fragments in order, an orphan
+continuation is `Unassigned`); `assemble` splits a record's bytes and wraps the
+parts in a whole-record `Witness`, or reports `LineUnreadable` for a
+non-line-aligned record. `test/assembly_test.gleam` covers each with examples
+and fixture bytes, including the AC classification field (opener plus three
+0xAC-marked continuations) assembled end to end, and one full-fixture
+integration test that reads the whole `fy94-9049442.bin` from disk (via the
+`simplifile` dev dependency) and checks the assembled 56-field sequence, each
+field's fragment count, and the whole-record witness against ground truth
+derived from the fixture.
 
-### Assembly design (settled, not yet fully built)
+What the reading layer does not yet do: join a field's fragments into one
+lexical value (concatenating raw columns 4-72 and dropping the trailing pad once
+at the end, so an interior nonconformance is not silently repaired), and detect
+record boundaries and file header/trailer within a multi-record buffer. Nothing
+constructs toward `Project`. See "Remaining source-based specification work"
+below.
 
-Two questions were settled before building assembly:
+### Assembly design (settled and built)
+
+Two questions were settled before building assembly, and hold in the built
+`assembly.gleam`:
 
 1. Source citation (the `Witness`/`Location` on each fragment). Assembly takes a
    `SourceBase` (file name and the record's first line number) and fills every
@@ -131,7 +146,7 @@ compile-time guarantee of the `opaque` keyword, verified once during the spike
 rather than re-tested at each run.
 
 Validation with Gleam 1.18.1 on the JavaScript target: `gleam test` reports
-32 passed, no failures, and `gleam format --check src test` is clean across the
+47 passed, no failures, and `gleam format --check src test` is clean across the
 project. The two unused-private-constructor warnings for Project and
 LoadedRecord are expected: their complete validators are not implemented.
 
