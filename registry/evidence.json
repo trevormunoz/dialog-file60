@@ -58,18 +58,18 @@
     "note": "NARA's served form, not the tape's"
   },
   "nara.conversion.control_bytes": {
-    "value": "EBCDIC-to-ASCII conversion products of an unidentified code page",
-    "status": "inferred",
-    "claim": "Three bytes left over from NARA's tape-to-text conversion appear in the file; which conversion produced them is not known.",
+    "value": "0xAC / 0xA0 0x02: Format B binary field delimiters, documented, not conversion residue",
+    "status": "documented",
+    "claim": "The non-printable bytes 0xAC (continuation marker) and 0xA0 0x02 (code/label separator) are Format B's own binary field delimiters -- documented in the dictionary and confined to the structured fields (SC/PH/GH and the classification columns). They passed through NARA's EBCDIC-to-ASCII conversion but are not products of it.",
     "sources": [
       {
         "source": "nara-cris-packet",
-        "locator": "FY 1991 validation statement, p.28",
-        "sourceDate": "1995-06-12",
-        "observedSystem": "NARA"
+        "locator": "Format B data-element descriptions, SC footnote 'HEX40 HEX41 HEX02', rendered '^' in the examples",
+        "sourceDate": "1990-02",
+        "observedSystem": "Format B"
       }
     ],
-    "note": "0xAC/0xA0/0x02 are taken to be EBCDIC-to-ASCII conversion products; code page unknown. All three now render as visible glyphs in the inspect panel's bytes card."
+    "note": "Correction (2026-09-14): an earlier version called 0xAC/0xA0/0x02 'EBCDIC-to-ASCII conversion products left over from conversion' -- that conflated designed delimiters with actual conversion residue. A full-file census (FY88 + FY94) shows two populations. These three are structural: 0x02 is STX, byte-identical in EBCDIC and ASCII; 0xA0 count equals 0x02 count exactly (the paired separator); all three occur only in SC/PH/GH and the AC/CM/FS/RP/CT/PA/JC columns; they were inserted by the CSRS COBOL program and are documented in the dictionary. The genuine conversion artifacts are a SEPARATE population -- a scatter of high bytes and rare control bytes in the free-text fields (OB/AP/DE/PR/PB), extended punctuation and formatting codes that did not map to 7-bit ASCII. 0xAC also appears as prose data (a left single-quote, 'Golden Delicious'), which is why it collides with the delimiter. Code page still unknown; the EBCDIC-to-ASCII step is undated (1995-2018). All three delimiter bytes render as visible glyphs in the inspect panel's bytes card."
   },
   "formatb.encoding.continuation_0xAC": {
     "value": "0xAC at column 4 starts a new value",

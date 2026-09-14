@@ -56,6 +56,7 @@ rests on. This is the full registry, grouped by status, produced by
 - map.TX.composite
 - map.UP
 - map.ZP
+- nara.conversion.control_bytes
 - nara.conversion.line_form
 - nara.file.fy1988_fixity
 - nara.file.fy1988_header_record
@@ -112,7 +113,6 @@ rests on. This is the full registry, grouped by status, produced by
 - map.AN.display_padding
 - map.SC.row_alignment
 - map.SX_TX.display_text
-- nara.conversion.control_bytes
 - nara.tape.fy1994_media
 - proto.accounting.combination
 - proto.begin.banner

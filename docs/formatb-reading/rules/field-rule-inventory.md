@@ -883,6 +883,36 @@ rather than bytes; it is not a claim about the true code page, which remains
 unknown. **Scoped to FY88; FY94 is unmeasured** — the same statement-of-absence
 discipline as every other FY88-only finding in this inventory.
 
+### The non-printable bytes are TWO populations, not one (2026-09-14 full-file census)
+
+An earlier framing (above, and in `registry/evidence.json`) treated the prose high
+bytes and the `0xAC`/`0xA0`/`0x02` bytes as one "conversion artifact" family. A
+full-file byte census (FY88 = 31 distinct non-printable bytes / 1,350,690 total;
+FY94 = 38 / 1,158,755) shows they are **two distinct populations**:
+
+- **Designed delimiters — NOT conversion residue.** `0xAC` (continuation marker)
+  and the pair `0xA0 0x02` (code/label separator) dominate the counts, occur *only*
+  in the structured fields (SC/PH/GH and the AC/CM/FS/RP/CT/PA/JC columns), and are
+  documented in the dictionary (SC footnote `HEX40 HEX41 HEX02`, rendered `^`). The
+  pairing is exact — FY94 `0xA0` = `0x02` = 358,066 to the byte. `0x02` is STX,
+  byte-identical in EBCDIC and ASCII. These were inserted by the CSRS COBOL program
+  as binary field delimiters; they passed *through* the EBCDIC→ASCII conversion but
+  are not products of it.
+- **Prose residue — the actual conversion artifacts.** A scatter of high bytes
+  (`0xA2 0xA3 0xA5 0xA7 0xA8 0xA9 0xB5 0xB6 0xB7 0xDD 0xDE 0xFE …`, hundreds each)
+  and rare control bytes (`0x01 0x07 0x08 0x09 0x0E 0x0F 0x16 0x1A 0x7F …`, tens),
+  confined to the free-text fields (OB/AP/DE/PR/PB). These are the EBCDIC→ASCII
+  residue: extended punctuation/symbols/accents that didn't map to 7-bit ASCII, and
+  embedded formatting/super-subscript control codes in scientific abstracts. The
+  structural three and the common high-byte tail are shared across both vintages,
+  but the rare tail differs (FY88: `0xF6 0xF3 0x1A 0xBB`; FY94: `0xED 0xE2 0xF9
+  0xFF`) — different content, and possibly different conversion handling between the
+  1990 ARS and 1993 CSRS accessions. One residue byte is confirmed: `0xAC` *also*
+  appears as data in prose — a left single-quote (`'Golden Delicious'`) — which is
+  exactly why it collides with the `0xAC` delimiter (see batch 4). The rest of the
+  source characters are speculative pending context-sampling or NARA's conversion
+  table (undated EBCDIC→ASCII step, 1995–2018).
+
 **Two disagreements still stand** (recorded, not reconciled, in each RuleRef):
 1. **Separator bytes.** Footnote `HEX40 HEX41 HEX02`; data `0xA0 0x02`. Split on
    the observed `0x02`, require a trailing `0xA0`; otherwise a typed divergence.
