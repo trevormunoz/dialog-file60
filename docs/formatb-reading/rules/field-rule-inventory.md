@@ -925,9 +925,41 @@ FY94 = 38 / 1,158,755) shows they are **two distinct populations**:
   0xFF`) — different content, and possibly different conversion handling between the
   1990 ARS and 1993 CSRS accessions. One residue byte is confirmed: `0xAC` *also*
   appears as data in prose — a left single-quote (`'Golden Delicious'`) — which is
-  exactly why it collides with the `0xAC` delimiter (see batch 4). The rest of the
-  source characters are speculative pending context-sampling or NARA's conversion
-  table (undated EBCDIC→ASCII step, 1995–2018).
+  exactly why it collides with the `0xAC` delimiter (see batch 4).
+
+#### Partial EBCDIC→ASCII map (SPECULATIVE — context-derived, not a source)
+
+Context-sampling the residue bytes in the free-text fields (reading what character
+belongs where, the way `0xAC`=left-quote was nailed) identifies most of them. The
+residue is overwhelmingly **scientific typography** the transcode could not carry to
+7-bit ASCII. **This whole table is an inference from surrounding text, not a
+documented conversion table** — it is the leading reading, to be confirmed only by
+NARA's actual code page. Confidence noted per row.
+
+| Byte | Reads as | Evidence (context) | Conf. |
+|---|---|---|---|
+| `0xA3` | superscript `1` | `¹⁴C`, `¹⁵N`, `m⁻²s⁻¹` (`NaH[A3][A9]CO(3)`, `[A3][A7]N`) | high |
+| `0xA5` | superscript `2` | `Ca²⁺`, `Cu²⁺`, `³²P`, `m⁻²` (`Cu[A5][FE]`, `m[B5][A5]s`) | high |
+| `0xB7` | superscript `3` | `³²P`, `³⁵S`, `mol m⁻³` (`[B7][A5]P`, `m[B5][B7]`) | high |
+| `0xA9` | superscript `4` | `¹⁴C` (`[A3][A9]C`, `NaH[A3][A9]CO(3)`) | high |
+| `0xA7` | superscript `5` | `¹⁵N`, `³⁵S` (`[A3][A7]N`, `[B7][A7]S`) | high |
+| `0xB6` | superscript `6` | `²⁶Mg`, `¹⁶O`, `10⁶ bp`, `⁶⁰Co` (`[A5][B6]Mg`, `(10[B6]bp)`) | high |
+| `0xB5` | superscript `−` | `NO₃⁻`, `m⁻²s⁻¹`, `m⁻³` (`NO(3[B5])`, `m[B5][A5]s`) | high |
+| `0xFE` | superscript `+` | `NH₄⁺`, `Ca²⁺` (`NH(4[FE])`, `Ca[A5][FE]`) | high |
+| `0xBD` | a Greek letter (α/β) | `5[BD]-reductase`, `3[BD]-Hydroxysteroid`, `16[BD]-hydroxyprogesterone` | med |
+| `0xA2` | an opening bracket/paren | `(Asteraceae[A2]Compositae\|)`, `Meehan[A2]ed.\|` | med |
+| `0xDE` | superscript letter(s) | `tRNAVa[DE]` = tRNA-Val (superscript `Val`) | med |
+| `0x01` | a space / word-break | `Tilletia[01]indica`, `triticale[01]and rye` | med |
+| `0x09` | horizontal TAB (a real control byte) | citation separator in PB (`473-478.[09] HERNANDEZ`) | high |
+| `0xA8`, `0xDD` | quote/space in citations | `report[A8].`, `In:[DD]Auburn` (bibliographic) | low |
+| `0x06 0x07 0x13 0x16 0x17` | genuinely corrupted region | one PR record: `exbVw"[07]7GVG[16][16]fr[07]F[06]R` — mojibake, not a clean glyph | n/a |
+
+So the story: the source text was scientific abstracts rich in isotopes (`¹⁴C`, `¹⁵N`,
+`³²P`, `³⁵S`, `²⁶Mg`), ion charges (`Ca²⁺`, `NO₃⁻`, `NH₄⁺`), unit exponents
+(`mol m⁻²s⁻¹`, `10⁶ bp`) and Greek nomenclature (`5α-reductase`) — a typographic layer
+the EBCDIC→ASCII step flattened to high bytes, plus a tab used as a list separator and
+at least one wholly corrupted region. The remaining source characters are speculative
+pending NARA's conversion table (undated EBCDIC→ASCII step, 1995–2018).
 
 **Two disagreements still stand** (recorded, not reconciled, in each RuleRef):
 1. **Separator bytes.** Footnote `HEX40 HEX41 HEX02`; data `0xA0 0x02`. Split on
