@@ -16,9 +16,10 @@ The batches below cover every field the model touches: **batch 1** identity
 (AN, PN, TI, IN, SF, provisional PS); **batch 2** chronology (PD, SD, SX, TD, TX,
 FY, UP, PP, PX); **batch 3** classifications, percentages, headings, and the
 undocumented SN; **batch 4** narratives (OB, AP, DE, PR, PB, HP); **batch 5**
-institution/participants, project type, and the UD loading stage. Transcription is
-complete; this still does **not** claim complete `Project` validation — that is
-the constructor work the closing section scopes.
+institution/participants, project type, and the UD loading stage; **batch 6** the
+RN/CG/GY/RG adjacency. Transcription is complete; this still does **not** claim
+complete `Project` validation — that is the constructor work the closing section
+scopes.
 
 ## Sources and provenance
 
@@ -190,11 +191,14 @@ byte or a literal hyphen cannot be told from a character printout — [unresolve
 - **Interpretation**: required; ordered list of 1..6 occurrences; each value ≤ 30
   bytes; first occurrence is the sort key. **Presence, the ordered non-empty
   list, the upper bound of six, and per-value length ≤ 30 are ready.**
-- **Model check**: `Participants.investigators: NonEmpty(Supported(String))`.
+- **Model check**: `Participants.investigators: NonEmpty(Supported(BitArray))`.
   `NonEmpty` enforces the lower bound (≥1) via the type; the upper bound (≤6) and
   the per-value length are NOT enforced by the type and remain the future
   constructor's runtime obligation — the model's own comment already says this.
-  Agrees.
+  Agrees. **Payload updated to `BitArray`** after the FY88 UTF-8 census (see the
+  payload-provenance rule, batch 3) found IN carries non-UTF-8 bytes in 0.002%
+  (1/32,016) of real values — rare, but still evidence to preserve rather than
+  reject at the MAX-30 length it otherwise satisfies.
 - **Unresolved**: is "Up to 6" a hard supplied-stage cap or a retrieval/display
   convention? It sits in Remarks; we read it as a documented cap to enforce, but
   that is our interpretation.
@@ -683,6 +687,27 @@ separators is `BitArray` (SC/PH/GH code/literal/percent). Not a blanket flip in
 either direction — the trigger to revisit a field's payload type is discovering
 it has structure, as happened here.
 
+**Extended by a whole-corpus FY88 UTF-8 census.** A full scan of the FY88
+corpus (32,016 records) checked every field's UTF-8 decodability and found
+non-UTF-8 bytes confined to six free-text/name fields — AP 1.8% (584/32,016),
+PR 0.7% (221), OB 0.4% (127), PB 0.3% (68), DE 0.03% (8), IN 0.002% (1) —
+while ~40 other fields (identifiers, dates, codes, institution/organization
+names, TI, the plain classification columns) are 100% UTF-8 over the same
+corpus. The failing bytes are scattered high bytes (`0xa3`, `0xa5`, `0xa7`,
+`0xfe`, `0xdd`, …), the same fingerprint as EBCDIC→ASCII conversion artifacts
+on extended characters that motivates the `0xAC`/`0xA0`/`0x02`
+transform-lineage hypothesis in `registry/evidence.json` — evidence to
+preserve, not noise to drop. This is a second, independent trigger for the
+provenance rule (discovered non-UTF-8 content, not carved structure): OB, AP,
+DE, PR, PB (`Narratives`) and IN (`Participants.investigators`) were switched
+from `Supported(String)` to `Supported(BitArray)`, dropping only the UTF-8
+decode step in the checked-field toolkit — no documented length or
+requiredness rule changed. `record_model.render` is the shared lossy Latin-1
+display render for these fields (and SC/PH/GH), for callers that need text
+rather than bytes; it is not a claim about the true code page, which remains
+unknown. **Scoped to FY88; FY94 is unmeasured** — the same statement-of-absence
+discipline as every other FY88-only finding in this inventory.
+
 **Two disagreements still stand** (recorded, not reconciled, in each RuleRef):
 1. **Separator bytes.** Footnote `HEX40 HEX41 HEX02`; data `0xA0 0x02`. Split on
    the observed `0x02`, require a trailing `0xA0`; otherwise a typed divergence.
@@ -735,7 +760,13 @@ unless noted; all Supplied stage.
   publications are all `Option` and all these rows are Always N — agrees. The
   MAX lengths (1600/1600/2400/3200/3200) and DE's 60-per-keyword are **ready**
   length checks; the upper/lower vs upper-case notes are real but their exact
-  scope is not a strict filter.
+  scope is not a strict filter. **Payload updated to `BitArray`**: all five are
+  now `Option(Supported(BitArray))`, not `Option(Supported(String))`, per the
+  FY88 UTF-8 census (payload-provenance rule, batch 3) — OB/AP/DE/PR/PB
+  together carried non-UTF-8 bytes in 0.03%-1.8% of real values, within their
+  documented MAX lengths; the checked-field toolkit still enforces every
+  length/requiredness rule above, only the final UTF-8 decode step is
+  dropped.
 
 # Batch 5 — institution, participants, project type, loading
 

@@ -278,7 +278,7 @@ pub fn institution(record: SuppliedRecord) -> Checked(Institution) {
 pub fn participants(record: SuppliedRecord) -> Checked(Participants) {
   let inst = institution(record)
   let invs =
-    bounded_nonempty(
+    bounded_nonempty_bytes(
       record,
       "IN",
       printed_rule(
@@ -815,7 +815,7 @@ fn collect(
 /// accumulate across all six.
 pub fn narratives(record: SuppliedRecord) -> Checked(Narratives) {
   let objectives =
-    optional(
+    optional_bytes(
       record,
       "OB",
       printed_rule(
@@ -826,7 +826,7 @@ pub fn narratives(record: SuppliedRecord) -> Checked(Narratives) {
       upto(1600),
     )
   let approach =
-    optional(
+    optional_bytes(
       record,
       "AP",
       printed_rule(
@@ -838,7 +838,7 @@ pub fn narratives(record: SuppliedRecord) -> Checked(Narratives) {
     )
   let descriptors_field = descriptors(record)
   let progress =
-    optional(
+    optional_bytes(
       record,
       "PR",
       printed_rule(
@@ -849,7 +849,7 @@ pub fn narratives(record: SuppliedRecord) -> Checked(Narratives) {
       upto(3200),
     )
   let publications =
-    optional(
+    optional_bytes(
       record,
       "PB",
       printed_rule(
@@ -916,7 +916,7 @@ fn hp_not_yet_modeled(
 /// rejected.
 pub fn descriptors(
   record: SuppliedRecord,
-) -> Checked(Option(Supported(String))) {
+) -> Checked(Option(Supported(BitArray))) {
   case occurrences(record, "DE") {
     [] -> Ok(None)
     [one] -> descriptors_value(one)
@@ -924,9 +924,14 @@ pub fn descriptors(
   }
 }
 
+// DE is byte-preserving (payload-provenance rule, record_model.gleam): both
+// documented bounds (aggregate MAX 2400, per-keyword MAX 60) are still
+// checked against the raw bytes, but the final UTF-8 decode step is dropped —
+// a non-UTF-8 DE value within both bounds is now accepted rather than
+// flagged "value is not valid text".
 fn descriptors_value(
   one: FieldOccurrence,
-) -> Checked(Option(Supported(String))) {
+) -> Checked(Option(Supported(BitArray))) {
   case single_value(one) {
     Error(Nil) -> Error(NonEmpty(fragment_placeholder(one), []))
     Ok(bytes) -> {
@@ -959,17 +964,7 @@ fn descriptors_value(
           )
         })
       case list.append(aggregate_problems, keyword_problems) {
-        [] ->
-          case bit_array.to_string(bytes) {
-            Ok(text) -> Ok(Some(Supported(text, locations(one))))
-            Error(Nil) ->
-              Error(
-                NonEmpty(
-                  invalid_value("DE", de_rule, one, "value is not valid text"),
-                  [],
-                ),
-              )
-          }
+        [] -> Ok(Some(Supported(bytes, locations(one))))
         [first, ..rest] -> Error(NonEmpty(first, rest))
       }
     }
@@ -1346,6 +1341,28 @@ pub fn optional(
   }
 }
 
+/// The byte-preserving counterpart of `optional`, for OB/AP/PR/PB: absent is
+/// Ok(None), not a problem; a present value's byte length is still checked
+/// against `length`, but the value is kept as BitArray with no UTF-8 decode
+/// step, so a non-UTF-8 value within `length` is accepted rather than
+/// flagged (the point of the payload-provenance rule — see record_model.gleam).
+pub fn optional_bytes(
+  record: SuppliedRecord,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+) -> Checked(Option(Supported(BitArray))) {
+  case occurrences(record, tag) {
+    [] -> Ok(None)
+    [one] ->
+      case checked_bytes(one, tag, rule, length) {
+        Ok(supported) -> Ok(Some(supported))
+        Error(problem) -> Error(NonEmpty(problem, []))
+      }
+    many -> Error(NonEmpty(non_repeating(many, tag, rule), []))
+  }
+}
+
 /// A repeating string field: every lexical value across the occurrences,
 /// length-checked. Multi-value — a field may carry several 0xAC-marked values in
 /// one occurrence (e.g. PF), so it consumes `flat_values`, not `single_value`.
@@ -1391,6 +1408,67 @@ pub fn bounded_nonempty(
         False -> []
       }
       case repeating(record, tag, rule, length), over {
+        Error(NonEmpty(first, rest)), _ -> {
+          let assert [combined_first, ..combined_rest] =
+            list.append([first, ..rest], over)
+            as "[first, ..rest] is never empty, so appending over stays non-empty"
+          Error(NonEmpty(combined_first, combined_rest))
+        }
+        Ok(_), [first, ..rest] -> Error(NonEmpty(first, rest))
+        Ok(values), [] ->
+          case values {
+            [first, ..rest] -> Ok(NonEmpty(first, rest))
+            [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
+          }
+      }
+    }
+  }
+}
+
+// The byte-preserving counterpart of `repeating`, for IN via
+// `bounded_nonempty_bytes`: every lexical value across the occurrences,
+// length-checked but kept as BitArray (no UTF-8 decode), so a non-UTF-8
+// value within `length` is accepted.
+fn repeating_bytes(
+  record: SuppliedRecord,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+) -> Checked(List(Supported(BitArray))) {
+  let #(values, extraction) = flat_values(record, tag)
+  let results =
+    list.map(values, fn(pair) {
+      let #(bytes, occurrence) = pair
+      check_raw_bytes(bytes, occurrence, tag, rule, length)
+    })
+  collect(results, extraction, [])
+}
+
+/// The byte-preserving counterpart of `bounded_nonempty`, for IN: required,
+/// ordered, 1..max_count, each within `length`, first is sort — but kept as
+/// BitArray (no UTF-8 decode), so a non-UTF-8 investigator name within
+/// `length` is accepted rather than flagged.
+pub fn bounded_nonempty_bytes(
+  record: SuppliedRecord,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+  max_count: Int,
+) -> Checked(record_model.NonEmpty(Supported(BitArray))) {
+  let occ = occurrences(record, tag)
+  case occ {
+    [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
+    _ -> {
+      // Count VALUES, not tagged occurrences: a multi-value field carries several
+      // 0xAC-marked values per occurrence, and the documented bound is on values.
+      let #(values, _extraction) = flat_values(record, tag)
+      let over = case list.length(values) > max_count {
+        True -> [
+          repetition_limit(occ, tag, rule, list.length(values), max_count),
+        ]
+        False -> []
+      }
+      case repeating_bytes(record, tag, rule, length), over {
         Error(NonEmpty(first, rest)), _ -> {
           let assert [combined_first, ..combined_rest] =
             list.append([first, ..rest], over)
@@ -1482,17 +1560,36 @@ fn checked_string(
   }
 }
 
-// Length-check and decode already-extracted value bytes, using the occurrence
-// only for its locations. Shared by the single-value `checked_string` and the
-// multi-value `bounded_repeating` so both apply the documented Length and the
-// same "not valid text" check to the exact bytes read.
-fn check_string_bytes(
+// The byte-preserving counterpart of `checked_string`, for OB/AP/PR/PB/IN:
+// same presence/length checking, but no UTF-8 decode step, so a non-UTF-8
+// value within the documented length is accepted rather than flagged.
+fn checked_bytes(
+  occurrence: FieldOccurrence,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+) -> Result(Supported(BitArray), ConstructionProblem) {
+  case single_value(occurrence) {
+    Error(Nil) -> Error(fragment_placeholder(occurrence))
+    Ok(bytes) -> check_raw_bytes(bytes, occurrence, tag, rule, length)
+  }
+}
+
+// Length-check already-extracted value bytes, then `decode` them. Shared leaf
+// behind both the String path (`check_string_bytes`, decode = UTF-8, "value
+// is not valid text" on failure) and the byte-preserving path
+// (`check_raw_bytes`, decode never fails) — one length-checking
+// implementation, so the String path's behavior stays byte-identical to
+// before this field split existed.
+fn check_bytes(
   bytes: BitArray,
   occurrence: FieldOccurrence,
   tag: String,
   rule: RuleRef,
   length: Length,
-) -> Result(Supported(String), ConstructionProblem) {
+  decode: fn(BitArray) -> Result(a, Nil),
+  invalid_decode_reason: String,
+) -> Result(Supported(a), ConstructionProblem) {
   case within(length, bit_array.byte_size(bytes)) {
     False ->
       Error(invalid_value(
@@ -1505,12 +1602,49 @@ fn check_string_bytes(
           <> describe_length(length),
       ))
     True ->
-      case bit_array.to_string(bytes) {
-        Ok(text) -> Ok(Supported(text, locations(occurrence)))
+      case decode(bytes) {
+        Ok(value) -> Ok(Supported(value, locations(occurrence)))
         Error(Nil) ->
-          Error(invalid_value(tag, rule, occurrence, "value is not valid text"))
+          Error(invalid_value(tag, rule, occurrence, invalid_decode_reason))
       }
   }
+}
+
+// Length-check and UTF-8-decode already-extracted value bytes, using the
+// occurrence only for its locations. Shared by the single-value
+// `checked_string` and the multi-value `bounded_repeating` so both apply the
+// documented Length and the same "not valid text" check to the exact bytes
+// read.
+fn check_string_bytes(
+  bytes: BitArray,
+  occurrence: FieldOccurrence,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+) -> Result(Supported(String), ConstructionProblem) {
+  check_bytes(
+    bytes,
+    occurrence,
+    tag,
+    rule,
+    length,
+    bit_array.to_string,
+    "value is not valid text",
+  )
+}
+
+// Length-check already-extracted value bytes, keeping them as BitArray — no
+// decode step, so non-UTF-8 bytes within the documented length are accepted.
+// Shared by the single-value `checked_bytes` and the multi-value
+// `repeating_bytes` (IN's `bounded_nonempty_bytes`).
+fn check_raw_bytes(
+  bytes: BitArray,
+  occurrence: FieldOccurrence,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+) -> Result(Supported(BitArray), ConstructionProblem) {
+  check_bytes(bytes, occurrence, tag, rule, length, fn(b) { Ok(b) }, "")
 }
 
 // --- classification headings (SC/PH/GH) --------------------------------------

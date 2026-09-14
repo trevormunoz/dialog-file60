@@ -360,7 +360,7 @@ pub fn participants_happy_test() {
   let assert Ok(Participants(inst, invs)) = construct.participants(supplied)
   inst.institution_name.value |> should.equal("Univ of Georgia")
   inst.city.value |> should.equal("Tifton")
-  invs.first.value |> should.equal("Gaines T P")
+  invs.first.value |> should.equal(<<"Gaines T P":utf8>>)
 }
 
 // Missing required fields accumulate: no PI and no CY yields two problems.
@@ -368,6 +368,22 @@ pub fn participants_accumulates_missing_required_test() {
   let supplied = record([#("ST", "GEORGIA"), #("IN", "Gaines T P")])
   let assert Error(NonEmpty(first, rest)) = construct.participants(supplied)
   list.length([first, ..rest]) |> should.equal(2)
+}
+
+// A non-UTF-8 byte within IN's documented MAX 30 bytes is ACCEPTED, not
+// flagged InvalidFieldValue: IN is byte-preserving per the FY88 UTF-8 census,
+// same as OB/AP/DE/PR/PB (see narratives_accepts_non_utf8_ob_test).
+pub fn participants_accepts_non_utf8_investigator_test() {
+  let in_bytes = <<"Doe":utf8, 0xfe>>
+  let supplied =
+    record_bytes([
+      #("PI", <<"Univ of Georgia":utf8>>),
+      #("CY", <<"Tifton":utf8>>),
+      #("ST", <<"GEORGIA":utf8>>),
+      #("IN", in_bytes),
+    ])
+  let assert Ok(Participants(_inst, invs)) = construct.participants(supplied)
+  invs.first.value |> should.equal(in_bytes)
 }
 
 // --- bounded_repeating: like repeating, but also caps occurrence count ------
@@ -501,9 +517,9 @@ pub fn narratives_populates_all_fields_test() {
     ])
   let assert Ok(Narratives(ob, ap, de, pr, pb)) = construct.narratives(supplied)
   let assert Some(Supported(ob_value, _)) = ob
-  ob_value |> should.equal("Improve poultry yields")
+  ob_value |> should.equal(<<"Improve poultry yields":utf8>>)
   let assert Some(Supported(de_value, _)) = de
-  de_value |> should.equal("POULTRY FORESTRY #IPM")
+  de_value |> should.equal(<<"POULTRY FORESTRY #IPM":utf8>>)
   let assert Some(_) = ap
   let assert Some(_) = pr
   let assert Some(_) = pb
@@ -514,6 +530,20 @@ pub fn narratives_accumulates_overlong_ob_test() {
   let supplied = record([#("OB", string.repeat("x", 1601))])
   let assert Error(NonEmpty(first, rest)) = construct.narratives(supplied)
   should.be_true(list.any([first, ..rest], is_invalid_field_value(_, "OB")))
+}
+
+// A non-UTF-8 byte within OB's documented MAX 1600 bytes is ACCEPTED, not
+// flagged InvalidFieldValue "value is not valid text": OB is byte-preserving
+// per the FY88 UTF-8 census (1.8% of real OB values carry non-UTF-8 bytes,
+// the EBCDIC-conversion-artifact fingerprint), so the checked payload is kept
+// as BitArray rather than decoded.
+pub fn narratives_accepts_non_utf8_ob_test() {
+  let ob_bytes = <<"abc":utf8, 0xfe>>
+  let supplied = record_bytes([#("OB", ob_bytes)])
+  let assert Ok(Narratives(ob, _ap, _de, _pr, _pb)) =
+    construct.narratives(supplied)
+  let assert Some(Supported(value, _)) = ob
+  value |> should.equal(ob_bytes)
 }
 
 // HP is not yet modeled: any occurrence blocks construction rather than being
@@ -542,7 +572,7 @@ pub fn descriptors_absent_returns_none_test() {
 pub fn descriptors_within_bounds_returns_some_test() {
   let supplied = record([#("DE", "FORESTRY FOREST-MANAGEMENT #IPM")])
   let assert Ok(Some(Supported(value, _))) = construct.descriptors(supplied)
-  value |> should.equal("FORESTRY FOREST-MANAGEMENT #IPM")
+  value |> should.equal(<<"FORESTRY FOREST-MANAGEMENT #IPM":utf8>>)
 }
 
 // A DE value over the aggregate 2400-byte MAX reports InvalidFieldValue,
@@ -805,7 +835,7 @@ pub fn descriptors_aggregate_over_2400_without_oversized_keyword_test() {
 pub fn descriptors_keyword_exactly_60_bytes_is_accepted_test() {
   let supplied = record([#("DE", string.repeat("A", 60))])
   let assert Ok(Some(Supported(value, _))) = construct.descriptors(supplied)
-  value |> should.equal(string.repeat("A", 60))
+  value |> should.equal(<<string.repeat("A", 60):utf8>>)
 }
 
 // --- classifications: composing the whole block -----------------------------

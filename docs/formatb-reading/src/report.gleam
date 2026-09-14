@@ -188,7 +188,7 @@ fn narratives_line(supplied: record_model.SuppliedRecord) -> String {
   }
 }
 
-fn presence(field: option.Option(Supported(String))) -> String {
+fn presence(field: option.Option(Supported(a))) -> String {
   case field {
     option.Some(_) -> "Y"
     option.None -> "N"

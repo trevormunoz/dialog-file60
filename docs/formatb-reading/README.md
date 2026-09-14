@@ -486,22 +486,39 @@ only the rules the inventory has settled:
   so the type enforces which fields have one; **SN** (undocumented) is
   `FieldNotYetModeled` when present. See "multi-value" below.
 - **`narratives`** (batch 4): OB/AP/PR/PB optional at their documented MAX
-  lengths (1600/1600/3200/3200) via the plain single-value `optional(...)` path
-  — verified against the first 3,000,000 lines of `data/RG310.CRIS.FY88.txt`
-  (statement of absence, scoped to that method and span, FY94 held out): all
-  five narrative fields are single-value, wrapped continuations joining to one
-  value, never `0xAC`-marked. **DE** gets a dedicated `descriptors` constructor
-  enforcing TWO independent bounds: an aggregate MAX 2400 bytes for the whole
-  joined value, AND a documented **60-byte max per whitespace-separated
-  keyword** (ASCII-space-run split, empty tokens dropped) — both checked and
-  their problems accumulated together. The 60-byte bound is enforced at the
-  printed/documented grade even though the FY88 scan never observed a keyword
-  over 30 bytes (with a pile-up at 30, looking truncated-at-30 in that
-  vintage): honouring the written contract, not the narrower observed range,
-  so a held-out FY94 keyword up to 60 bytes is not wrongly rejected. **HP** has
-  no settled dictionary row (it appears twice and inconsistently — a
-  handwritten stub and a separate printed row) so any HP occurrence is
-  `FieldNotYetModeled`, mirroring `SN`.
+  lengths (1600/1600/3200/3200) via the byte-preserving `optional_bytes(...)`
+  path — verified against the first 3,000,000 lines of
+  `data/RG310.CRIS.FY88.txt` (statement of absence, scoped to that method and
+  span, FY94 held out): all five narrative fields are single-value, wrapped
+  continuations joining to one value, never `0xAC`-marked. **DE** gets a
+  dedicated `descriptors` constructor enforcing TWO independent bounds: an
+  aggregate MAX 2400 bytes for the whole joined value, AND a documented
+  **60-byte max per whitespace-separated keyword** (ASCII-space-run split,
+  empty tokens dropped) — both checked and their problems accumulated
+  together. The 60-byte bound is enforced at the printed/documented grade
+  even though the FY88 scan never observed a keyword over 30 bytes (with a
+  pile-up at 30, looking truncated-at-30 in that vintage): honouring the
+  written contract, not the narrower observed range, so a held-out FY94
+  keyword up to 60 bytes is not wrongly rejected. **HP** has no settled
+  dictionary row (it appears twice and inconsistently — a handwritten stub
+  and a separate printed row) so any HP occurrence is `FieldNotYetModeled`,
+  mirroring `SN`.
+
+  OB/AP/DE/PR/PB (and IN, in `participants` above) are **byte-preserving** —
+  `Supported(BitArray)`, not `Supported(String)`. A whole-corpus FY88 UTF-8
+  census (32,016 records) found non-UTF-8 bytes confined to exactly these six
+  free-text/name fields (AP 1.8%/584, PR 0.7%/221, OB 0.4%/127, PB 0.3%/68, DE
+  0.03%/8, IN 0.002%/1), scattered high bytes (`0xa3`, `0xa5`, `0xa7`, `0xfe`,
+  `0xdd`, …) consistent with EBCDIC→ASCII conversion artifacts on extended
+  characters — evidence to preserve, not noise to drop — while ~40 other
+  fields (identifiers, dates, codes, institution/org names, TI, the plain
+  columns) are 100% UTF-8 over the same corpus. The checked-field toolkit's
+  leaf check (`check_bytes`) is parameterized by a decode step so the
+  byte-preserving path reuses the same length checking as the `String` path
+  and simply skips the UTF-8 decode; `record_model.render(bytes)` is a
+  display-only lossy Latin-1 render (matching the TS parser's `latin1` and
+  the inspect panel) for showing a byte-preserving value, never a claim about
+  its actual code page (see `registry/evidence.json`).
 - **`project`** — the top-level composition: identity, title (TI, required
   upto 100), status (PS, `Provisional`, handwritten grade, presence only — NO
   length enforced, the documented max digit itself is uncertain 16 vs 10),
@@ -522,9 +539,10 @@ only the rules the inventory has settled:
 
 These are built from a small reusable **checked-field toolkit** — `required`,
 `optional`, `repeating`, `bounded_repeating`, `bounded_nonempty`,
-`required_nonempty`, all taking one `Length` type (`exact` / `upto` /
-`between`) — that serves every group. Using one `Length` type means every
-field's documented bound is honoured identically,
+`required_nonempty`, plus the byte-preserving `optional_bytes` and
+`bounded_nonempty_bytes` (OB/AP/PR/PB and IN), all taking one `Length` type
+(`exact` / `upto` / `between`) — that serves every group. Using one `Length`
+type means every field's documented bound is honoured identically,
 **including MIN** (IC/OC "MIN 4"): a present-but-too-short value is a divergence,
 not a pass. This non-leniency is deliberate — a `≤max`-only model would be
 indistinguishable from the TS parser, so the discipline is the point.
@@ -589,21 +607,23 @@ scoped to that method and span; FY94 held out).
 (all 32,016 records, 3.15 M lines, `0xAC` marker; FY94 held out) via the
 runnable `tally` module (`gleam run -m tally -- <path>`), which buckets every
 record's outcome. After modeling the four adjacency fields RN/CG/GY/RG (batch 6
-of the rule inventory), **27,268 records (85.2%) certify a clean `Project`; 0 are
-unreadable; 0 fail on unmodeled material.** (Before batch 6, the same run
-certified 17,741 (55.4%) with 9,527 failing *only* because they carried an
-unmodeled RN/CG/GY/RG tag — no documentary conflict; modeling those four cleared
-exactly that 9,527.) The remaining 4,748 failures are genuine divergences: UP
-length (3,962 records — a supplied 4-byte `YYMM` against the dictionary's Exact-6
-`YYMMDD`) and non-UTF-8 text in the free-text fields (AP 584, PR 221, OB 127,
-PB 68, DE 8, IN 1 — these fit their MAX lengths but carry bytes the constructor
-refuses to decode rather than mangle). Those non-UTF-8 bytes are hypothesised to
-be EBCDIC→ASCII conversion artifacts from the transform lineage the data passed
+of the rule inventory), 27,268 records (85.2%) certified a clean `Project`,
+with the remaining failures split between UP length (3,962 records — a
+supplied 4-byte `YYMM` against the dictionary's Exact-6 `YYMMDD`) and
+non-UTF-8 text in the free-text fields (AP 584, PR 221, OB 127, PB 68, DE 8,
+IN 1 — these fit their MAX lengths but the constructor then refused to decode
+them rather than mangle them). Those non-UTF-8 bytes were hypothesised to be
+EBCDIC→ASCII conversion artifacts from the transform lineage the data passed
 through before NARA distribution (the same hypothesis `registry/evidence.json`
-records for `0xAC`/`0xA0`/`0x02`), so they are evidence to preserve, not noise to
-drop: the recorded next step is to model these fields with a byte-preserving
-payload (as SC/PH/GH already keep `BitArray`) rather than a UTF-8 `String`. All
-counts are scoped to this corpus and marker; FY94 is unmeasured.
+records for `0xAC`/`0xA0`/`0x02`) — evidence to preserve, not noise to drop —
+so OB/AP/DE/PR/PB and IN were switched to the byte-preserving
+`Supported(BitArray)` payload (as SC/PH/GH already kept `BitArray`), dropping
+the UTF-8 decode step while keeping every documented length/requiredness rule
+unchanged. Re-run after that change, **28,054 records (87.6%) certify a clean
+`Project`; 0 are unreadable; 0 fail on unmodeled material.** AP/PR/OB/PB/DE/IN
+are gone from the problem buckets entirely; **UP invalid-length (3,962
+records) is now the only remaining bucket.** All counts are scoped to this
+corpus and marker; FY94 is unmeasured.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though

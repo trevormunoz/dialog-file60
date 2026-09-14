@@ -7,6 +7,7 @@
 
 import accession.{type Accession, type AccessionError}
 import gleam/option.{type Option}
+import gleam/string
 
 /// A list guaranteed to hold at least one element: `first` plus any `rest`.
 pub type NonEmpty(a) {
@@ -61,6 +62,42 @@ pub type SuppliedRecord {
 
 pub type Supported(a) {
   Supported(value: a, locations: NonEmpty(Location))
+}
+
+/// Payload-provenance rule: OB, AP, DE, PR, PB (Narratives) and IN
+/// (Participants' investigators) are `Supported(BitArray)`, not
+/// `Supported(String)`. A whole-corpus FY88 UTF-8 census (32,016 records)
+/// found non-UTF-8 bytes confined to exactly these six free-text/name
+/// fields — AP 1.8% (584), PR 0.7% (221), OB 0.4% (127), PB 0.3% (68), DE
+/// 0.03% (8), IN 0.002% (1) — scattered high bytes (0xa3, 0xa5, 0xa7, 0xfe,
+/// 0xdd, …) that are the fingerprint of EBCDIC-to-ASCII conversion artifacts
+/// on extended characters, not noise: evidence to preserve. Every other
+/// field stays `String`, a true "this decodes as text" assertion. Use
+/// `render` below to display a BitArray payload; it is lossy and does not
+/// undo the decode question the bytes still pose (see
+/// registry/evidence.json).
+///
+/// A lossy Latin-1 display render of a byte-preserving field's payload: each
+/// byte 0..255 maps to its Latin-1 code point (matching the TS parser's
+/// `latin1` and the inspect panel), so this never fails on non-UTF-8 bytes.
+/// This is display-only, deliberately not a faithful decode — the bytes'
+/// actual code page is unknown (see registry/evidence.json); `render` just
+/// gives every byte a visible glyph rather than asserting what it means.
+pub fn render(bytes: BitArray) -> String {
+  bytes
+  |> bit_array_to_latin1_codepoints
+  |> string.from_utf_codepoints
+}
+
+fn bit_array_to_latin1_codepoints(bytes: BitArray) -> List(UtfCodepoint) {
+  case bytes {
+    <<byte, rest:bytes>> -> {
+      let assert Ok(codepoint) = string.utf_codepoint(byte)
+        as "every byte 0..255 is a valid Latin-1/Unicode code point"
+      [codepoint, ..bit_array_to_latin1_codepoints(rest)]
+    }
+    _ -> []
+  }
 }
 
 /// A field whose requiredness is not settled — asserted only on lower-grade
@@ -182,9 +219,11 @@ pub type Institution {
 pub type Participants {
   Participants(
     institution: Institution,
-    // PDF p. 16: always present, up to six, first is sort value.
-    // NonEmpty enforces the lower bound, not the upper bound.
-    investigators: NonEmpty(Supported(String)),
+    // PDF p. 16: always present, up to six, first is sort value. IN is
+    // byte-preserving (payload-provenance rule near `Supported`, above) —
+    // Supported(BitArray), not Supported(String). NonEmpty enforces the
+    // lower bound, not the upper bound.
+    investigators: NonEmpty(Supported(BitArray)),
   )
 }
 
@@ -269,13 +308,16 @@ pub type Classifications {
   )
 }
 
+// OB/AP/DE/PR/PB are byte-preserving (payload-provenance rule near
+// `Supported`, above) — Supported(BitArray), not Supported(String). Use
+// `render` to display a value.
 pub type Narratives {
   Narratives(
-    objectives: Option(Supported(String)),
-    approach: Option(Supported(String)),
-    descriptors: Option(Supported(String)),
-    progress: Option(Supported(String)),
-    publications: Option(Supported(String)),
+    objectives: Option(Supported(BitArray)),
+    approach: Option(Supported(BitArray)),
+    descriptors: Option(Supported(BitArray)),
+    progress: Option(Supported(BitArray)),
+    publications: Option(Supported(BitArray)),
   )
 }
 
