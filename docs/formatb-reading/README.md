@@ -40,15 +40,19 @@ construction likewise certifies only the selected rules, not historical truth.
 ### Implementation status
 
 `src/record_model.gleam` revises the whole-example model around this design. The
-permissive `Reading(...)` slots are removed. Project is opaque and deliberately
-has no public construction function yet: a complete rule inventory and validator
-must precede any claim to return a valid Project. Required AN, PN, TI, IN and SF
-are no longer optional. PS is modelled as `Provisional`: its requiredness rests
-only on a handwritten amendment on PDF p. 13, a weaker `EvidenceGrade` than the
-printed rows, so a missing PS is a scoped provisional situation to record rather
-than a hard nonconformance. Whether that annotation applies remains to settle.
+permissive `Reading(...)` slots are removed. Project is opaque; its public
+construction path is `build_project`, a smart constructor that performs no
+checking itself — `construct.project` calls it only after every group/field
+has been independently checked and found problem-free, so the checking
+discipline stays in `construct`, not in the model. Required AN, PN, TI, IN and
+SF are no longer optional. PS is modelled as `Provisional`: its requiredness
+rests only on a handwritten amendment on PDF p. 13 — the ENTIRE PS row is a
+handwritten insertion, not merely an amendment to a printed row — a weaker
+`EvidenceGrade` than the printed rows, so a missing PS is a scoped provisional
+situation to record rather than a hard nonconformance, and no length is
+enforced on it either. Whether that annotation applies remains to settle.
 
-Two steps are implemented. Accession lexical construction: the checks live in
+Accession lexical construction: the checks live in
 `test/accession_test.gleam` (gleeunit): valid values, preserved zeroes, invalid
 lengths, non-digits, whitespace, and the byte-versus-character boundary.
 
@@ -66,10 +70,9 @@ returns a `LineKind`: `SeparatorLine` ("$$"), `ContinuationLine` (blank tag
 "  "), or `TaggedLine(tag)` (any other two bytes). It reads only the tag
 columns; value extraction stays in `data_value`. A continuation whose first
 data byte is a profile marker (0xAC in this record) is a marked value rather
-than wrapped text, but that split needs a profile transcribed from the source
-and is deferred, so `classify` reports both as `ContinuationLine`. File-
-structure lines ("<<" header, ">>" trailer) sit outside a record span and are
-the line-splitting step's concern, not `classify`'s.
+than wrapped text; `continuation_kind` makes that distinction separately, so
+`classify` reports both as `ContinuationLine`. File-structure lines ("<<"
+header, ">>" trailer) are `scan.scan`'s concern, not `classify`'s.
 
 Line splitting: `card_image.gleam` `split_lines` chops a record's bytes into
 fixed 82-byte served lines in order. The width is structural, so a byte count
@@ -107,12 +110,37 @@ integration test that reads the whole `fy94-9049442.bin` from disk (via the
 field's fragment count, and the whole-record witness against ground truth
 derived from the fixture.
 
-What the reading layer does not yet do: join a field's fragments into one
-lexical value (concatenating raw columns 4-72 and dropping the trailing pad once
-at the end, so an interior nonconformance is not silently repaired), and detect
-record boundaries and file header/trailer within a multi-record buffer. Nothing
-constructs toward `Project`. See "Remaining source-based specification work"
-below.
+Value joining: `src/field_value.gleam` `field_values` joins a field's fragments
+into ordered lexical byte values. `card_image.raw_columns` exposes untrimmed
+columns 4-72; wrapped continuations append those bytes, marked continuations
+open a new value with the first data byte dropped. `trim_trailing_spaces` drops
+only ASCII-space pad once per finished value, retaining interior padding,
+duplicates and empty values. `field_values(occurrence)` takes no marker argument:
+fragment variants already carry assembly's profile-derived classification.
+Joining matches those variants directly rather than translating their meanings
+into boolean flags.
+Tests cover mixed continuations, non-ASCII bytes, short witnesses, supplier-column
+exclusion, and actual fixture AC and TI slices.
+
+Record scanning: `src/scan.gleam` `scan` splits a byte buffer into contiguous
+`ScannedRecord`s with file-absolute `SourceBase`s. `$$` opens a record; `>>`
+closes it before the trailer; EOF closes the last record. `FileStructure` keeps
+the last observed header/trailer as complete raw 82-byte lines. Tests cover
+multiple records, adjacent separators, empty input, ragged input, absolute
+locations, and scanning/assembling/joining all 56 fields of the fixture.
+
+Scanning is not structural validation: CRLF, header/trailer ordering and
+multiplicity are unchecked. Ordinary lines outside open records are counted but
+not retained. An unexpected `<<` inside an open record is captured as structure
+and retained in the contiguous record bytes, matching the reference scanner's
+span behavior; dropping it would corrupt subsequent assembly locations.
+Callers needing all file bytes must retain the input buffer.
+
+The value-joining and scanning plan is implemented:
+`plans/2026-09-13-value-joining-and-record-scanning.md` records execution and
+adjustments. The next work is the per-field documentary rule inventory, not
+`Project` construction from code-shape guesses. See "Remaining source-based
+specification work" below.
 
 ### Assembly design (settled and built)
 
@@ -146,7 +174,7 @@ compile-time guarantee of the `opaque` keyword, verified once during the spike
 rather than re-tested at each run.
 
 Validation with Gleam 1.18.1 on the JavaScript target: `gleam test` reports
-47 passed, no failures, and `gleam format --check src test` is clean across the
+68 passed, no failures, and `gleam format --check src test` is clean across the
 project. The two unused-private-constructor warnings for Project and
 LoadedRecord are expected: their complete validators are not implemented.
 
@@ -166,13 +194,45 @@ future Project constructor must check. Type-checking is not corpus validation.
 The existing public parser interface and byte-for-byte parity requirement remain
 unchanged; the richer research model is separate from that compatibility surface.
 
+### Maintainability review and the language comparison
+
+A fresh read-only reviewer recommended two focused changes, now applied:
+remove joining's unused marker parameter and retain the named fragment variants
+through the join rather than converting them into positional booleans. A test
+assembles the same bytes under two markers and checks the different joined
+results: the profile interpretation belongs to assembly. Another tests the
+existing wrapped-first fallback for manually constructed occurrences; that
+fallback is reader behavior, not an assertion about permitted Format B records.
+
+The evidence for the Gleam patterns is the official tour's
+[record accessors](https://tour.gleam.run/data-types/record-accessors/),
+[recursion](https://tour.gleam.run/flow-control/recursion/), and
+[tail calls](https://tour.gleam.run/flow-control/tail-calls/), together with pinned
+`gleam_stdlib` 1.0.5 `list.gleam:498-511` (`try_map_loop`): direct case analysis,
+error propagation, consing onto an accumulator and reversing once. This supports
+keeping the existing recursive walkers, not mechanically replacing them with
+callbacks. The two changes above are maintainability judgments, not language
+requirements.
+
+The object of comparison remains how Gleam and TypeScript help or hinder our
+expression of what we know about Format B. Here, Gleam's named variants and
+exhaustive matching keep tagged, wrapped and marked fragments visible at the
+point of joining. TypeScript can also express those distinctions with a
+discriminated union; this revision alone does not demonstrate a uniquely Gleam
+benefit. Neither the marker's historical meaning nor documentary rules are
+established by the compiler. The interpretation still comes from the evidence.
+
 ## Evidence used
 
 - Captured PDF, local preservation copy:
   `../../../dataset-cards/research/cris-dialog/sources/nara/367_1DP.pdf`.
   Page numbers here are PDF pages. OCR was read for the format instructions,
   dictionary and validation; page images 2, 11, 13, 16, 18, 23, 28 and 30 were
-  additionally read.
+  additionally read, and for the rule inventory also 12, 14, 15, 17, 19, 20, 21,
+  22, 23, 29, and 31-33 (p.18 too, for the classification columns). The dictionary title page (p.11) is dated February 1990; the "DATA
+  FORMAT" card-image section (p.2) is dated Feb 1986; the NARA validation
+  statement (p.28-30) covers the FY1991 file — three vintages, distinct from the
+  FY1994 fixture.
   Other OCR details, especially symbols, must still be checked visually before
   making exact transcription/byte claims.
 - Complete `../../packages/cris-formatb/fixtures/fy94-9049442.bin`:
@@ -337,6 +397,232 @@ interpretations explicitly and distinguish them from confirmed disagreements.
 The design choice is settled: model the assertions and confront failures to
 satisfy them. What remains is determining exactly which assertions we can
 responsibly make and testing their construction against complete records.
+
+### Documentary rule inventory (in progress)
+
+The per-field transcription now lives in `rules/field-rule-inventory.md`,
+source-linked to page images (not OCR alone). **Batch 1** covers the
+identity/required fields AN, PN, TI, IN, SF and the provisional PS; **batch 2**
+covers the chronology fields PD, SD, SX, TD, TX, FY, UP, PP, PX. Each entry
+records the exact cell wording, PDF page/row, our interpretation, stage, evidence
+grade, requiredness, repetition, lengths/character constraints and unresolved
+questions. Key batch-1 results, none of which the compiler produced:
+
+- **Ready to implement** (printed grade, checkable against supplied bytes): AN
+  (numeric, exactly 7, done in `accession.gleam`); PN required, non-repeating,
+  length ≤ 20; TI required, non-repeating, joined length ≤ 100; IN required,
+  ordered 1..6 occurrences, each ≤ 30, first is sort; SF required, repeating,
+  each 4..11.
+- **Not ready**: any character-class check — the Character Type codes "A"/"A,N"
+  are contradicted by their own examples (PN hyphens, TI/IN spaces, SF caret), so
+  they are not literal `[A-Z0-9]` classes; and any PS rule at printed grade.
+- **PS refinement**: the *entire* PS row (element 2.2) is handwritten, not an
+  amendment to a printed row — so `Provisional(PS)` is better supported than the
+  `record_model.gleam` comment states; that comment's "amendment" wording should
+  be tightened. Recorded as a disagreement, not silently repaired.
+- **Dictionary is known-incomplete**: the FY1991 NARA validation statement
+  (PDF p.28-29) names two data elements present in the data but absent from the
+  dictionary — Field Tags **SN** and **BP** — confirming that an SN/BP occurrence
+  is a documented `FieldNotYetModeled` case, not a nonconformance.
+- **Tension recorded**: the dictionary's "Always Present = Y" versus the FY1991
+  statement "the data elements may vary per physical record" (PDF p.28).
+
+Key batch-2 (chronology) results:
+
+- **Ready** (printed grade): every chronology field is non-repeating with an exact
+  printed byte length (PD 6, SD 6, SX 9, TD 6, TX 9, UP 6, PP 4, PX 12); all are
+  optional except FY. `PairedDate` is confirmed — SX/TX are printed "Not
+  searchable" display forms paired with searchable SD/TD, so keeping both forms
+  and not asserting they agree is faithful.
+- **FY is a two-to-four-digit year amendment, in handwriting.** The printed FY row
+  is two-digit throughout (Length "Exact 2", example "86", "Format is YY"); a hand
+  widens it to four digits (length 2→4, century "19" prepended to "86",
+  "may be 00"→"0000", a caret-inserted "YY"). GY (elem 28) got the same hand,
+  written out as "Format is YYYY / may be blank". The fixture's four-digit "FY
+  1992" matches only the **handwritten** form. The pattern has the shape of a
+  partial Y2K widening but the amendment is undated/unattributed — intent is not
+  asserted. Meanwhile SD/SX/TD/TX keep two-digit years with no century, which is
+  why `PairedDate`/the model must not normalize centuries.
+- **Disagreement recorded**: the dictionary marks FY required (Always Present Y),
+  but `Chronology.fiscal_year` is `Option`. Not repaired.
+
+The inventory is now complete across all modeled fields (batches 1-5: identity,
+chronology, classifications/headings, narratives, institution/participants +
+the UD loading stage). Fields present but unmodeled (SN, NI, HP, CG, RG, RN, GY)
+are recorded as `FieldNotYetModeled` candidates. Batch-3 result of note: the
+source gives **no** support for aligned classification tuples ("displays columnar
+format" is display, not data alignment), vindicating `ClassificationColumns` as
+independent lists. The checked `Project` constructor, built field group by
+field group as the inventory's closing "Inventory status and next work"
+section recommended, is now in place — see the next section.
+
+### Runnable reading over real data (checked Identity, Project)
+
+`src/formatb_reading.gleam` is a runnable entrypoint that reads a whole Format B
+file from disk and prints each record parsed **through the model**, not as a raw
+dump. It is the first vertical slice of checked construction:
+
+    gleam run -- <path-to-format-b-file> [max_records] [max_lines]
+
+`src/construct.gleam` builds checked groups from a `SuppliedRecord`, enforcing
+only the rules the inventory has settled:
+- **`identity`** (batch 1): AN numeric, exactly seven bytes, non-repeating,
+  required (via `accession.parse`); PN required, non-repeating, length ≤ 20 bytes.
+- **`institution` / `participants`** (batch 5 + IN from batch 1): PI/CY/ST
+  required with lengths; AS/DS/IC/ZP/RE/OC optional; PF a repeating list;
+  investigators (IN) a required ordered list of 1..6, each ≤ 30, first is sort.
+  OC's optionality and PF's max length are marked `HandwrittenAmendment` grade.
+- **`chronology`** (batch 2): PD/SD/SX/TD/TX/UP/PP/PX optional at their exact
+  printed lengths; **FY required** and honouring **both** documented lengths
+  (printed Exact 2 `YY` and handwritten Exact 4 `YYYY`) — a value matching neither
+  is a divergence. `PairedDate` keeps searchable SD/TD and display SX/TX without
+  asserting they agree. No century inference, no date agreement.
+- **`classifications`** (batch 3): BT/AT/DT optional Exact-4 percentages; the
+  seven columns (AC/CM/FS/RP/CT/PA/JC) as independent multi-value lists with
+  per-value length ranges and a Max-15 value count each (no aligned tuples — the
+  source asserts none); **SC** as a list of `Subcommodity(code, literal,
+  percent)` and **PH/GH** as lists of `Heading(code, literal)` — two types
+  because the shapes differ (SC values carry a required percent, PH/GH never do),
+  so the type enforces which fields have one; **SN** (undocumented) is
+  `FieldNotYetModeled` when present. See "multi-value" below.
+- **`narratives`** (batch 4): OB/AP/PR/PB optional at their documented MAX
+  lengths (1600/1600/3200/3200) via the plain single-value `optional(...)` path
+  — verified against the first 3,000,000 lines of `data/RG310.CRIS.FY88.txt`
+  (statement of absence, scoped to that method and span, FY94 held out): all
+  five narrative fields are single-value, wrapped continuations joining to one
+  value, never `0xAC`-marked. **DE** gets a dedicated `descriptors` constructor
+  enforcing TWO independent bounds: an aggregate MAX 2400 bytes for the whole
+  joined value, AND a documented **60-byte max per whitespace-separated
+  keyword** (ASCII-space-run split, empty tokens dropped) — both checked and
+  their problems accumulated together. The 60-byte bound is enforced at the
+  printed/documented grade even though the FY88 scan never observed a keyword
+  over 30 bytes (with a pile-up at 30, looking truncated-at-30 in that
+  vintage): honouring the written contract, not the narrower observed range,
+  so a held-out FY94 keyword up to 60 bytes is not wrongly rejected. **HP** has
+  no settled dictionary row (it appears twice and inconsistently — a
+  handwritten stub and a separate printed row) so any HP occurrence is
+  `FieldNotYetModeled`, mirroring `SN`.
+- **`project`** — the top-level composition: identity, title (TI, required
+  upto 100), status (PS, `Provisional`, handwritten grade, presence only — NO
+  length enforced, the documented max digit itself is uncertain 16 vs 10),
+  project_type (PT, optional upto 20), participants, chronology,
+  classifications, narratives, and subfiles (SF, required non-empty, each
+  4..11 bytes, **no documented occurrence cap** — hence the new
+  `required_nonempty` toolkit fn rather than `bounded_nonempty`). Every
+  group's problems accumulate together, so a record can fail several groups
+  at once and see all of it in one `Error`. `record_model.build_project` is
+  the opaque `Project`'s smart constructor: it performs no checking itself,
+  so only `construct.project` — after every group/field is independently
+  checked — is meant to call it. `Project.rules` is set to the `RuleRef`s
+  `project` applies directly (identity's AN/PN plus TI/PS/PT/SF); each
+  group's own rules already ride on that group's own values and problems,
+  and extending `rules` to cover every rule used throughout would mean
+  threading rules out of every group constructor — deliberately out of scope
+  for this composition.
+
+These are built from a small reusable **checked-field toolkit** — `required`,
+`optional`, `repeating`, `bounded_repeating`, `bounded_nonempty`,
+`required_nonempty`, all taking one `Length` type (`exact` / `upto` /
+`between`) — that serves every group. Using one `Length` type means every
+field's documented bound is honoured identically,
+**including MIN** (IC/OC "MIN 4"): a present-but-too-short value is a divergence,
+not a pass. This non-leniency is deliberate — a `≤max`-only model would be
+indistinguishable from the TS parser, so the discipline is the point.
+
+**Multi-value fields.** A single tagged occurrence can carry several values,
+separated by the `0xAC` continuation marker (verified against 300k FY88 lines:
+SC/PH/GH and the classification columns all do this, as does PF). The checked
+constructors consume `field_value.field_values`' full value list, not just the
+first value; count caps bound the value count. The SC/PH/GH value's internal
+parts are separated by `0xA0 0x02` (data) / footnote `HEX40 HEX41 HEX02` — a
+recorded disagreement — and the whole value is not valid UTF-8, so its parts are
+kept as **`BitArray`**.
+
+**Payload type is a provenance claim.** `String` in Gleam asserts "valid text",
+so it is a *checked* claim, not a default: a value read whole and decoded is
+`String` (PN, PI, CY, the plain columns); a value carved from byte structure is
+`BitArray` (SC/PH/GH parts). Not a blanket choice either way — the trigger to
+revisit a field's payload type is discovering it has structure.
+
+Character classes stay unchecked — "A,N" is not a literal class. Problems are
+typed and accumulated across every field, never repaired:
+`RequiredFieldNotLocated`, `NonRepeatingFieldRepeated`, `InvalidAccession`,
+`InvalidFieldValue`, `RepetitionLimitExceeded`, `FieldNotYetModeled`, each
+carrying its source-linked `RuleRef`. `src/report.gleam` renders each record's
+Identity, Participants, Chronology, Classifications, and Narratives, plus the
+top-level Project result (or their problems), with a summary. Narratives are
+rendered as per-field presence (`OB=Y AP=N DE=Y ...`), not the text itself —
+OB/AP/PR/PB can run to 3200 bytes — and the Project line shows only its title,
+mirroring the concise-summary shape the other group lines already use rather
+than dumping the whole opaque `Project`. Every function is covered by
+`test/construct_test.gleam` and `test/report_test.gleam`, TDD, each test
+watched failing first.
+
+This was exercised on real NARA data. **FY94 is held out** (it is the fixture's
+own derivation source); the run used **FY88** (`data/RG310.CRIS.FY88.txt`,
+258 MB, 3.15 M lines). Over the first 592 records: all have a valid checked
+Identity (e.g. `AN=9000001 PN=PNW-1601`); **all 592 construct Participants and
+Classifications cleanly** (e.g. `classifications OK — 7 column code(s), 2 SC,
+4 PH, 2 GH`), each SC value split into its required percent. Records missing a
+required field report `N problem(s)` rather than being repaired — the "elements
+may vary per physical record" tension made concrete. Chronology confirms the FY
+decision on real data: `chronology OK — FY=1985` (four-digit, accepted by the
+handwritten Exact-4 rule). Note the entrypoint's `--max-lines` slices the file by
+line count and can cut the last record mid-way; a truncated record honestly
+reports a divergence (e.g. a two-part SC) — a bound of the harness, not the model.
+
+The multi-value handling above was found *by running on real data*: synthetic
+tests passed against a wrong single-value mental model; the real bytes did not.
+This is why the runnable slice matters — it is the check on the interpretation.
+
+This is not parity with the TS parser, but it is now a whole checked `Project`:
+`construct.project` composes identity, title (TI), status (PS), project_type
+(PT), participants, chronology, classifications, narratives, and subfiles (SF)
+— every group and field the model currently checks — accumulating every
+group's problems into one `Error` rather than stopping at the first. The
+narratives group's single-value shape (OB/AP/DE/PR/PB never `0xAC`-marked) was
+verified separately, replicating the reading layer's value-joining over the
+first 3,000,000 lines of `data/RG310.CRIS.FY88.txt` (statement of absence,
+scoped to that method and span; FY94 held out).
+
+`construct.project` has now been run end-to-end over the **whole FY88 corpus**
+(all 32,016 records, 3.15 M lines, `0xAC` marker; FY94 held out) via the
+runnable `tally` module (`gleam run -m tally -- <path>`), which buckets every
+record's outcome. After modeling the four adjacency fields RN/CG/GY/RG (batch 6
+of the rule inventory), **27,268 records (85.2%) certify a clean `Project`; 0 are
+unreadable; 0 fail on unmodeled material.** (Before batch 6, the same run
+certified 17,741 (55.4%) with 9,527 failing *only* because they carried an
+unmodeled RN/CG/GY/RG tag — no documentary conflict; modeling those four cleared
+exactly that 9,527.) The remaining 4,748 failures are genuine divergences: UP
+length (3,962 records — a supplied 4-byte `YYMM` against the dictionary's Exact-6
+`YYMMDD`) and non-UTF-8 text in the free-text fields (AP 584, PR 221, OB 127,
+PB 68, DE 8, IN 1 — these fit their MAX lengths but carry bytes the constructor
+refuses to decode rather than mangle). Those non-UTF-8 bytes are hypothesised to
+be EBCDIC→ASCII conversion artifacts from the transform lineage the data passed
+through before NARA distribution (the same hypothesis `registry/evidence.json`
+records for `0xAC`/`0xA0`/`0x02`), so they are evidence to preserve, not noise to
+drop: the recorded next step is to model these fields with a byte-preserving
+payload (as SC/PH/GH already keep `BitArray`) rather than a UTF-8 `String`. All
+counts are scoped to this corpus and marker; FY94 is unmeasured.
+
+This run also produced the project's first data-grounded documentary decision.
+The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though
+the Feb-1990 dictionary marks FY "Always Present Y". That requiredness is a
+later vintage than FY88 (RG310) and is contradicted by a quarter of the data;
+combined with the FY1991 "elements may vary per physical record" caveat and the
+model's existing `Option` type, **`construct.fiscal_year` was reconciled to treat
+FY as optional for FY88** (absent is `Ok(None)`; a present FY still length-checks
+against both documented forms). This resolves the FY required-vs-`Option`
+disagreement the inventory had recorded but not repaired, and lifted the clean
+certification rate from 48.0% to 55.4%. The basis is recorded in `fiscal_year`'s
+`RuleRef` (assertion = the printed rule; interpretation = why it does not govern
+FY88), not silently applied.
+
+Validation after this work: `gleam test` **144 passed**, `gleam check` zero
+errors (one expected `LoadedRecord` unused-constructor warning — `build_project`
+resolved the other, for `Project`), and `gleam format --check src test` clean.
+`simplifile` moved to `[dependencies]` and `argv` was added, for the entrypoint
+and the `tally` corpus-analysis module; the reference TS parser is unchanged.
 
 ## Checkout observation
 

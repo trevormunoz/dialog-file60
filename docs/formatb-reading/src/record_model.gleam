@@ -1,6 +1,9 @@
-//// Design model, not the parser API. Only accession.parse is implemented.
-//// Opaque Project deliberately has no public construction path yet: the full
-//// rule inventory and validator must exist before we can return Ok(Project).
+//// Design model, not the parser API. The reading layer and accession.parse
+//// are implemented; complete Project construction remains gated on rules.
+//// Opaque Project has a public construction path, `build_project`, used only
+//// by `construct.project` once every group/field has been checked — it does
+//// not itself check anything, so callers outside `construct` should not use
+//// it to bypass the rule inventory.
 
 import accession.{type Accession, type AccessionError}
 import gleam/option.{type Option}
@@ -35,8 +38,8 @@ pub type Witness {
 /// continuation as Wrapped (this WrappedText) or Marked (this MarkedValueStart)
 /// against the profile marker byte. `assembly.gleam` walks the classified lines
 /// into these Fragments and the FieldOccurrences/SuppliedRecord that hold them,
-/// each carrying a Witness/Location. Joining a field's fragments into one
-/// lexical value is still separate and not yet implemented.
+/// each carrying a Witness/Location. `field_value.field_values` separately
+/// joins these fragments into ordered lexical byte values.
 pub type Fragment {
   TaggedStart(witness: Witness)
   WrappedText(witness: Witness)
@@ -161,8 +164,18 @@ pub type Institution {
     state_country: Supported(String),
     zip: Option(Supported(String)),
     region: Option(Supported(String)),
+    // RG (element 16): the 2-letter regional abbreviation. Distinct from
+    // `region`/RE (element 11, a numeric region code, Exact 1) above — RG and
+    // RE are two separate documented fields, not two readings of one field.
+    region_abbreviation: Option(Supported(String)),
     organization_code: Option(Supported(String)),
     organization_names: List(Supported(String)),
+    // CG (element 14): contract/grant/agreement number.
+    contract_grant: Option(Supported(String)),
+    // RN (element 17): "the second part of a two-part designation" per the
+    // dictionary's own Remarks — modeled independently of RG, not as an
+    // asserted pairing (the source only hints at it).
+    regional_project_number: Option(Supported(String)),
   )
 }
 
@@ -191,6 +204,9 @@ pub type Chronology {
     start: PairedDate,
     termination: PairedDate,
     fiscal_year: Option(Supported(String)),
+    // GY (element 28): grant year — FY's exact twin (same printed Exact-2
+    // widened by hand to Exact-4 dual-length rule); see `fiscal_year`/`gy_rule`.
+    grant_year: Option(Supported(String)),
     progress_updated: Option(Supported(String)),
     progress_period_end: Option(Supported(String)),
     progress_period_display: Option(Supported(String)),
@@ -212,8 +228,32 @@ pub type ClassificationColumns {
   )
 }
 
+/// A classification heading value (PH, GH): a fixed-width code and a literal,
+/// separated in the supplied bytes by a byte sequence the printed footnote and
+/// the FY88 data disagree on (footnote HEX40 HEX41 HEX02; FY88 0xA0 0x02 — see
+/// rules/field-rule-inventory.md batch 3). TWO parts, no percent (verified: PH/
+/// GH values never carry a trailing percent in FY88). The value is NOT valid
+/// UTF-8 (the lone high byte 0xA0), and code/literal are carved out of that
+/// byte structure, so they are kept as BitArray with their provenance rather
+/// than cast to String; decoding to text happens only at a display edge.
 pub type Heading {
-  Heading(code: Supported(String), literal: Supported(String))
+  Heading(code: Supported(BitArray), literal: Supported(BitArray))
+}
+
+/// A subcommodity allocation value (SC): code + literal + percent, the three
+/// parts separated by 0xA0 0x02 in the supplied bytes. Unlike a Heading, the
+/// percent is a REQUIRED part — every FY88 SC value carries one (6487/6487) —
+/// so a value lacking it is a divergence, not an omission. This is why SC is a
+/// distinct type from Heading rather than a Heading with an optional percent:
+/// the shapes differ, and the type enforces which fields carry a percent.
+/// All three parts are carved from the same non-UTF-8 byte structure, so all
+/// three are kept as BitArray (see Heading).
+pub type Subcommodity {
+  Subcommodity(
+    code: Supported(BitArray),
+    literal: Supported(BitArray),
+    percent: Supported(BitArray),
+  )
 }
 
 pub type Classifications {
@@ -222,7 +262,7 @@ pub type Classifications {
     applied: Option(Supported(String)),
     developmental: Option(Supported(String)),
     columns: ClassificationColumns,
-    subcommodities: List(Supported(Heading)),
+    subcommodities: List(Supported(Subcommodity)),
     subcommodity_percentages: List(Supported(String)),
     primary_headings: List(Supported(Heading)),
     general_headings: List(Supported(Heading)),
@@ -264,4 +304,50 @@ pub opaque type Project {
 /// No public construction path until the loading rules are specified.
 pub opaque type LoadedRecord {
   LoadedRecord(supplied: Project, dialog_update: Supported(String))
+}
+
+/// Smart constructor for the opaque `Project`. Performs no checking itself —
+/// it exists so `construct.project` can assemble a `Project` only after every
+/// field/group has been independently checked and found problem-free; the
+/// checking discipline lives in `construct`, not here.
+pub fn build_project(
+  rules rules: NonEmpty(RuleRef),
+  identity identity: Identity,
+  title title: Supported(String),
+  status status: Provisional(Supported(String)),
+  project_type project_type: Option(Supported(String)),
+  participants participants: Participants,
+  chronology chronology: Chronology,
+  classifications classifications: Classifications,
+  narratives narratives: Narratives,
+  subfiles subfiles: NonEmpty(Supported(String)),
+) -> Project {
+  Project(
+    rules: rules,
+    identity: identity,
+    title: title,
+    status: status,
+    project_type: project_type,
+    participants: participants,
+    chronology: chronology,
+    classifications: classifications,
+    narratives: narratives,
+    subfiles: subfiles,
+  )
+}
+
+/// The title (TI), for callers (tests, `report.gleam`) that only need to read
+/// back one field of an already-constructed `Project`.
+pub fn project_title(project: Project) -> Supported(String) {
+  project.title
+}
+
+/// The subfile codes (SF).
+pub fn project_subfiles(project: Project) -> NonEmpty(Supported(String)) {
+  project.subfiles
+}
+
+/// The narratives group (OB/AP/DE/PR/PB), for report rendering.
+pub fn project_narratives(project: Project) -> Narratives {
+  project.narratives
 }

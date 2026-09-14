@@ -8,7 +8,10 @@ target = "javascript"
 
 [dependencies]
 gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+# simplifile and argv power the runnable entrypoint (src/formatb_reading.gleam),
+# which reads a Format B file from disk and prints each record's checked Identity.
+simplifile = ">= 2.7.0 and < 3.0.0"
+argv = ">= 1.0.0 and < 2.0.0"
 
 [dev_dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
-simplifile = ">= 2.7.0 and < 3.0.0"

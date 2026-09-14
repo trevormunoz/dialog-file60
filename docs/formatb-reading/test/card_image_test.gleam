@@ -40,6 +40,24 @@ fn spaces(n: Int) -> BitArray {
   list.repeat(<<0x20>>, times: n) |> bit_array.concat
 }
 
+pub fn raw_columns_returns_untrimmed_69_bytes_test() {
+  let line = served_line(<<"AN":utf8>>, <<"9049442":utf8>>, <<"XXXXXXXX":utf8>>)
+  card_image.raw_columns(line)
+  |> should.equal(Ok(bit_array.append(<<"9049442":utf8>>, spaces(62))))
+}
+
+pub fn raw_columns_line_too_short_test() {
+  card_image.raw_columns(<<"AN ":utf8>>)
+  |> should.equal(Error(card_image.LineTooShort(3)))
+}
+
+pub fn trim_trailing_spaces_drops_only_ascii_space_test() {
+  card_image.trim_trailing_spaces(<<>>) |> should.equal(<<>>)
+  card_image.trim_trailing_spaces(spaces(69)) |> should.equal(<<>>)
+  card_image.trim_trailing_spaces(<<32, 65, 32, 0xAC, 9, 13, 32, 32>>)
+  |> should.equal(<<32, 65, 32, 0xAC, 9, 13>>)
+}
+
 pub fn extracts_columns_4_to_72_dropping_trailing_spaces_test() {
   // Columns 73-80 hold non-space junk: a correct reading stops at column 72
   // and never reaches them (guards against reading cols 4-80, the offsets.ts

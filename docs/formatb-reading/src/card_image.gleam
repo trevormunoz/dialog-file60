@@ -15,9 +15,9 @@ import gleam/list
 ///   - TaggedLine: a two-letter tag opening a field; carries the tag bytes.
 ///   - ContinuationLine: blank tag "  ", continuing the field above it. A
 ///     marked-value continuation (a profile-specific marker byte in column 4)
-///     is not yet distinguished from wrapped text; that needs a Profile.
-/// File-structure lines ("<<" header, ">>" trailer) are not handled here: they
-/// sit outside a record span, in the not-yet-built line-splitting step.
+///     is distinguished from wrapped text separately by `continuation_kind`.
+/// File-structure lines ("<<" header, ">>" trailer) are handled by `scan.scan`,
+/// not this per-record classifier.
 pub type LineKind {
   SeparatorLine
   TaggedLine(tag: BitArray)
@@ -47,8 +47,17 @@ const data_length: Int = 69
 /// so a later field check can see it rather than have it silently repaired. A
 /// line too short to reach column 72 yields `LineTooShort`.
 pub fn data_value(line: BitArray) -> Result(BitArray, CardImageError) {
+  case raw_columns(line) {
+    Ok(columns) -> Ok(trim_trailing_spaces(columns))
+    Error(reason) -> Error(reason)
+  }
+}
+
+/// Columns 4-72, untrimmed: 69 bytes at offsets 3..71. Columns 73-80 are
+/// excluded. A line stopping before column 72 yields `LineTooShort`.
+pub fn raw_columns(line: BitArray) -> Result(BitArray, CardImageError) {
   case bit_array.slice(line, data_start, data_length) {
-    Ok(region) -> Ok(drop_trailing_spaces(region))
+    Ok(region) -> Ok(region)
     Error(Nil) -> Error(LineTooShort(bit_array.byte_size(line)))
   }
 }
@@ -117,9 +126,9 @@ pub fn classify(line: BitArray) -> Result(LineKind, CardImageError) {
   }
 }
 
-/// Drop the trailing run of ASCII-space bytes, returning columns 4-72 with the
-/// card pad removed. Bytes before the last non-space are kept verbatim.
-fn drop_trailing_spaces(region: BitArray) -> BitArray {
+/// Drop the trailing run of ASCII-space bytes (0x20) from byte-aligned input.
+/// Bytes before the last non-space are kept verbatim.
+pub fn trim_trailing_spaces(region: BitArray) -> BitArray {
   let keep = kept_length(region, 0, 0)
   // `keep` is within `region` by construction; assert rather than silently
   // return untrimmed bytes if that invariant ever breaks.
