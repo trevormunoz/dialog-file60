@@ -13,6 +13,7 @@ import gleam/bit_array
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import gleam/result
 import record_model.{
   type Chronology, type Classifications, type ConstructionProblem,
   type FieldOccurrence, type Fragment, type Heading, type Identity,
@@ -1323,13 +1324,20 @@ pub fn required(
   }
 }
 
-/// An optional, non-repeating string field: absent is Ok(None), not a problem.
-pub fn optional(
+/// An optional, non-repeating field checked by `check`: absent is Ok(None), not
+/// a problem. Shared by `optional` (check_string_bytes) and `optional_bytes`
+/// (check_raw_bytes) — the two are byte-identical apart from that one check
+/// function, including the present-but-empty `Ok(<<>>) -> Ok(None)` special
+/// case, which belongs to this single-value path only (the repeating-family
+/// functions below do NOT skip empty values).
+fn optional_checked(
   record: SuppliedRecord,
   tag: String,
   rule: RuleRef,
   length: Length,
-) -> Checked(Option(Supported(String))) {
+  check: fn(BitArray, FieldOccurrence, String, RuleRef, Length) ->
+    Result(Supported(a), ConstructionProblem),
+) -> Checked(Option(Supported(a))) {
   case occurrences(record, tag) {
     [] -> Ok(None)
     [one] ->
@@ -1343,13 +1351,23 @@ pub fn optional(
         Error(Nil) -> Error(NonEmpty(fragment_placeholder(one), []))
         Ok(<<>>) -> Ok(None)
         Ok(bytes) ->
-          case check_string_bytes(bytes, one, tag, rule, length) {
+          case check(bytes, one, tag, rule, length) {
             Ok(supported) -> Ok(Some(supported))
             Error(problem) -> Error(NonEmpty(problem, []))
           }
       }
     many -> Error(NonEmpty(non_repeating(many, tag, rule), []))
   }
+}
+
+/// An optional, non-repeating string field: absent is Ok(None), not a problem.
+pub fn optional(
+  record: SuppliedRecord,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+) -> Checked(Option(Supported(String))) {
+  optional_checked(record, tag, rule, length, check_string_bytes)
 }
 
 /// The byte-preserving counterpart of `optional`, for OB/AP/PR/PB: absent is
@@ -1363,21 +1381,33 @@ pub fn optional_bytes(
   rule: RuleRef,
   length: Length,
 ) -> Checked(Option(Supported(BitArray))) {
-  case occurrences(record, tag) {
-    [] -> Ok(None)
-    [one] ->
-      // Present-but-empty reads as omission, same as `optional` (see its note).
-      case single_value(one) {
-        Error(Nil) -> Error(NonEmpty(fragment_placeholder(one), []))
-        Ok(<<>>) -> Ok(None)
-        Ok(bytes) ->
-          case check_raw_bytes(bytes, one, tag, rule, length) {
-            Ok(supported) -> Ok(Some(supported))
-            Error(problem) -> Error(NonEmpty(problem, []))
-          }
-      }
-    many -> Error(NonEmpty(non_repeating(many, tag, rule), []))
-  }
+  optional_checked(record, tag, rule, length, check_raw_bytes)
+}
+
+/// A repeating field checked by `check`: every lexical value across the
+/// occurrences, length-checked. Multi-value — a field may carry several
+/// 0xAC-marked values in one occurrence (e.g. PF), so it consumes
+/// `flat_values`, not `single_value`. Absent is Ok([]). Every overlong/invalid
+/// value contributes a problem; if any, the whole field fails with all of
+/// them, so problems accumulate across values. Shared by `repeating`
+/// (check_string_bytes) and `repeating_bytes` (check_raw_bytes) — unlike
+/// `optional_checked`, there is no empty-value special case: every value is
+/// length-checked exactly as documented.
+fn repeating_checked(
+  record: SuppliedRecord,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+  check: fn(BitArray, FieldOccurrence, String, RuleRef, Length) ->
+    Result(Supported(a), ConstructionProblem),
+) -> Checked(List(Supported(a))) {
+  let #(values, extraction) = flat_values(record, tag)
+  let results =
+    list.map(values, fn(pair) {
+      let #(bytes, occurrence) = pair
+      check(bytes, occurrence, tag, rule, length)
+    })
+  collect(results, extraction, [])
 }
 
 /// A repeating string field: every lexical value across the occurrences,
@@ -1391,13 +1421,55 @@ pub fn repeating(
   rule: RuleRef,
   length: Length,
 ) -> Checked(List(Supported(String))) {
-  let #(values, extraction) = flat_values(record, tag)
-  let results =
-    list.map(values, fn(pair) {
-      let #(bytes, occurrence) = pair
-      check_string_bytes(bytes, occurrence, tag, rule, length)
-    })
-  collect(results, extraction, [])
+  repeating_checked(record, tag, rule, length, check_string_bytes)
+}
+
+/// A required, non-empty, repeating field with a per-value byte bound and a
+/// maximum occurrence count (e.g. IN: 1..6, each <= 30, first is sort), values
+/// read via `repeating_fn`. Order is preserved. Empty is
+/// RequiredFieldNotLocated; over the count limit is RepetitionLimitExceeded;
+/// overlong values accumulate. Shared by `bounded_nonempty` (parameterized by
+/// `repeating`) and `bounded_nonempty_bytes` (parameterized by
+/// `repeating_bytes`) — the two are byte-identical apart from which
+/// repeating-family function reads the values.
+fn bounded_nonempty_checked(
+  record: SuppliedRecord,
+  tag: String,
+  rule: RuleRef,
+  length: Length,
+  max_count: Int,
+  repeating_fn: fn(SuppliedRecord, String, RuleRef, Length) ->
+    Checked(List(Supported(a))),
+) -> Checked(record_model.NonEmpty(Supported(a))) {
+  let occ = occurrences(record, tag)
+  case occ {
+    [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
+    _ -> {
+      // Count VALUES, not tagged occurrences: a multi-value field carries several
+      // 0xAC-marked values per occurrence, and the documented bound is on values.
+      let #(values, _extraction) = flat_values(record, tag)
+      let over = case list.length(values) > max_count {
+        True -> [
+          repetition_limit(occ, tag, rule, list.length(values), max_count),
+        ]
+        False -> []
+      }
+      case repeating_fn(record, tag, rule, length), over {
+        Error(NonEmpty(first, rest)), _ -> {
+          let assert [combined_first, ..combined_rest] =
+            list.append([first, ..rest], over)
+            as "[first, ..rest] is never empty, so appending over stays non-empty"
+          Error(NonEmpty(combined_first, combined_rest))
+        }
+        Ok(_), [first, ..rest] -> Error(NonEmpty(first, rest))
+        Ok(values), [] ->
+          case values {
+            [first, ..rest] -> Ok(NonEmpty(first, rest))
+            [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
+          }
+      }
+    }
+  }
 }
 
 /// A required, non-empty, repeating string field with a per-value byte bound
@@ -1411,35 +1483,7 @@ pub fn bounded_nonempty(
   length: Length,
   max_count: Int,
 ) -> Checked(record_model.NonEmpty(Supported(String))) {
-  let occ = occurrences(record, tag)
-  case occ {
-    [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
-    _ -> {
-      // Count VALUES, not tagged occurrences: a multi-value field carries several
-      // 0xAC-marked values per occurrence, and the documented bound is on values.
-      let #(values, _extraction) = flat_values(record, tag)
-      let over = case list.length(values) > max_count {
-        True -> [
-          repetition_limit(occ, tag, rule, list.length(values), max_count),
-        ]
-        False -> []
-      }
-      case repeating(record, tag, rule, length), over {
-        Error(NonEmpty(first, rest)), _ -> {
-          let assert [combined_first, ..combined_rest] =
-            list.append([first, ..rest], over)
-            as "[first, ..rest] is never empty, so appending over stays non-empty"
-          Error(NonEmpty(combined_first, combined_rest))
-        }
-        Ok(_), [first, ..rest] -> Error(NonEmpty(first, rest))
-        Ok(values), [] ->
-          case values {
-            [first, ..rest] -> Ok(NonEmpty(first, rest))
-            [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
-          }
-      }
-    }
-  }
+  bounded_nonempty_checked(record, tag, rule, length, max_count, repeating)
 }
 
 // The byte-preserving counterpart of `repeating`, for IN via
@@ -1452,13 +1496,7 @@ fn repeating_bytes(
   rule: RuleRef,
   length: Length,
 ) -> Checked(List(Supported(BitArray))) {
-  let #(values, extraction) = flat_values(record, tag)
-  let results =
-    list.map(values, fn(pair) {
-      let #(bytes, occurrence) = pair
-      check_raw_bytes(bytes, occurrence, tag, rule, length)
-    })
-  collect(results, extraction, [])
+  repeating_checked(record, tag, rule, length, check_raw_bytes)
 }
 
 /// The byte-preserving counterpart of `bounded_nonempty`, for IN: required,
@@ -1472,35 +1510,14 @@ pub fn bounded_nonempty_bytes(
   length: Length,
   max_count: Int,
 ) -> Checked(record_model.NonEmpty(Supported(BitArray))) {
-  let occ = occurrences(record, tag)
-  case occ {
-    [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
-    _ -> {
-      // Count VALUES, not tagged occurrences: a multi-value field carries several
-      // 0xAC-marked values per occurrence, and the documented bound is on values.
-      let #(values, _extraction) = flat_values(record, tag)
-      let over = case list.length(values) > max_count {
-        True -> [
-          repetition_limit(occ, tag, rule, list.length(values), max_count),
-        ]
-        False -> []
-      }
-      case repeating_bytes(record, tag, rule, length), over {
-        Error(NonEmpty(first, rest)), _ -> {
-          let assert [combined_first, ..combined_rest] =
-            list.append([first, ..rest], over)
-            as "[first, ..rest] is never empty, so appending over stays non-empty"
-          Error(NonEmpty(combined_first, combined_rest))
-        }
-        Ok(_), [first, ..rest] -> Error(NonEmpty(first, rest))
-        Ok(values), [] ->
-          case values {
-            [first, ..rest] -> Ok(NonEmpty(first, rest))
-            [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
-          }
-      }
-    }
-  }
+  bounded_nonempty_checked(
+    record,
+    tag,
+    rule,
+    length,
+    max_count,
+    repeating_bytes,
+  )
 }
 
 /// An optional, repeating string field with a per-value byte bound AND a
@@ -1582,15 +1599,16 @@ fn checked_string(
 // is not valid text" on failure) and the byte-preserving path
 // (`check_raw_bytes`, decode never fails) — one length-checking
 // implementation, so the String path's behavior stays byte-identical to
-// before this field split existed.
+// before this field split existed. `decode` carries its own failure reason,
+// so a decoder is never forced to report a dead reason string (as the raw
+// path previously did with `""`).
 fn check_bytes(
   bytes: BitArray,
   occurrence: FieldOccurrence,
   tag: String,
   rule: RuleRef,
   length: Length,
-  decode: fn(BitArray) -> Result(a, Nil),
-  invalid_decode_reason: String,
+  decode: fn(BitArray) -> Result(a, String),
 ) -> Result(Supported(a), ConstructionProblem) {
   case within(length, bit_array.byte_size(bytes)) {
     False ->
@@ -1606,8 +1624,7 @@ fn check_bytes(
     True ->
       case decode(bytes) {
         Ok(value) -> Ok(Supported(value, locations(occurrence)))
-        Error(Nil) ->
-          Error(invalid_value(tag, rule, occurrence, invalid_decode_reason))
+        Error(reason) -> Error(invalid_value(tag, rule, occurrence, reason))
       }
   }
 }
@@ -1624,15 +1641,9 @@ fn check_string_bytes(
   rule: RuleRef,
   length: Length,
 ) -> Result(Supported(String), ConstructionProblem) {
-  check_bytes(
-    bytes,
-    occurrence,
-    tag,
-    rule,
-    length,
-    bit_array.to_string,
-    "value is not valid text",
-  )
+  check_bytes(bytes, occurrence, tag, rule, length, fn(b) {
+    bit_array.to_string(b) |> result.replace_error("value is not valid text")
+  })
 }
 
 // Length-check already-extracted value bytes, keeping them as BitArray — no
@@ -1646,7 +1657,7 @@ fn check_raw_bytes(
   rule: RuleRef,
   length: Length,
 ) -> Result(Supported(BitArray), ConstructionProblem) {
-  check_bytes(bytes, occurrence, tag, rule, length, fn(b) { Ok(b) }, "")
+  check_bytes(bytes, occurrence, tag, rule, length, fn(b) { Ok(b) })
 }
 
 // --- classification headings (SC/PH/GH) --------------------------------------

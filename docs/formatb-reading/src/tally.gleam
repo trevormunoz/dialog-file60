@@ -85,32 +85,43 @@ type Acc {
 }
 
 fn tally(records: List(scan.ScannedRecord)) -> Acc {
-  list.fold(records, Acc(0, 0, 0, 0, 0, dict.new()), fn(acc, record) {
-    let scan.ScannedRecord(base, bytes) = record
-    let acc = Acc(..acc, total: acc.total + 1)
-    case assembly.assemble(bytes, base, 0xAC) {
-      Error(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
-      Ok(supplied) ->
-        case construct.project(supplied) {
-          Ok(_) -> Acc(..acc, certified: acc.certified + 1)
-          Error(NonEmpty(first, rest)) -> {
-            let problems = [first, ..rest]
-            let unmodeled_only = case list.all(problems, is_not_yet_modeled) {
-              True -> acc.unmodeled_only + 1
-              False -> acc.unmodeled_only
+  list.fold(
+    records,
+    Acc(
+      total: 0,
+      certified: 0,
+      failed: 0,
+      unreadable: 0,
+      unmodeled_only: 0,
+      problems: dict.new(),
+    ),
+    fn(acc, record) {
+      let scan.ScannedRecord(base, bytes) = record
+      let acc = Acc(..acc, total: acc.total + 1)
+      case assembly.assemble(bytes, base, 0xAC) {
+        Error(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
+        Ok(supplied) ->
+          case construct.project(supplied) {
+            Ok(_) -> Acc(..acc, certified: acc.certified + 1)
+            Error(NonEmpty(first, rest)) -> {
+              let problems = [first, ..rest]
+              let unmodeled_only = case list.all(problems, is_not_yet_modeled) {
+                True -> acc.unmodeled_only + 1
+                False -> acc.unmodeled_only
+              }
+              Acc(
+                ..acc,
+                failed: acc.failed + 1,
+                unmodeled_only: unmodeled_only,
+                problems: list.fold(problems, acc.problems, fn(d, p) {
+                  bump(d, bucket(p))
+                }),
+              )
             }
-            Acc(
-              ..acc,
-              failed: acc.failed + 1,
-              unmodeled_only: unmodeled_only,
-              problems: list.fold(problems, acc.problems, fn(d, p) {
-                bump(d, bucket(p))
-              }),
-            )
           }
-        }
-    }
-  })
+      }
+    },
+  )
 }
 
 fn is_not_yet_modeled(problem: ConstructionProblem) -> Bool {
@@ -174,9 +185,17 @@ fn render(acc: Acc, path: String, line_count: Int) -> String {
   let rows =
     acc.problems
     |> dict.to_list
-    |> list.sort(fn(a, b) { int.compare(b.1, a.1) })
+    |> list.sort(fn(a, b) {
+      let #(_, a_count) = a
+      let #(_, b_count) = b
+      int.compare(b_count, a_count)
+    })
     |> list.map(fn(row) {
-      "    " <> pad_right(row.0, 30) <> " " <> int.to_string(row.1)
+      let #(key, count) = row
+      "    "
+      <> string.pad_end(key, to: 30, with: " ")
+      <> " "
+      <> int.to_string(count)
     })
     |> string.join("\n")
   string.join(
@@ -196,13 +215,6 @@ fn render(acc: Acc, path: String, line_count: Int) -> String {
     ],
     "\n",
   )
-}
-
-fn pad_right(text: String, width: Int) -> String {
-  case width - string.length(text) {
-    n if n > 0 -> text <> string.repeat(" ", n)
-    _ -> text
-  }
 }
 
 fn read_bits(path: String) -> Result(BitArray, String) {
