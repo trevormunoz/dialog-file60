@@ -46,6 +46,85 @@ marker/data collision** in single-value fields was resolved by field-aware readi
   fixture FY1994. Do not assume a rule transcribed from one applies unchanged to
   another without saying so.
 
+### RG310 / RG164: the file-name prefix is a NARA record group (accession provenance)
+
+The `RGnnn` prefix on each corpus file is a **NARA record group** — the record
+group of the accession that file came into NARA through — not a USDA-internal label
+(an earlier note in this repo mis-stated this; corrected here). Verified from the
+repo's `dataset-cards/research/cris-dialog/README.md` (the two NARA validation
+statements) and the NARA record-group authority (archives.gov guide-fed-records
+groups 310 and 164):
+
+- **FY88** — `RG310.CRIS.FY88.txt` — accession **NN3-310-90-001** (Oct 2 1990),
+  **Record Group 310, Records of the Agricultural Research Service (ARS)**.
+- **FY89–FY94** — `RG164.CRIS.*` — accession **NN3-164-93-001** (1993),
+  **Record Group 164, Records of the Cooperative State Research Service (CSRS)** —
+  the agency that operated CRIS.
+
+The 2018 manifest `CRIS_TSS367.pdf` catalogs the whole consolidated series (NAID
+6207709) under RG 164; FY88's `RG310` name is a fossil of its original, separate
+ARS accession. **Consequence for the vintage argument**: FY88 differs from the rest
+on two confounded axes — the earliest fiscal year *and* a distinct 1990 ARS-routed
+accession — so its outlier traits (BP/SN absent, three-part SC) cannot be split
+between "older CRIS export" and "ARS-side transfer". Among FY89–FY94 (all one 1993
+CSRS accession) any differences are pure vintage. BARC/Beltsville is an ARS facility,
+so the ARS-accessioned FY88 file is the one nearest Beltsville's own provenance.
+
+### Provenance chain: one path with a branch at the Format B tape
+
+The bytes we read are the far end of a documented transformation chain. It is NOT
+linear through DIALOG — it **branches at the Format B tape**, and NARA sits on the
+tape branch, parallel to DIALOG, not downstream of it. Evidence is the FY1991
+Validation Statement (`367_1DP.pdf` pp. 28-30, accession NN3-164-93-001, T.
+Southerly, June 12 1995) unless noted:
+
+```
+CRIS internal "agency format"  ("difficult for users … not applicable")
+    │  a COBOL program creates the tapes "in a more useable fashion"
+    ▼
+Format B card-image tapes  (EBCDIC char set, 9-track open reel, 6250 bpi)
+    ├──► DIALOG load ──► File 60 online     [BRANCH — inferred, not in these statements]
+    └──► CSRS transfers the tapes to NARA
+            │  NARA copies to 3480 cartridge, STILL EBCDIC, reblocked   [1995]
+            │  EBCDIC→ASCII + CRLF added                                 [undated; ASCII by the 2018 manifest]
+            ▼
+        NARA electronic-records copy ──► 2026 WACZ/WARC capture
+```
+
+- **CRIS internal → (COBOL) → Format B tape** (p.28): "The agency format used in the
+  creation of the automated system … (CRIS) is difficult for users to work with and,
+  therefore, is not applicable to these records. Instead, a COBOL program is utilized
+  to create the tapes in a more useable fashion." The tape's form (p.28): "in text
+  format and in a card image form which is 80 columns in length. A record separator
+  ($$) in columns 1-2 … designates the beginning of each physical record". ("not …
+  the currently usual EBCDIC or ASCII **format**" there = record organization, not
+  character set — the character set was EBCDIC, per p.30.)
+- **CSRS → NARA, the Format B tapes themselves** (p.30): "Cooperative State Research
+  Service transferred the … CRIS, Fiscal Year 1991, data file to the National
+  Archives … on two 1/2-inch open reel magnetic tapes. The technical specifications
+  were EBCDIC character set, non-labeled, 9 track, and 6250 bpi." NARA received the
+  Format B tapes, NOT anything downstream of DIALOG.
+- **NARA reblock — still EBCDIC** (p.30): "Upon arrival, NARA staff copied the tapes
+  to 18-track 3480 tape cartridges, 37871 bpi … using EBCDIC character set. The data
+  file was blocked at 5,040 characters per block."
+- **EBCDIC → ASCII + CRLF: undated in these PDFs.** The 1995 cartridge copy is still
+  EBCDIC (above); the 2018 manifest `CRIS_TSS367.pdf` describes the served file as
+  "ASCII Text … with two record-delimiters (carriage return and line feed); record
+  length includes delimiters." So the ASCII conversion and CRLF happened in NARA's
+  pipeline **between 1995 and 2018** — the layer that most plausibly produced the
+  surviving conversion artifacts (0xAC etc.). The statements do not say when or how.
+- **DIALOG → File 60 is inferred, not in these statements.** It rests on the spec's
+  own title, "DIALOG File Design Specifications, FORMAT B" (Format B is the format
+  designed *for* DIALOG loading), and File 60's existence in DIALOG catalogs
+  (external). CSRS made the Format B tapes "in a more useable fashion"; one copy fed
+  DIALOG's load, and NARA received a copy of those same tapes.
+- **Scope caveat**: this detailed chain is the **FY1991 / CSRS (RG 164)** statement.
+  The FY88 / ARS (RG 310) statement (p.1, Oct 1990) is far briefer — it describes
+  only NARA's validation procedure ("a manual comparison of the documentation with a
+  computer-generated printout"), NOT the COBOL/EBCDIC/reblock chain. Do not assume
+  FY88 followed the identical pipeline — another way the ARS-accessioned FY88 file is
+  a distinct provenance branch (see the RG310/RG164 note above).
+
 Prior source readings from these sessions are **source-restricted** (notebook):
 do not export this inventory outside the team archive.
 
@@ -742,11 +821,11 @@ since each value spans ≥1 line).
 ### SC percent — FY94 generalization finding (2026-09-14)
 
 Running the composed `construct.project` over the **held-out** `RG164.CRIS.FY94.txt`
-(3,384,622 lines, 34,090 records — a different fiscal-year vintage; per the manifest
-`CRIS_TSS367.pdf`, the same NARA Record Group 164 as FY88, the `RGnnn` file-name
-prefix being a USDA/CRIS designation, not the archival record group) was the first
-check of any SC rule outside FY88. It falsified the "percent required" part of the
-modeling decision above.
+(3,384,622 lines, 34,090 records — a different fiscal-year vintage, and a different
+accession/record group: FY94 is RG 164 / CSRS via accession NN3-164-93-001, while
+FY88 is RG 310 / ARS via NN3-310-90-001 — see the RG310/RG164 note below) was the
+first check of any SC rule outside FY88. It falsified the "percent required" part of
+the modeling decision above.
 
 - **FY94/RG164 SC values are two-part** (`code 0xA0 0x02 literal`, no percent) —
   e.g. `S3140 0xA0 0x02 Dairy Cattle-Milk`. The percent segment that is present

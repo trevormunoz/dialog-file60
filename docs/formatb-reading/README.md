@@ -646,13 +646,27 @@ generalization test below). All counts are scoped to this corpus and marker.
 (`data/RG164.CRIS.FY94.txt`, 3,384,622 lines, 34,090 records, `0xAC` marker) via
 the same `tally` module. This corpus was held out through every FY88
 reconciliation above, so it is a genuine test of a different fiscal-year vintage
-(FY94 vs FY88). (An earlier draft called it a *different record group*; that was
-an over-read of the file names. The manifest `CRIS_TSS367.pdf` lists all six
-annual files under NARA **Record Group 164** — the `RGnnn` prefix in a file name
-is a USDA/CRIS-side designation, not the archival record group. It happens to be
-`RG310` for FY88 alone and `RG164` for FY89–FY94, changing once at the FY88→FY89
-boundary. So FY88 may itself be a slightly older tooling vintage than the rest of
-the run — a reason to test FY89 next — but FY88 and FY94 are the same record group.)
+(FY94 vs FY88).
+
+The `RGnnn` file-name prefix is a **NARA record group**, and it identifies the
+accession each file came into NARA through — verified from the repo's own
+`dataset-cards/research/cris-dialog/README.md` and the NARA record-group authority:
+- **FY88** (`RG310.CRIS.FY88.txt`) came via accession **NN3-310-90-001** (Oct 1990),
+  **Record Group 310 — Records of the Agricultural Research Service (ARS)**.
+- **FY89–FY94** (`RG164.CRIS.*`) came via accession **NN3-164-93-001** (1993),
+  **Record Group 164 — Records of the Cooperative State Research Service (CSRS)**,
+  the agency that ran CRIS.
+
+The 2018 manifest `CRIS_TSS367.pdf` catalogs the whole consolidated series
+(6207709) under RG 164, but FY88's `RG310` prefix is a fossil of its original,
+separate ARS accession. So FY88 differs from the rest along **two** confounded
+axes at once: an earlier, ARS-routed 1990 accession *and* the earliest fiscal year.
+Among FY89–FY94 (all RG 164 / CSRS, one 1993 accession) differences are pure
+vintage; FY88's cannot be cleanly split between "older CRIS export" and "ARS-side
+transfer". (An earlier draft of this file mis-corrected the prefix as a non-archival
+USDA label; that was wrong — it is a record group.) This is BARC-relevant: BARC/
+Beltsville is an ARS facility, so the ARS-accessioned FY88 file sits closer to
+Beltsville's own institutional provenance than the CSRS-accessioned later years.
 
 **Initial result (before any FY94-informed reconciliation): 7.0% certified**
 (2,383 of 34,090); 31,707 failed; **0 unreadable.** The model does not
@@ -750,7 +764,8 @@ N` rule. That is correct behavior (the constructor flags a real conflict), not a
 modeling gap.
 
 The honest summary of the generalization test: the Format B **frame** generalizes
-perfectly across every fiscal-year vintage tested (all the same NARA record group); one
+perfectly across every fiscal-year vintage tested (and across the FY88 ARS accession
+vs the FY89–94 CSRS accession — see the RG310/RG164 note); one
 overfit **field rule** (SC percent) was found and corrected; one **coverage gap**
 (BP) was filled; one field the source itself declared undocumented (SN) was given
 an honest representation rather than counted as the model's failure; and one format
@@ -774,13 +789,20 @@ independent corpus certifying clean under rules built without it is the evidence
 the earlier 100%s could not give on their own: this is capture, not fit. (25,814
 of the 33,499 carry SN, reported in the source-undocumented tier as always.)
 
-FY89 also **dates the schema shift**. It already carries BP and SN — like FY94,
-unlike FY88, which had neither — so the CRIS schema additions land sharply at the
-**FY88→FY89 boundary**, the same boundary where the file-name prefix changes
-(`RG310` for FY88 alone, `RG164` from FY89 on). FY88 is thus the outlier vintage;
-FY89–94 look like one coherent later group. This is the two-layer reading (a stable
-Format B envelope around a drifting CRIS schema) shown across three years rather
-than argued from two. FY90, FY91, and FY93 remain held out and unmeasured.
+FY89 also **locates the schema shift** — with a caveat about what it can and
+cannot separate. FY89 already carries BP and SN — like FY94, unlike FY88, which had
+neither — so the CRIS schema additions appear at the **FY88→FY89 boundary**. But
+that boundary is confounded: it is also where the accession/record-group changes
+(FY88 via the 1990 ARS accession, RG 310; FY89 on via the 1993 CSRS accession,
+RG 164). So FY88's differences cannot be cleanly attributed to fiscal-year vintage
+alone versus its separate ARS-routed transfer. What FY89 *does* establish cleanly:
+**among the RG 164 / CSRS files (FY89–FY94, one 1993 accession), the schema is
+already stable by FY89** — BP and SN present, and a corpus held out from all rules
+certifying 100%. FY88 stands apart on both axes at once. This is the two-layer
+reading (a stable Format B envelope around a drifting CRIS schema) shown across
+three years rather than argued from two. FY90, FY91, and FY93 remain held out and
+unmeasured; none can isolate FY88's vintage from its provenance, since FY88 is the
+only ARS-accessioned file.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though
