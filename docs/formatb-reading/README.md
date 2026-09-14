@@ -726,19 +726,38 @@ Two evidence-grounded changes followed, each re-verified against **both** corpor
    never conflates the two). FY88 is unchanged: 32,016 clean, **0** carrying SN
    (SN does not occur there — which is what makes the tier real, not cosmetic).
 
-After all three changes, the only records that still fail in the entire
-34,090-record held-out corpus are **4**: a single `DE non-repeating-repeated`
-(the one genuine documentary divergence) and three `PR`/`PB` `FieldNotYetModeled`
-occurrences — an unexplained edge (3 in 3.38 M lines) worth a later glance, since
-PR/PB *are* modeled narrative fields.
+4. **The `0xAC` marker/data collision in single-value fields.** Investigating the
+   handful of residual failures found three `PR`/`PB` records reported (misleadingly)
+   as `FieldNotYetModeled`. The cause: `0xAC` is both the continuation marker *and*
+   a data byte in prose — a left single-quote conversion artifact (`'Golden
+   Delicious'`, `'Empire'`). When a long single-value narrative wraps such that a
+   data-`0xAC` lands at a continuation-line start, the reader misread it as a
+   `MarkedValueStart`, split one narrative into two values (dropping the quote
+   byte), and `single_value` then failed and mislabeled it. Fix (field-aware
+   reading): single-value fields (OB/AP/DE/PR/PB and the scalar fields) read via a
+   new `field_value.joined_value` that concatenates *all* fragments and keeps a
+   line-start `0xAC` as data — the marker never separates values in a field that
+   has only one. Multi-value fields (SC/PH/GH/PF) still honor the marker via
+   `field_values`; `assembly` is unchanged. This also retired the `FieldNotYetModeled`
+   mislabel for these records. Result: FY94 certification rose to **99.997%
+   (34,089/34,090)**; FY88 unchanged (no FY88 single-value field ever hit the
+   collision, so it stays byte-identical at 100%).
+
+After all four changes, the **only** record that still fails in the entire
+34,090-record held-out corpus is a single `DE non-repeating-repeated` — a record
+with two `DE` tagged lines, which genuinely diverges from DE's printed `Repeating
+N` rule. That is correct behavior (the constructor flags a real conflict), not a
+modeling gap.
 
 The honest summary of the generalization test: the Format B **frame** generalizes
 perfectly across the two fiscal-year vintages tested (same NARA record group); one
 overfit **field rule** (SC percent) was found and corrected; one **coverage gap**
-(BP) was filled; and one field the source itself declared undocumented (SN) was
-given an honest representation rather than counted as the model's failure. FY94
-certifies at 99.99%, reported as clean vs SN-carrying so the figure never
-overclaims. All counts scoped to these two corpora and the `0xAC` marker.
+(BP) was filled; one field the source itself declared undocumented (SN) was given
+an honest representation rather than counted as the model's failure; and one format
+ambiguity (the `0xAC` marker/data collision) was resolved by field-aware reading.
+FY94 certifies at 99.997%, reported as clean vs SN-carrying so the figure never
+overclaims, with one genuine `DE` divergence remaining. All counts scoped to these
+two corpora and the `0xAC` marker.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though
@@ -753,7 +772,7 @@ certification rate from 48.0% to 55.4%. The basis is recorded in `fiscal_year`'s
 `RuleRef` (assertion = the printed rule; interpretation = why it does not govern
 FY88), not silently applied.
 
-Validation after this work: `gleam test` **155 passed**, `gleam check` zero
+Validation after this work: `gleam test` **156 passed**, `gleam check` zero
 errors (one expected `LoadedRecord` unused-constructor warning — `build_project`
 resolved the other, for `Project`), and `gleam format --check src test` clean.
 `simplifile` moved to `[dependencies]` and `argv` was added, for the entrypoint

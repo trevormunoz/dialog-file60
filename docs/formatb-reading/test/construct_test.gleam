@@ -607,6 +607,29 @@ pub fn narratives_accepts_non_utf8_ob_test() {
   value |> should.equal(ob_bytes)
 }
 
+// A 0xAC byte (the profile continuation marker) that is actually DATA -- a
+// left-quote conversion artifact -- can land at the start of a wrapped line when
+// a long single-value narrative wraps. PR is single-value, so this is NOT a
+// marked-value boundary: the value must read as ONE joined BitArray with the
+// 0xAC preserved, never split (and never mislabelled FieldNotYetModeled). The
+// value here is 69 data bytes (filling the tagged line) + 0xAC + more, so the
+// 0xAC begins the continuation line -- exactly the FY94 collision.
+pub fn narratives_line_start_marker_in_single_value_pr_is_data_test() {
+  let pr =
+    bit_array.concat([
+      <<string.repeat("A", 69):utf8>>,
+      <<0xAC>>,
+      <<
+        "Empire":utf8,
+      >>,
+    ])
+  let supplied = record_bytes([#("PR", pr)])
+  let assert Ok(Narratives(_ob, _ap, _de, progress, _pb)) =
+    construct.narratives(supplied)
+  let assert Some(Supported(value, _)) = progress
+  value |> should.equal(pr)
+}
+
 // HP is not yet modeled: any occurrence blocks construction rather than being
 // silently accepted or dropped (the model has no `remaining` escape hatch).
 pub fn narratives_hp_present_reports_field_not_yet_modeled_test() {

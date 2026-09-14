@@ -34,6 +34,44 @@ pub fn field_values(
   }
 }
 
+/// Join ALL fragments into a SINGLE value, treating every continuation as
+/// wrapped text: a line-start marker byte is kept as DATA, never a value
+/// boundary. This is the correct reading for SINGLE-VALUE fields (OB/AP/DE/PR/PB
+/// and the scalar fields), where the profile marker never separates values — so a
+/// 0xAC at a wrapped-line start is a data byte (a left-quote conversion artifact;
+/// see the FY94 generalization finding), not a MarkedValueStart. Contrast
+/// `field_values`, which honors the marker for MULTI-value fields (SC/PH/GH/PF,
+/// the repeating columns). Interior padding is retained and the whole is trimmed
+/// once, exactly as `field_values` does per value.
+pub fn joined_value(
+  occurrence: FieldOccurrence,
+) -> Result(BitArray, CardImageError) {
+  let FieldOccurrence(_, NonEmpty(first, rest)) = occurrence
+  join_raw([first, ..rest], [])
+}
+
+fn join_raw(
+  fragments: List(Fragment),
+  chunks_reversed: List(BitArray),
+) -> Result(BitArray, CardImageError) {
+  case fragments {
+    [] ->
+      Ok(
+        chunks_reversed
+        |> list.reverse
+        |> bit_array.concat
+        |> card_image.trim_trailing_spaces,
+      )
+    [fragment, ..rest] ->
+      // Every fragment's raw columns 4-72 verbatim -- a MarkedValueStart's first
+      // byte (the marker) is kept as data here, unlike chunk_for's drop.
+      case card_image.raw_columns(fragment.witness.bytes) {
+        Error(reason) -> Error(reason)
+        Ok(raw) -> join_raw(rest, [raw, ..chunks_reversed])
+      }
+  }
+}
+
 // Both the values and each value's chunks accumulate in reverse order.
 fn fold_fragments(
   fragments: List(Fragment),

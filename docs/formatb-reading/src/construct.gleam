@@ -1873,11 +1873,14 @@ fn occurrences(record: SuppliedRecord, tag: String) -> List(FieldOccurrence) {
   })
 }
 
+// A single-value field's one value: ALL the occurrence's fragments joined,
+// treating a line-start marker byte as data, not a value boundary (see
+// field_value.joined_value and the FY94 0xAC-collision finding). A single-value
+// field never carries marked values, so joining is the faithful reading; only
+// genuinely unreadable bytes (raw_columns Error) fail here.
 fn single_value(occurrence: FieldOccurrence) -> Result(BitArray, Nil) {
-  case field_value.field_values(occurrence) {
-    Ok([value]) -> Ok(value)
-    _ -> Error(Nil)
-  }
+  field_value.joined_value(occurrence)
+  |> result.replace_error(Nil)
 }
 
 fn locations(occurrence: FieldOccurrence) -> record_model.NonEmpty(Location) {

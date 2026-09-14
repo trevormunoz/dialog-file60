@@ -18,12 +18,13 @@ FY, UP, PP, PX); **batch 3** classifications, percentages, headings, and the
 undocumented SN; **batch 4** narratives (OB, AP, DE, PR, PB, HP); **batch 5**
 institution/participants, project type, and the UD loading stage; **batch 6** the
 RN/CG/GY/RG adjacency. The **FY94 generalization test** (2026-09-14) then made
-three field changes from the held-out RG164 corpus: SC's percent was reconciled
-to optional, **BP** was modeled (its own entry below), and **SN** was recast from
-`FieldNotYetModeled` to a preserved source-undocumented field (`UndocumentedField`)
-— the latter two both under the new evidence grade `ValidationAddendum`.
-Transcription is complete; this still does **not** claim complete `Project`
-validation — that is the constructor work the closing section scopes.
+four changes from the held-out RG164 corpus: SC's percent was reconciled to
+optional, **BP** was modeled (its own entry below), **SN** was recast from
+`FieldNotYetModeled` to a preserved source-undocumented field (`UndocumentedField`,
+both under the new evidence grade `ValidationAddendum`), and the **`0xAC`
+marker/data collision** in single-value fields was resolved by field-aware reading
+(batch 4). Transcription is complete; this still does **not** claim complete
+`Project` validation — that is the constructor work the closing section scopes.
 
 ## Sources and provenance
 
@@ -862,6 +863,31 @@ unless noted; all Supplied stage.
   documented MAX lengths; the checked-field toolkit still enforces every
   length/requiredness rule above, only the final UTF-8 decode step is
   dropped.
+
+### The 0xAC marker/data collision in single-value fields (2026-09-14, FY94)
+
+Investigating the residual FY94 failures found that **`0xAC` is both the
+continuation marker and a data byte** in prose: it is a left single-quote
+conversion artifact (`'Golden Delicious'`, `'Empire'`, `'Jonagold'` — the opening
+quote is `0xAC`, the closing one a plain `0x27`). This is the same EBCDIC→ASCII
+artifact class registry/evidence.json tracks, now colliding with the marker byte.
+
+- **Symptom**: three FY94 records (2 PR, 1 PB) failed, reported — misleadingly — as
+  `FieldNotYetModeled`. A long single-value narrative wrapped such that a
+  data-`0xAC` landed at a continuation-line start; the reader classified it as a
+  `MarkedValueStart`, split one value into two (and dropped the quote byte), and
+  `single_value` then failed and fell back to the `FieldNotYetModeled` placeholder.
+- **Reading rule (fix)**: a single-value field never carries marked values, so a
+  line-start `0xAC` inside OB/AP/DE/PR/PB (and the scalar fields) is **data, not a
+  boundary**. `single_value` now reads via `field_value.joined_value`, which
+  concatenates all fragments and keeps a line-start `0xAC` verbatim. Multi-value
+  fields (SC/PH/GH/PF, the repeating columns) still honor the marker via
+  `field_values`; `assembly` is unchanged. The field-awareness is which reader a
+  field's constructor calls, not new state in the reading layer.
+- **Scope/impact**: FY94 rose to 99.997% (34,089/34,090); FY88 byte-identical at
+  100% (no FY88 single-value field hit the collision). The lone remaining FY94
+  failure is one `DE non-repeating-repeated` — a record with two DE tagged lines,
+  a genuine divergence from DE's printed `Repeating N`, correctly flagged.
 
 # Batch 5 — institution, participants, project type, loading
 
