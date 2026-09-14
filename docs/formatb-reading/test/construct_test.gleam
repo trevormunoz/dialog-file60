@@ -16,8 +16,8 @@ import record_model.{
   type RuleRef, Disagreement, FieldNotYetModeled, FormatDisagreement, Heading,
   Identity, InvalidAccession, InvalidFieldValue, Narratives, NonEmpty,
   NonRepeatingFieldRepeated, Participants, PrintedDictionary, Provisional,
-  RepetitionLimitExceeded, RequiredFieldNotLocated, RuleRef, Subcommodity,
-  Supplied, Supported, UndocumentedField,
+  RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
+  RuleRef, Subcommodity, Supplied, Supported, UndocumentedField,
 }
 
 // A throwaway rule for exercising the generic field checkers.
@@ -880,12 +880,18 @@ pub fn project_with_unassigned_part_reports_field_not_yet_modeled_test() {
 
 // SN is source-undocumented, so a full record that also carries SN CERTIFIES:
 // SN is neither a divergence nor a FieldNotYetModeled backlog item. The presence
-// is surfaced via `project_undocumented_fields`, never hidden — exactly one SN
-// entry, and the generic unmodeled-material pass does not double-count it (SN is
-// a member of the authoritative modeled-tag set).
+// is surfaced via `project_undocumented_fields`, never hidden. SN is bound to SC
+// (one percentage per SC value), so the record carries a matching SC value.
 pub fn project_with_sn_certifies_carrying_undocumented_field_test() {
-  let supplied = record(list.append(full_record_pairs(), [#("SN", "50")]))
-  let assert Ok(project) = construct.project(supplied)
+  let sc = <<"S3140":utf8, 0x20, 0xA0, 0x02, "Dairy":utf8>>
+  let pairs =
+    full_record_pairs()
+    |> list.map(fn(p) {
+      let #(tag, v) = p
+      #(tag, <<v:utf8>>)
+    })
+    |> list.append([#("SC", sc), #("SN", <<"50":utf8>>)])
+  let assert Ok(project) = construct.project(record_bytes(pairs))
   let assert [UndocumentedField("SN", _, _)] =
     record_model.project_undocumented_fields(project)
 }
@@ -941,14 +947,59 @@ pub fn classifications_happy_path_test() {
 
 // SN has no dictionary row: it is source-undocumented (the validation addendum
 // names SN and BP as present in the data but not in the Data Element
-// Descriptions). Its occurrence is PRESERVED as an UndocumentedField, not
-// reported as a problem and not silently dropped: Classifications still builds,
-// and the SN bytes are carried in `subcommodity_percentages`.
+// Descriptions). Its value is PRESERVED as an UndocumentedField, not reported as a
+// problem and not silently dropped. SN is bound to SC (one percentage per SC
+// value), so a matching SC value is present; the SN bytes are carried in
+// `subcommodity_percentages`.
 pub fn classifications_with_sn_preserves_undocumented_field_test() {
-  let supplied = record([#("BT", "1000"), #("SN", "50")])
+  let sc = <<"S3140":utf8, 0x20, 0xA0, 0x02, "Dairy":utf8>>
+  let supplied = record_bytes([#("SC", sc), #("SN", <<"50":utf8>>)])
   let assert Ok(c) = construct.classifications(supplied)
   let assert [UndocumentedField("SN", value, _)] = c.subcommodity_percentages
   value |> should.equal(<<"50":utf8>>)
+}
+
+// The SN<->SC positional bond is enforced: SN carries one percentage per SC value.
+// Two SC values with only one SN percentage is a RelatedFieldsDisagree divergence.
+pub fn classifications_sn_sc_count_mismatch_reports_related_fields_disagree_test() {
+  let sc1 = <<"XPR":utf8, 0x20, 0x20, 0xA0, 0x02, "Pollution":utf8>>
+  let sc2 = <<"W2G":utf8, 0x20, 0x20, 0xA0, 0x02, "Water in Soils":utf8>>
+  let supplied =
+    record_bytes([#("SC", sc1), #("SC", sc2), #("SN", <<"100%":utf8>>)])
+  let assert Error(NonEmpty(first, rest)) = construct.classifications(supplied)
+  should.be_true(
+    list.any([first, ..rest], fn(p) {
+      case p {
+        Disagreement(FormatDisagreement(RelatedFieldsDisagree(_, _), _, _, _)) ->
+          True
+        _ -> False
+      }
+    }),
+  )
+}
+
+// Matched counts pair by position: two SC values with two SN percentages build a
+// Classifications whose subcommodity_percentages is the same length as its
+// subcommodities, in order (percentage i pairs with subcommodity i).
+pub fn classifications_sn_pairs_with_sc_by_position_test() {
+  let sc1 = <<"XPR":utf8, 0x20, 0x20, 0xA0, 0x02, "Pollution":utf8>>
+  let sc2 = <<"W2G":utf8, 0x20, 0x20, 0xA0, 0x02, "Water in Soils":utf8>>
+  let supplied =
+    record_bytes([
+      #("SC", sc1),
+      #("SC", sc2),
+      #("SN", <<"040%":utf8>>),
+      #("SN", <<"060%":utf8>>),
+    ])
+  let assert Ok(c) = construct.classifications(supplied)
+  list.length(c.subcommodity_percentages)
+  |> should.equal(list.length(c.subcommodities))
+  let assert [
+    UndocumentedField("SN", first, _),
+    UndocumentedField("SN", second, _),
+  ] = c.subcommodity_percentages
+  first |> should.equal(<<"040%":utf8>>)
+  second |> should.equal(<<"060%":utf8>>)
 }
 
 // An AC value below the documented MIN 5 is a divergence, not silently

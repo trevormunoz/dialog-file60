@@ -418,6 +418,22 @@ recorded for the inventory's completeness and the next batch.)
 >   figure never conflates clean with SN-carrying). Resolving SN's actual rule
 >   still needs a source, not a guess — this models the field's *status*, not its
 >   content.
+>
+>   **SN↔SC positional bond (2026-09-14).** SN is not just a preserved bag of
+>   values — it is an **ordered parallel field to SC**: percentage *i* is the
+>   percentage for subcommodity *i* (the agency note: "SN … refers to the previous
+>   SC"). A full-file census confirms it value-for-value: every one of FY94's
+>   34,090 records has `count(SN values) == count(SC values)` (e.g. `S3140…Dairy
+>   Cattle-Milk` ↔ `100%`; `XPR…Pollution` + `W2G…Water in Soils` ↔ `040%` +
+>   `060%`). This is the same percentage FY88 carried inline in a three-part SC —
+>   the schema change externalized it to a parallel field. So `subcommodity_percentages`
+>   is now an ordered list index-paired to `subcommodities`, and the constructor
+>   enforces the equal-count bond (`RelatedFieldsDisagree`, rule `sn_sc_bond_rule`,
+>   evidence `ValidationAddendum`) when SN is present; the percentage values stay
+>   preserved and unchecked. Enforcing the pairing is not "inferring an SN rule from
+>   data" — the pairing is documented; only a value-format rule would be inferred,
+>   and none is imposed. Verified non-regressing: FY88 100%, FY89 100%, FY94 99.997%
+>   (the bond flags zero real records; the lone FY94 failure remains the DE repeat).
 
 ### BP — Progress Report Period Covered (validation addendum, no element number)
 

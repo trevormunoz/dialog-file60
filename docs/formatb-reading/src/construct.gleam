@@ -24,9 +24,9 @@ import record_model.{
   FormatDisagreement, HandwrittenAmendment, Heading, Identity, Institution,
   InvalidAccession, InvalidFieldValue, Location, MarkedValueStart, Narratives,
   NonEmpty, PairedDate, Participants, PrintedDictionary, Provisional,
-  RequiredFieldNotLocated, RuleRef, Subcommodity, Supplied, Supported,
-  TaggedStart, Unassigned, UndocumentedField, ValidationAddendum, Witness,
-  WrappedText,
+  RelatedFieldsDisagree, RequiredFieldNotLocated, RuleRef, Subcommodity,
+  Supplied, Supported, TaggedStart, Unassigned, UndocumentedField,
+  ValidationAddendum, Witness, WrappedText,
 }
 
 /// AN rule, PDF p.13 row 1, printed (rules/field-rule-inventory.md batch 1).
@@ -615,7 +615,10 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
       ),
       50,
     )
-  // SN: source-undocumented, preserved (never a problem) — see sn_undocumented.
+  // SN: source-undocumented, preserved (values, never checked) — see
+  // sn_undocumented. When present, SN is an ordered parallel field: percentage i
+  // pairs with subcommodity i, so the counts must match (the documented SN<->SC
+  // bond). The pairing is checked below once the SC values are known.
   let subcommodity_percentages = sn_undocumented(record)
   let primary_headings =
     heading_field(
@@ -639,6 +642,11 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
       ),
       60,
     )
+  // The SN<->SC positional bond: only checkable once the SC values are in hand.
+  let sn_sc_pairing = case subcommodities {
+    Ok(scs) -> sn_sc_bond(scs, subcommodity_percentages)
+    Error(_) -> []
+  }
   let problems =
     list.flatten([
       problems_of(basic),
@@ -652,6 +660,7 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
       problems_of(program_area),
       problems_of(joint_council),
       problems_of(subcommodities),
+      sn_sc_pairing,
       problems_of(primary_headings),
       problems_of(general_headings),
     ])
@@ -699,6 +708,52 @@ fn sn_undocumented(record: SuppliedRecord) -> List(UndocumentedField) {
     }
   })
 }
+
+/// The SN<->SC positional bond. SN is an ordered parallel field: percentage i is
+/// the percentage for subcommodity i (agency note, Aug 26 1992: "SN = percentage
+/// that refers to the previous SC field tag"; confirmed value-for-value in FY94,
+/// 34,090/34,090 records). So when SN is present its value count must equal the SC
+/// value count — a `RelatedFieldsDisagree` divergence otherwise. Absent SN ([]) is
+/// no divergence: FY88 carries the percentage inline in a three-part SC instead.
+/// The pairing is documented, so enforcing it does not "infer an SN rule from
+/// data"; the percentage VALUES stay preserved and unchecked.
+fn sn_sc_bond(
+  subcommodities: List(Supported(Subcommodity)),
+  percentages: List(UndocumentedField),
+) -> List(ConstructionProblem) {
+  case percentages {
+    [] -> []
+    [first, ..] ->
+      case list.length(percentages) == list.length(subcommodities) {
+        True -> []
+        False -> [
+          disagreement(
+            RelatedFieldsDisagree(
+              NonEmpty("SN", ["SC"]),
+              "SN carries "
+                <> int.to_string(list.length(percentages))
+                <> " percentage(s) but SC carries "
+                <> int.to_string(list.length(subcommodities))
+                <> " value(s); the documented one-to-one SN<->SC pairing requires equal counts",
+            ),
+            sn_sc_bond_rule,
+            first.locations,
+            "count of SN percentages against count of SC values",
+          ),
+        ]
+      }
+  }
+}
+
+const sn_sc_bond_rule: RuleRef = RuleRef(
+  document: "367_1DP.pdf",
+  pdf_page: 29,
+  element: "— (SN)",
+  assertion: "validation addendum p.28-29, agency note Aug 26 1992: 'Percentage that refers to the previous SC field tag. The SN changes depending on the SC.'",
+  interpretation: "SN is an ordered parallel field bound position-for-position to SC: percentage i is subcommodity i's percentage, so a present SN must carry exactly one value per SC value. Documented pairing (not inferred); the percentage values themselves are source-undocumented and kept unchecked. Confirmed value-for-value across FY94 (34,090/34,090 records).",
+  stage: Supplied,
+  evidence: ValidationAddendum,
+)
 
 // PH/GH: a multi-value classification-heading field. Each 0xAC-marked value
 // across the occurrence(s) is parsed into a two-part Heading (code+literal);

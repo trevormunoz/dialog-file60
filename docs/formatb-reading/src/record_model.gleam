@@ -334,8 +334,13 @@ pub type Classifications {
     developmental: Option(Supported(String)),
     columns: ClassificationColumns,
     subcommodities: List(Supported(Subcommodity)),
-    // SN: source-undocumented (see UndocumentedField). Preserved, unvalidated
-    // presences rather than checked values; empty when the record carries no SN.
+    // SN: source-undocumented (see UndocumentedField), and an ORDERED PARALLEL
+    // field to `subcommodities` — element i is the percentage for subcommodity i
+    // (agency note, Aug 26 1992: "SN = percentage that refers to the previous SC").
+    // Preserved, unvalidated values; empty when the record carries no SN (FY88,
+    // where the percentage is inline in a three-part SC instead). When non-empty,
+    // the constructor enforces len == len(subcommodities) (the documented bond);
+    // the values themselves are kept unchecked.
     subcommodity_percentages: List(UndocumentedField),
     primary_headings: List(Supported(Heading)),
     general_headings: List(Supported(Heading)),
