@@ -637,8 +637,86 @@ nothing fails will certify that corpus. The constructor keeps discriminating
 power — the tests show it still rejects wrong-length values, missing required
 fields, bad accessions, unmodeled tags, and malformed SC structure — so this is
 not a rubber stamp. But the real test of whether the model captures Format B
-rather than FY88 is **FY94, held out throughout and still unmeasured.** All
-counts are scoped to this corpus and marker.
+rather than FY88 is **FY94, held out throughout** — now measured (see the FY94
+generalization test below). All counts are scoped to this corpus and marker.
+
+### FY94 generalization test (held-out corpus)
+
+`construct.project` was run end-to-end over the **whole held-out FY94 corpus**
+(`data/RG164.CRIS.FY94.txt`, 3,384,622 lines, 34,090 records, `0xAC` marker) via
+the same `tally` module. This corpus was held out through every FY88
+reconciliation above; it is also a **different record group** (RG164, not FY88's
+RG310), so it stresses both fiscal-year vintage and agency provenance at once.
+
+**Initial result (before any FY94-informed reconciliation): 7.0% certified**
+(2,383 of 34,090); 31,707 failed; **0 unreadable.** The model does not
+generalize as-is — and the split shows exactly where.
+
+- **The format frame generalized perfectly.** 0 unreadable across 3.38 M lines:
+  82-byte/CRLF alignment, `$$` record separators, the `<<` header, the `0xAC`
+  continuation marker, and the `0xA0`/`0x02` internal separators are all
+  identical in RG164/FY94. The scan → assemble reading layer is not overfit.
+- **One field rule overfit, and it dominates.** The failure buckets were
+  `SC invalid-structure` 67,723 (the real divergence), `SN not-yet-modeled`
+  27,607 and `BP not-yet-modeled` 19,739 (coverage gaps — unmodeled tags, not
+  conflicts; BP does not occur in the FY88 modeled set), and 4 others. Only
+  4,100 of 31,707 failures are unmodeled-only, so this is a genuine documentary
+  conflict on SC, not merely missing tag coverage.
+- **Root cause, confirmed against real data** (not inferred): every SC failure
+  reports the same reason, `expected 3 parts (code, literal, percent) separated
+  by 0x02 but found 2`. FY94/RG164 SC values are two-part — e.g.
+  `S3140 [A0][02]Dairy Cattle-Milk` (code, literal) with **no percent** — while
+  FY88/RG310 values carry a third percent segment. The `subcommodity_field`
+  parser hard-required the percent; its own `RuleRef` note recorded the overfit
+  ("percent required (present in every FY88 value)"). A coverage fact about one
+  corpus had been asserted as format law. **This is the falsification the
+  held-out corpus was for**: a concentrated, legible, directional failure (one
+  field, one rule, provably too strict) rather than a scattered misread of the
+  format itself.
+
+The reconciliation that followed this finding is recorded next.
+
+#### Reconciliation, and what remains
+
+Two evidence-grounded changes followed, each re-verified against **both** corpora
+(FY88 must stay clean; FY94 must improve):
+
+1. **SC percent → optional.** `Subcommodity.percent` became an `Option`: a value
+   may be two-part (code, literal) or three-part (code, literal, percent). This
+   no longer asserts a bound only FY88 met, while keeping SC distinct from PH/GH
+   (still two-part; a percent on one is still a divergence) and still rejecting a
+   one-part or 4+-part SC. Result: the 67,723 SC structure faults went to **0**,
+   FY88 held at 100%, and FY94's failures flipped in kind — from documentary
+   conflict to unmodeled-tag coverage (99.997% unmodeled-only). Cert rate did not
+   move yet, because the same records also carry SN and BP.
+2. **BP modeled.** A census showed BP is absent from FY88 entirely but present in
+   FY94/RG164, where every one of 19,739 values is exact-12 `YYMM TO YYMM` — the
+   same shape as the printed PX (element 27), with which BP co-occurs (so it is a
+   distinct field, not a rename). BP has no printed dictionary row; it is one of
+   the two tags (with SN) the validation-report addendum (p.28-29) records as
+   present in the data but absent from the Data Element Descriptions, described by
+   the agency (Aug 26 1992) as "Progress report period covered". It is modeled as
+   an optional `Chronology` field under a new evidence grade, `ValidationAddendum`
+   (distinct from `PrintedDictionary`/`HandwrittenAmendment`). Result: the 19,739
+   BP unmodeled occurrences went to **0**, and FY94 certification rose to **19.0%
+   (6,483/34,090)** — exactly the records carrying neither SN nor BP (2,383) plus
+   the BP-only records (4,100). FY88 stayed 100%.
+
+**What remains is SN, and it is a documentary limit, not an oversight.** SN
+(27,607 records, 81% of FY94) is the *other* validation-addendum tag — "a
+percentage that refers to the previous SC field tag" — and the rule inventory
+records the explicit instruction *not* to infer an SN rule from its data
+behaviour. So SN stays `FieldNotYetModeled`: those records cannot fully certify
+until SN's rule is resolved from a source, not guessed. After SC + BP, the only
+*real* documentary divergence left in the entire 34,090-record held-out corpus is
+a single `DE non-repeating-repeated`; two more `PR`/`PB` `FieldNotYetModeled`
+occurrences (3 in 3.38 M lines) are an unexplained edge worth a later glance.
+
+The honest summary of the generalization test: the Format B **frame** generalizes
+perfectly across year and record group; one overfit **field rule** (SC percent)
+was found and corrected; one **coverage gap** (BP) was filled; and one field (SN)
+the source itself left undocumented remains the ceiling on FY94 certification.
+All counts scoped to these two corpora and the `0xAC` marker.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though
@@ -653,7 +731,7 @@ certification rate from 48.0% to 55.4%. The basis is recorded in `fiscal_year`'s
 `RuleRef` (assertion = the printed rule; interpretation = why it does not govern
 FY88), not silently applied.
 
-Validation after this work: `gleam test` **144 passed**, `gleam check` zero
+Validation after this work: `gleam test` **155 passed**, `gleam check` zero
 errors (one expected `LoadedRecord` unused-constructor warning — `build_project`
 resolved the other, for `Project`), and `gleam format --check src test` clean.
 `simplifile` moved to `[dependencies]` and `argv` was added, for the entrypoint

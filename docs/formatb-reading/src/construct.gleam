@@ -25,7 +25,7 @@ import record_model.{
   InvalidFieldValue, Location, MarkedValueStart, Narratives, NonEmpty,
   PairedDate, Participants, PrintedDictionary, Provisional,
   RequiredFieldNotLocated, RuleRef, Subcommodity, Supplied, Supported,
-  TaggedStart, Unassigned, Witness, WrappedText,
+  TaggedStart, Unassigned, ValidationAddendum, Witness, WrappedText,
 }
 
 /// AN rule, PDF p.13 row 1, printed (rules/field-rule-inventory.md batch 1).
@@ -364,6 +364,7 @@ pub fn chronology(record: SuppliedRecord) -> Checked(Chronology) {
       printed_rule(17, "27 (PX)", "A,N; Exact 12; YYMM TO YYMM"),
       exact(12),
     )
+  let bp = optional(record, "BP", bp_rule, exact(12))
   let problems =
     list.flatten([
       problems_of(process_date),
@@ -376,6 +377,7 @@ pub fn chronology(record: SuppliedRecord) -> Checked(Chronology) {
       problems_of(up),
       problems_of(pp),
       problems_of(px),
+      problems_of(bp),
     ])
   case problems {
     [] ->
@@ -391,6 +393,7 @@ pub fn chronology(record: SuppliedRecord) -> Checked(Chronology) {
         progress_updated: value_of(up),
         progress_period_end: value_of(pp),
         progress_period_display: value_of(px),
+        progress_report_period: value_of(bp),
       ))
     [first, ..rest] -> Error(NonEmpty(first, rest))
   }
@@ -442,6 +445,25 @@ const gy_rule: RuleRef = RuleRef(
   interpretation: "optional (printed Always Present N); when present, length must equal 2 (printed YY) or 4 (handwritten YYYY) — the same dual-length rule as FY; matches-neither is a divergence. Evidence PrintedDictionary for the Exact-2/2-digit example; the Exact-4 widening rests on the handwritten amendment.",
   stage: Supplied,
   evidence: PrintedDictionary,
+)
+
+/// BP (Progress report period covered): a field with NO printed dictionary row.
+/// It is one of the two tags the validation report addendum (367_1DP.pdf p.28-29)
+/// records as appearing in the data but absent from the Data Element Descriptions;
+/// the agency described it by phone (Note 1, Aug 26 1992) as "Progress report
+/// period covered". Absent from FY88 (RG310) entirely; present in FY94 (RG164),
+/// where every observed value is exact-12 "YYMM TO YYMM" (19,739/19,739) — the
+/// same shape as the printed PX (element 27), with which BP co-occurs. Modeled
+/// optional, exact-12; the shape rests on that PX precedent plus the FY94 census,
+/// not a dictionary row (EvidenceGrade ValidationAddendum). Scoped to FY94/RG164.
+const bp_rule: RuleRef = RuleRef(
+  document: "367_1DP.pdf",
+  pdf_page: 28,
+  element: "— (BP, no element number)",
+  assertion: "no printed dictionary row; validation addendum p.28-29 records BP as present in the data but not in the Data Element Descriptions; agency note (Aug 26 1992): 'Progress report period covered'",
+  interpretation: "optional; when present, exact 12 bytes 'YYMM TO YYMM' — observed in 19,739/19,739 FY94/RG164 values and identical to the printed PX (element 27), with which BP co-occurs. Absent in FY88. Shape rests on the PX precedent plus the FY94 census, not a BP dictionary row.",
+  stage: Supplied,
+  evidence: ValidationAddendum,
 )
 
 /// Shared dual-length optional-year check for FY and GY: absent is Ok(None);
@@ -1136,8 +1158,8 @@ const sf_rule: RuleRef = RuleRef(
 const modeled_tags: List(String) = [
   "AN", "PN", "TI", "PS", "PT", "SF", "IN", "AS", "DS", "IC", "PI", "CY", "ST",
   "ZP", "RE", "CG", "RG", "RN", "OC", "PF", "PD", "SD", "SX", "TD", "TX", "FY",
-  "GY", "UP", "PP", "PX", "BT", "AT", "DT", "AC", "CM", "FS", "RP", "CT", "PA",
-  "JC", "SC", "SN", "PH", "GH", "OB", "AP", "DE", "PR", "PB", "HP",
+  "GY", "UP", "PP", "PX", "BP", "BT", "AT", "DT", "AC", "CM", "FS", "RP", "CT",
+  "PA", "JC", "SC", "SN", "PH", "GH", "OB", "AP", "DE", "PR", "PB", "HP",
 ]
 
 // Sentinel tag naming unassigned material (an orphan continuation with no
@@ -1700,8 +1722,13 @@ fn parse_heading(
   }
 }
 
-// Parse one SC value into a three-part Subcommodity (code, literal, percent).
-// The percent is required; a two-part value (no percent) fails the count check.
+// Parse one SC value into a Subcommodity. The percent is OPTIONAL (the FY94
+// generalization finding): a three-part value (code, literal, percent) carries
+// Some(percent); a two-part value (code, literal) is an omission, None. A
+// one-part or 4+-part value is a divergence. In the three-part shape the literal
+// is followed by a 0xA0 0x02 separator and so ends with 0xA0 (dropped); in the
+// two-part shape the literal is the final segment and is kept raw (as in
+// parse_heading).
 fn parse_subcommodity(
   bytes: BitArray,
   occurrence: FieldOccurrence,
@@ -1715,28 +1742,53 @@ fn parse_subcommodity(
         drop_trailing_0xa0(literal_segment)
       {
         Ok(padded_code), Ok(padded_literal) ->
-          Ok(Subcommodity(
-            code: Supported(
-              card_image.trim_trailing_spaces(padded_code),
-              locations(occurrence),
-            ),
-            literal: Supported(
-              card_image.trim_trailing_spaces(padded_literal),
-              locations(occurrence),
-            ),
-            percent: Supported(percent, locations(occurrence)),
+          Ok(subcommodity(
+            occurrence,
+            padded_code,
+            padded_literal,
+            Some(Supported(percent, locations(occurrence))),
           ))
         _, _ -> Error(missing_0xa0(tag, rule, occurrence))
+      }
+    [code_segment, literal] ->
+      case drop_trailing_0xa0(code_segment) {
+        Ok(padded_code) ->
+          Ok(subcommodity(occurrence, padded_code, literal, None))
+        Error(Nil) -> Error(missing_0xa0(tag, rule, occurrence))
       }
     segments ->
       Error(invalid_value(
         tag,
         rule,
         occurrence,
-        "expected 3 parts (code, literal, percent) separated by 0x02 but found "
+        "expected 2 or 3 parts (code, literal, optional percent) separated by 0x02 but found "
           <> int.to_string(list.length(segments)),
       ))
   }
+}
+
+// Assemble a Subcommodity from already-split code/literal bytes and an optional
+// percent, trimming the trailing space padding from both code and literal (as
+// the original three-part path did for both). The two-part path passes the raw
+// final literal segment; the three-part path passes the 0xA0-dropped one — both
+// are then space-trimmed identically here.
+fn subcommodity(
+  occurrence: FieldOccurrence,
+  padded_code: BitArray,
+  padded_literal: BitArray,
+  percent: option.Option(Supported(BitArray)),
+) -> Subcommodity {
+  Subcommodity(
+    code: Supported(
+      card_image.trim_trailing_spaces(padded_code),
+      locations(occurrence),
+    ),
+    literal: Supported(
+      card_image.trim_trailing_spaces(padded_literal),
+      locations(occurrence),
+    ),
+    percent: percent,
+  )
 }
 
 fn missing_0xa0(

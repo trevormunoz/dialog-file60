@@ -17,9 +17,12 @@ The batches below cover every field the model touches: **batch 1** identity
 FY, UP, PP, PX); **batch 3** classifications, percentages, headings, and the
 undocumented SN; **batch 4** narratives (OB, AP, DE, PR, PB, HP); **batch 5**
 institution/participants, project type, and the UD loading stage; **batch 6** the
-RN/CG/GY/RG adjacency. Transcription is complete; this still does **not** claim
-complete `Project` validation — that is the constructor work the closing section
-scopes.
+RN/CG/GY/RG adjacency. The **FY94 generalization test** (2026-09-14) then added
+two field-rule changes from the held-out RG164 corpus: SC's percent was
+reconciled to optional, and **BP** was modeled (its own entry below, evidence
+grade `ValidationAddendum`). Transcription is complete; this still does **not**
+claim complete `Project` validation — that is the constructor work the closing
+section scopes.
 
 ## Sources and provenance
 
@@ -309,6 +312,38 @@ report period covered." Implication for construction: an SN or BP occurrence is
 **documented as undocumented** — a `FieldNotYetModeled`/`RuleUnresolved` case,
 not a silent pass and not a nonconformance. (SN, BP are outside batch 1's fields;
 recorded for the inventory's completeness and the next batch.)
+
+> **Update (2026-09-14, from the FY94 generalization test).** Both tags are
+> absent from FY88 (RG310) and appear in FY94 (RG164). They now diverge in
+> treatment:
+> - **BP is now modeled** (see the BP entry below). Its meaning is the agency
+>   note above and its shape is unambiguous in the data (exact-12 `YYMM TO YYMM`,
+>   19,739/19,739, identical to the printed PX). A new evidence grade
+>   `ValidationAddendum` marks that the rule rests on the addendum note plus
+>   observed data and the PX precedent, not on a dictionary row for BP itself.
+> - **SN stays `FieldNotYetModeled`.** Its meaning ("a percentage tied to the
+>   preceding SC") does not fix a checkable shape, and the standing instruction is
+>   *not to infer an SN rule from its data behaviour*. SN is present in 27,607 of
+>   34,090 FY94 records (81%) and is the ceiling on FY94 certification (19.0%);
+>   lifting it needs a source for SN's rule, not a guess from the data.
+
+### BP — Progress Report Period Covered (validation addendum, no element number)
+
+No printed Data Element Description row. Recorded in the validation addendum
+(p.28-29) as present in the data but not in the descriptions; the agency described
+it (phone, Note 1, Aug 26 1992) as "Progress report period covered".
+- **Absent in FY88 (RG310); present in FY94 (RG164).** In FY94, BP co-occurs with
+  the printed PX (element 27) — PX=2796, BP=2115 in the first 300,000 lines — so
+  BP is a **distinct** field, not a rename of PX.
+- **Shape (FY94 census, whole corpus)**: every value is exactly 12 bytes,
+  `YYMM TO YYMM` (19,739/19,739, 100.00%); no `0xAC`/`0xA0`/`0x02` markers,
+  single-value, non-repeating. This is byte-for-byte the printed PX format.
+- **Model check — MODELED (2026-09-14)**: `construct.chronology` gains an optional
+  `progress_report_period` field, `optional(record, "BP", bp_rule, exact(12))`,
+  parallel to PX. `bp_rule` carries evidence grade **`ValidationAddendum`**: the
+  identity is from the addendum note, the shape from the PX precedent plus the
+  FY94 census — not a BP dictionary row. Scoped to FY94/RG164; a BP in another
+  vintage with a different shape would reopen this.
 
 ### Multiple handwritten insertions
 PS (elem 2.2) and HP "History Publications" (elem 45.2, PDF p.21) are both fully
@@ -688,6 +723,40 @@ full value list (not a single value), so multi-value fields are read whole; the
 "Max 15 codes / Max 50 lines / Max 60 classifications" caps bound the **value
 count** (for SC, ≤50 values is a sound lower bound on the documented line max,
 since each value spans ≥1 line).
+
+### SC percent — FY94 generalization finding (2026-09-14)
+
+Running the composed `construct.project` over the **held-out** `RG164.CRIS.FY94.txt`
+(3,384,622 lines, 34,090 records — a different fiscal year *and* record group)
+was the first check of any SC rule outside FY88. It falsified the "percent
+required" part of the modeling decision above.
+
+- **FY94/RG164 SC values are two-part** (`code 0xA0 0x02 literal`, no percent) —
+  e.g. `S3140 0xA0 0x02 Dairy Cattle-Milk`. The percent segment that is present
+  in every FY88 value is **absent** from FY94 values. Confirmed through the real
+  reading pipeline: every SC failure reports the identical reason `expected 3
+  parts (code, literal, percent) separated by 0x02 but found 2` (3,873 such in the
+  first 200,000 lines; 67,723 across the corpus).
+- **Not a retraction — a scope correction.** The "6487/6487 FY88 values carry a
+  percent" census is still true *of FY88*. What was wrong was promoting a
+  coverage fact about one corpus to a format-wide **required** part (the modeling
+  decision above did so explicitly, rejecting an optional percent). This is the
+  statement-of-absence hazard in the requiredness direction: "no FY88 value
+  lacks a percent" does not license "no Format B value may lack a percent."
+- **Impact**: with percent hard-required, FY94 certified only **7.0%** (2,383 of
+  34,090), SC being the dominant divergence (67,723 occurrences). The reading
+  frame itself generalized perfectly (0 unreadable).
+- **Reconciliation (2026-09-14)**: `Subcommodity`'s percent is made **optional**
+  (`Option`) — a value may be two-part (code, literal) or three-part (code,
+  literal, percent); both parse, neither is rejected for the other's shape. A
+  one-part or 4+-part value is still a divergence. This keeps SC distinct from
+  PH/GH (which are always two-part and would still diverge on a percent) while no
+  longer asserting a bound only FY88 met. **Re-verified against both corpora**:
+  FY88 stayed 100% (byte-identical, the three-part path unchanged); FY94's 67,723
+  SC structure faults went to **0**. FY94 certification did not rise on this
+  change alone (the same records also carry SN and BP), but its failures flipped
+  from documentary conflict to unmodeled-tag coverage — see the BP entry and the
+  SN note below.
 
 **Payload-provenance rule (String vs BitArray).** A `String` in Gleam asserts
 "these bytes are valid text"; choosing it is a checked claim, not a default. A

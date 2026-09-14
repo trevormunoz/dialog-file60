@@ -370,6 +370,31 @@ pub fn chronology_happy_test() {
   sd |> should.equal("880720")
 }
 
+// BP ("Progress report period covered" — validation-report addendum p.28, agency
+// note Aug 26 1992): an FY94/RG164 field absent from FY88, exact-12 "YYMM TO
+// YYMM" (the same shape as the printed PX, with which it co-occurs). Present -> Some.
+pub fn chronology_parses_bp_progress_report_period_test() {
+  let supplied = record([#("BP", "9201 TO 9209")])
+  let assert Ok(chron) = construct.chronology(supplied)
+  let assert Some(Supported(bp, _)) = chron.progress_report_period
+  bp |> should.equal("9201 TO 9209")
+}
+
+// BP is optional: an absent BP yields None (as it always does in FY88).
+pub fn chronology_bp_absent_is_none_test() {
+  let supplied = record([#("PD", "831214")])
+  let assert Ok(chron) = construct.chronology(supplied)
+  chron.progress_report_period |> should.equal(None)
+}
+
+// A BP of the wrong length is a divergence: the exact-12 shape is enforced, not
+// guessed around, just as PX's is.
+pub fn chronology_bp_wrong_length_reports_divergence_test() {
+  let supplied = record([#("BP", "9201 TO 92")])
+  let assert Error(NonEmpty(first, rest)) = construct.chronology(supplied)
+  should.be_true(list.any([first, ..rest], is_invalid_field_value(_, "BP")))
+}
+
 // --- institution / participants composition ---------------------------------
 
 // A record with the required institution fields and one IN constructs Participants.
@@ -455,26 +480,38 @@ pub fn bounded_repeating_absent_returns_empty_test() {
 
 // --- headings & subcommodities (multi-value, split on 0xA0 0x02) ------------
 
-// An SC value is three parts (code, literal, percent); the percent is required
-// and every part is kept as BitArray (bit_array.to_string is a TEST-ONLY check
-// that the extracted bytes are what's expected).
+// A three-part SC value (code, literal, percent) carries its percent as
+// Some(...); every part is kept as BitArray (bit_array.to_string is a TEST-ONLY
+// check that the extracted bytes are what's expected).
 pub fn classifications_parses_subcommodity_with_percent_test() {
   let sc = <<
     "XFRS":utf8, 0x20, 0x20, 0xA0, 0x02, "Forestry Related":utf8, 0xA0, 0x02,
     "100%":utf8,
   >>
   let assert Ok(c) = construct.classifications(record_bytes([#("SC", sc)]))
-  let assert [Supported(Subcommodity(code, literal, percent), _)] =
+  let assert [Supported(Subcommodity(code, literal, Some(percent)), _)] =
     c.subcommodities
   let assert Ok("XFRS") = bit_array.to_string(code.value)
   let assert Ok("Forestry Related") = bit_array.to_string(literal.value)
   let assert Ok("100%") = bit_array.to_string(percent.value)
 }
 
-// An SC value missing its percent (two parts) is a divergence, not accepted:
-// the required-percent invariant is enforced, not guessed around.
-pub fn classifications_subcommodity_without_percent_reports_divergence_test() {
+// A two-part SC value (code, literal, no percent) is accepted with percent None.
+// FY94/RG164 SC values omit the percent (see the FY94 generalization finding in
+// rules/field-rule-inventory.md); the percent is optional, not required.
+pub fn classifications_parses_subcommodity_without_percent_test() {
   let sc = <<"XFRS":utf8, 0x20, 0x20, 0xA0, 0x02, "Forestry Related":utf8>>
+  let assert Ok(c) = construct.classifications(record_bytes([#("SC", sc)]))
+  let assert [Supported(Subcommodity(code, literal, None), _)] =
+    c.subcommodities
+  let assert Ok("XFRS") = bit_array.to_string(code.value)
+  let assert Ok("Forestry Related") = bit_array.to_string(literal.value)
+}
+
+// A one-part SC value (no 0x02 separator at all) is still a divergence: optional
+// means two OR three parts, not "any shape".
+pub fn classifications_subcommodity_single_part_reports_divergence_test() {
+  let sc = <<"XFRS only":utf8>>
   let assert Error(NonEmpty(first, rest)) =
     construct.classifications(record_bytes([#("SC", sc)]))
   should.be_true(list.any([first, ..rest], is_invalid_field_value(_, "SC")))

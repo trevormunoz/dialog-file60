@@ -123,10 +123,17 @@ pub type Stage {
 /// Evidence grade of a documentary rule. The printed dictionary rows are one
 /// grade; a handwritten amendment on the page is a weaker, separate grade, so a
 /// requirement resting only on handwriting is not treated as firmly as one from
-/// the printed rows.
+/// the printed rows. `ValidationAddendum` is a third, distinct grade: a field
+/// that has NO dictionary row at all but is described in the validation report's
+/// addendum (PDF p.28-29: "appear in the data but are not included in the Data
+/// Element Descriptions") — SN and BP. Its identity comes from that note (and,
+/// for BP, an agency phone note, Aug 26 1992); its shape rule rests on observed
+/// data plus any printed precedent, never on a dictionary row for the field
+/// itself. Weaker than a printed row, and not to be mistaken for one.
 pub type EvidenceGrade {
   PrintedDictionary
   HandwrittenAmendment
+  ValidationAddendum
 }
 
 pub type RuleRef {
@@ -249,6 +256,11 @@ pub type Chronology {
     progress_updated: Option(Supported(String)),
     progress_period_end: Option(Supported(String)),
     progress_period_display: Option(Supported(String)),
+    // BP: "Progress report period covered" — an FY94/RG164 field with no printed
+    // dictionary row (EvidenceGrade ValidationAddendum), absent in FY88. Same
+    // exact-12 "YYMM TO YYMM" shape as PX, but a distinct field that co-occurs
+    // with it. Optional, like every chronology field but FY.
+    progress_report_period: Option(Supported(String)),
   )
 }
 
@@ -279,19 +291,21 @@ pub type Heading {
   Heading(code: Supported(BitArray), literal: Supported(BitArray))
 }
 
-/// A subcommodity allocation value (SC): code + literal + percent, the three
-/// parts separated by 0xA0 0x02 in the supplied bytes. Unlike a Heading, the
-/// percent is a REQUIRED part — every FY88 SC value carries one (6487/6487) —
-/// so a value lacking it is a divergence, not an omission. This is why SC is a
-/// distinct type from Heading rather than a Heading with an optional percent:
-/// the shapes differ, and the type enforces which fields carry a percent.
-/// All three parts are carved from the same non-UTF-8 byte structure, so all
-/// three are kept as BitArray (see Heading).
+/// A subcommodity allocation value (SC): code + literal + an OPTIONAL percent,
+/// the parts separated by 0xA0 0x02 in the supplied bytes. FY88/RG310 values are
+/// three-part and always carry a percent (6487/6487); FY94/RG164 values are
+/// two-part and never do (the FY94 generalization finding — see
+/// rules/field-rule-inventory.md). So the percent is `Option`: a two-part value
+/// is an omission (`None`), a three-part value carries `Some(percent)`, and a
+/// one-part (or 4+-part) value is still a divergence. SC stays a distinct type
+/// from Heading — a Heading is always two-part and a percent on one is a
+/// divergence, whereas SC permits both shapes. All parts are carved from the
+/// same non-UTF-8 byte structure, so all are kept as BitArray (see Heading).
 pub type Subcommodity {
   Subcommodity(
     code: Supported(BitArray),
     literal: Supported(BitArray),
-    percent: Supported(BitArray),
+    percent: Option(Supported(BitArray)),
   )
 }
 
