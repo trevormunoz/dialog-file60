@@ -109,6 +109,24 @@ pub type Provisional(a) {
   Provisional(value: Option(a), basis: RuleRef)
 }
 
+/// A field the SOURCE ITSELF declares undocumented. The validation-report
+/// addendum (367_1DP.pdf p.28-29) names SN and BP as fields that "appear in the
+/// data but are not included in the Data Element Descriptions". BP had a clear
+/// shape (exact-12 `YYMM TO YYMM`) and a stated meaning, so it was modelled as a
+/// checked field. SN ("a percentage tied to the preceding SC") has no checkable
+/// rule, and the inventory's standing instruction is not to infer one from the
+/// data. So an SN occurrence is neither a divergence nor a `FieldNotYetModeled`
+/// backlog item (that grade is for fields WE have not modelled yet, e.g. HP,
+/// which does have a — handwritten — dictionary row). It is recorded here as a
+/// **preserved, unvalidated presence**: the raw bytes are kept (never decoded or
+/// length-checked, evidence grade `ValidationAddendum`) with their witness, so a
+/// record carrying only such fields still certifies while the presence is never
+/// hidden. `value` is `BitArray` for the same byte-preservation reason as the
+/// prose payloads; use `render` to display it.
+pub type UndocumentedField {
+  UndocumentedField(tag: String, value: BitArray, locations: NonEmpty(Location))
+}
+
 /// Which rule set applies. Rule selection is explicit, not inferred from the
 /// date of a file name.
 ///   - Supplied: the Format B card image as the Cooperative State Research
@@ -316,7 +334,9 @@ pub type Classifications {
     developmental: Option(Supported(String)),
     columns: ClassificationColumns,
     subcommodities: List(Supported(Subcommodity)),
-    subcommodity_percentages: List(Supported(String)),
+    // SN: source-undocumented (see UndocumentedField). Preserved, unvalidated
+    // presences rather than checked values; empty when the record carries no SN.
+    subcommodity_percentages: List(UndocumentedField),
     primary_headings: List(Supported(Heading)),
     general_headings: List(Supported(Heading)),
   )
@@ -406,4 +426,15 @@ pub fn project_subfiles(project: Project) -> NonEmpty(Supported(String)) {
 /// The narratives group (OB/AP/DE/PR/PB), for report rendering.
 pub fn project_narratives(project: Project) -> Narratives {
   project.narratives
+}
+
+/// The source-undocumented fields the record carries (currently only SN; see
+/// UndocumentedField). Empty for a record that carries none. A caller (tally,
+/// report) uses non-emptiness to tell a fully-clean certified record apart from
+/// one that certifies while carrying an unvalidatable, source-undocumented field
+/// — the presence is surfaced, never hidden.
+pub fn project_undocumented_fields(
+  project: Project,
+) -> List(UndocumentedField) {
+  project.classifications.subcommodity_percentages
 }

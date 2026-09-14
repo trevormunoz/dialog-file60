@@ -645,8 +645,14 @@ generalization test below). All counts are scoped to this corpus and marker.
 `construct.project` was run end-to-end over the **whole held-out FY94 corpus**
 (`data/RG164.CRIS.FY94.txt`, 3,384,622 lines, 34,090 records, `0xAC` marker) via
 the same `tally` module. This corpus was held out through every FY88
-reconciliation above; it is also a **different record group** (RG164, not FY88's
-RG310), so it stresses both fiscal-year vintage and agency provenance at once.
+reconciliation above, so it is a genuine test of a different fiscal-year vintage
+(FY94 vs FY88). (An earlier draft called it a *different record group*; that was
+an over-read of the file names. The manifest `CRIS_TSS367.pdf` lists all six
+annual files under NARA **Record Group 164** — the `RGnnn` prefix in a file name
+is a USDA/CRIS-side designation, not the archival record group. It happens to be
+`RG310` for FY88 alone and `RG164` for FY89–FY94, changing once at the FY88→FY89
+boundary. So FY88 may itself be a slightly older tooling vintage than the rest of
+the run — a reason to test FY89 next — but FY88 and FY94 are the same record group.)
 
 **Initial result (before any FY94-informed reconciliation): 7.0% certified**
 (2,383 of 34,090); 31,707 failed; **0 unreadable.** The model does not
@@ -702,21 +708,37 @@ Two evidence-grounded changes followed, each re-verified against **both** corpor
    (6,483/34,090)** — exactly the records carrying neither SN nor BP (2,383) plus
    the BP-only records (4,100). FY88 stayed 100%.
 
-**What remains is SN, and it is a documentary limit, not an oversight.** SN
-(27,607 records, 81% of FY94) is the *other* validation-addendum tag — "a
-percentage that refers to the previous SC field tag" — and the rule inventory
-records the explicit instruction *not* to infer an SN rule from its data
-behaviour. So SN stays `FieldNotYetModeled`: those records cannot fully certify
-until SN's rule is resolved from a source, not guessed. After SC + BP, the only
-*real* documentary divergence left in the entire 34,090-record held-out corpus is
-a single `DE non-repeating-repeated`; two more `PR`/`PB` `FieldNotYetModeled`
-occurrences (3 in 3.38 M lines) are an unexplained edge worth a later glance.
+3. **SN modeled as a source-undocumented field.** SN (27,607 records, 81% of
+   FY94) is the *other* validation-addendum tag — "a percentage that refers to
+   the previous SC field tag" — and the inventory's standing instruction is *not*
+   to infer an SN rule from its data behaviour. It was previously reported as
+   `FieldNotYetModeled`, which conflated two different things: fields *we* have
+   not modeled yet (a backlog — e.g. HP) and a field *the source itself* declared
+   it never documented. These are now distinct. A new type `UndocumentedField`
+   (evidence grade `ValidationAddendum`) records SN as a **preserved, unvalidated
+   presence** — its bytes are kept, never decoded or checked, carried on the
+   `Project` and surfaced via `project_undocumented_fields` — and it is **not** a
+   `ConstructionProblem`. So a record carrying SN certifies, while the presence is
+   never hidden. HP and genuinely unmodeled tags stay `FieldNotYetModeled` (still
+   fatal), so the two concepts have a clean test. Result: FY94 certification rose
+   to **99.99% (34,086/34,090)** — of which 6,483 are fully clean and **27,603
+   certify while carrying SN** (reported as a distinct tier by `tally`, so 100%
+   never conflates the two). FY88 is unchanged: 32,016 clean, **0** carrying SN
+   (SN does not occur there — which is what makes the tier real, not cosmetic).
+
+After all three changes, the only records that still fail in the entire
+34,090-record held-out corpus are **4**: a single `DE non-repeating-repeated`
+(the one genuine documentary divergence) and three `PR`/`PB` `FieldNotYetModeled`
+occurrences — an unexplained edge (3 in 3.38 M lines) worth a later glance, since
+PR/PB *are* modeled narrative fields.
 
 The honest summary of the generalization test: the Format B **frame** generalizes
-perfectly across year and record group; one overfit **field rule** (SC percent)
-was found and corrected; one **coverage gap** (BP) was filled; and one field (SN)
-the source itself left undocumented remains the ceiling on FY94 certification.
-All counts scoped to these two corpora and the `0xAC` marker.
+perfectly across the two fiscal-year vintages tested (same NARA record group); one
+overfit **field rule** (SC percent) was found and corrected; one **coverage gap**
+(BP) was filled; and one field the source itself declared undocumented (SN) was
+given an honest representation rather than counted as the model's failure. FY94
+certifies at 99.99%, reported as clean vs SN-carrying so the figure never
+overclaims. All counts scoped to these two corpora and the `0xAC` marker.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though

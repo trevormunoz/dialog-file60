@@ -17,7 +17,7 @@ import record_model.{
   Identity, InvalidAccession, InvalidFieldValue, Narratives, NonEmpty,
   NonRepeatingFieldRepeated, Participants, PrintedDictionary, Provisional,
   RepetitionLimitExceeded, RequiredFieldNotLocated, RuleRef, Subcommodity,
-  Supplied, Supported,
+  Supplied, Supported, UndocumentedField,
 }
 
 // A throwaway rule for exercising the generic field checkers.
@@ -855,20 +855,16 @@ pub fn project_with_unassigned_part_reports_field_not_yet_modeled_test() {
     })
 }
 
-// SN is already flagged by classifications' own `sn_not_yet_modeled`; the
-// generic unmodeled-material pass must not double-flag it because SN is a
-// member of the authoritative modeled-tag set.
-pub fn project_with_sn_reports_field_not_yet_modeled_exactly_once_test() {
+// SN is source-undocumented, so a full record that also carries SN CERTIFIES:
+// SN is neither a divergence nor a FieldNotYetModeled backlog item. The presence
+// is surfaced via `project_undocumented_fields`, never hidden — exactly one SN
+// entry, and the generic unmodeled-material pass does not double-count it (SN is
+// a member of the authoritative modeled-tag set).
+pub fn project_with_sn_certifies_carrying_undocumented_field_test() {
   let supplied = record(list.append(full_record_pairs(), [#("SN", "50")]))
-  let assert Error(NonEmpty(first, rest)) = construct.project(supplied)
-  let sn_problems =
-    list.filter([first, ..rest], fn(problem) {
-      case problem {
-        FieldNotYetModeled("SN", _) -> True
-        _ -> False
-      }
-    })
-  list.length(sn_problems) |> should.equal(1)
+  let assert Ok(project) = construct.project(supplied)
+  let assert [UndocumentedField("SN", _, _)] =
+    record_model.project_undocumented_fields(project)
 }
 
 // --- DE: the aggregate 2400 bound in isolation, and the 60-byte accepting edge
@@ -920,18 +916,16 @@ pub fn classifications_happy_path_test() {
   list.length(c.subcommodities) |> should.equal(1)
 }
 
-// SN has no dictionary row: any SN occurrence reports FieldNotYetModeled
-// rather than being silently accepted or guessed at.
-pub fn classifications_with_sn_reports_field_not_yet_modeled_test() {
+// SN has no dictionary row: it is source-undocumented (the validation addendum
+// names SN and BP as present in the data but not in the Data Element
+// Descriptions). Its occurrence is PRESERVED as an UndocumentedField, not
+// reported as a problem and not silently dropped: Classifications still builds,
+// and the SN bytes are carried in `subcommodity_percentages`.
+pub fn classifications_with_sn_preserves_undocumented_field_test() {
   let supplied = record([#("BT", "1000"), #("SN", "50")])
-  let assert Error(NonEmpty(first, rest)) = construct.classifications(supplied)
-  let assert True =
-    list.any([first, ..rest], fn(problem) {
-      case problem {
-        FieldNotYetModeled("SN", _) -> True
-        _ -> False
-      }
-    })
+  let assert Ok(c) = construct.classifications(supplied)
+  let assert [UndocumentedField("SN", value, _)] = c.subcommodity_percentages
+  value |> should.equal(<<"50":utf8>>)
 }
 
 // An AC value below the documented MIN 5 is a divergence, not silently

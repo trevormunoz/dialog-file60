@@ -75,6 +75,10 @@ type Acc {
   Acc(
     total: Int,
     certified: Int,
+    // Subset of `certified`: records that certify while carrying a SOURCE-
+    // undocumented field (SN) — preserved, unvalidatable, never hidden. Reported
+    // apart from fully-clean certification so 100% never conflates the two.
+    certified_undocumented: Int,
     failed: Int,
     unreadable: Int,
     // Records whose ONLY problems are FieldNotYetModeled (unmodeled material),
@@ -90,6 +94,7 @@ fn tally(records: List(scan.ScannedRecord)) -> Acc {
     Acc(
       total: 0,
       certified: 0,
+      certified_undocumented: 0,
       failed: 0,
       unreadable: 0,
       unmodeled_only: 0,
@@ -102,7 +107,17 @@ fn tally(records: List(scan.ScannedRecord)) -> Acc {
         Error(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
         Ok(supplied) ->
           case construct.project(supplied) {
-            Ok(_) -> Acc(..acc, certified: acc.certified + 1)
+            Ok(project) -> {
+              let acc = Acc(..acc, certified: acc.certified + 1)
+              case record_model.project_undocumented_fields(project) {
+                [] -> acc
+                _ ->
+                  Acc(
+                    ..acc,
+                    certified_undocumented: acc.certified_undocumented + 1,
+                  )
+              }
+            }
             Error(NonEmpty(first, rest)) -> {
               let problems = [first, ..rest]
               let unmodeled_only = case list.all(problems, is_not_yet_modeled) {
@@ -205,6 +220,8 @@ fn render(acc: Acc, path: String, line_count: Int) -> String {
       "",
       "records scanned : " <> int.to_string(acc.total),
       "  certified     : " <> int.to_string(acc.certified),
+      "    of which carrying a source-undocumented field (SN), preserved: "
+        <> int.to_string(acc.certified_undocumented),
       "  failed        : " <> int.to_string(acc.failed),
       "    of which unmodeled-material only (no documentary divergence): "
         <> int.to_string(acc.unmodeled_only),

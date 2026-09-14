@@ -17,12 +17,13 @@ The batches below cover every field the model touches: **batch 1** identity
 FY, UP, PP, PX); **batch 3** classifications, percentages, headings, and the
 undocumented SN; **batch 4** narratives (OB, AP, DE, PR, PB, HP); **batch 5**
 institution/participants, project type, and the UD loading stage; **batch 6** the
-RN/CG/GY/RG adjacency. The **FY94 generalization test** (2026-09-14) then added
-two field-rule changes from the held-out RG164 corpus: SC's percent was
-reconciled to optional, and **BP** was modeled (its own entry below, evidence
-grade `ValidationAddendum`). Transcription is complete; this still does **not**
-claim complete `Project` validation — that is the constructor work the closing
-section scopes.
+RN/CG/GY/RG adjacency. The **FY94 generalization test** (2026-09-14) then made
+three field changes from the held-out RG164 corpus: SC's percent was reconciled
+to optional, **BP** was modeled (its own entry below), and **SN** was recast from
+`FieldNotYetModeled` to a preserved source-undocumented field (`UndocumentedField`)
+— the latter two both under the new evidence grade `ValidationAddendum`.
+Transcription is complete; this still does **not** claim complete `Project`
+validation — that is the constructor work the closing section scopes.
 
 ## Sources and provenance
 
@@ -321,11 +322,22 @@ recorded for the inventory's completeness and the next batch.)
 >   19,739/19,739, identical to the printed PX). A new evidence grade
 >   `ValidationAddendum` marks that the rule rests on the addendum note plus
 >   observed data and the PX precedent, not on a dictionary row for BP itself.
-> - **SN stays `FieldNotYetModeled`.** Its meaning ("a percentage tied to the
->   preceding SC") does not fix a checkable shape, and the standing instruction is
->   *not to infer an SN rule from its data behaviour*. SN is present in 27,607 of
->   34,090 FY94 records (81%) and is the ceiling on FY94 certification (19.0%);
->   lifting it needs a source for SN's rule, not a guess from the data.
+> - **SN is modeled as a source-undocumented field** (not a checked rule, and no
+>   longer `FieldNotYetModeled`). Its meaning ("a percentage tied to the preceding
+>   SC") does not fix a checkable shape, and the standing instruction is *not to
+>   infer an SN rule from its data behaviour*. But reporting it as
+>   `FieldNotYetModeled` conflated two different things — fields WE have not modeled
+>   yet (a backlog, e.g. HP) and a field the SOURCE itself declared undocumented.
+>   These are now distinct: SN occurrences are preserved as `UndocumentedField`
+>   values (record_model) — raw bytes kept, never checked, evidence grade
+>   `ValidationAddendum` — carried on the `Project` and surfaced via
+>   `project_undocumented_fields`, and NOT a `ConstructionProblem`. So a record
+>   carrying SN certifies. SN is present in 27,607 of 34,090 FY94 records (81%);
+>   with this change FY94 certifies **99.99% (34,086/34,090)**, of which 27,603
+>   certify while carrying SN (`tally` reports this as a distinct tier, so the
+>   figure never conflates clean with SN-carrying). Resolving SN's actual rule
+>   still needs a source, not a guess — this models the field's *status*, not its
+>   content.
 
 ### BP — Progress Report Period Covered (validation addendum, no element number)
 
@@ -662,9 +674,11 @@ Caret footnote "* S1210-HEX40-HEX41-HEX02-Leguminous Vegetables-General-...-060%
 - **SN has NO dictionary row.** It is the undocumented field named in the FY1991
   validation statement (p.29: "Percentage that refers to the previous SC field
   tag. The SN changes depending on the SC."). So the model's
-  `subcommodity_percentages` (SN) is a **documented-as-undocumented**
-  `FieldNotYetModeled`/`RuleUnresolved` case, not a checkable rule. Do not infer
-  an SN rule from its data behaviour.
+  `subcommodity_percentages` (SN) is a **source-undocumented** field: not a
+  checkable rule. It is modeled as an `UndocumentedField` (preserved bytes,
+  evidence grade `ValidationAddendum`, not a `ConstructionProblem`) — see the
+  known-incomplete update above and record_model. Do not infer an SN rule from its
+  data behaviour.
 
 ### Heading fields PH, GH, and the unmodeled NI (elems 46, 47, 48)
 - **PH** (46, p.21): A,N, MAX 2819 MIN 187, Repeating Y, Always N; Remarks
@@ -727,9 +741,11 @@ since each value spans ≥1 line).
 ### SC percent — FY94 generalization finding (2026-09-14)
 
 Running the composed `construct.project` over the **held-out** `RG164.CRIS.FY94.txt`
-(3,384,622 lines, 34,090 records — a different fiscal year *and* record group)
-was the first check of any SC rule outside FY88. It falsified the "percent
-required" part of the modeling decision above.
+(3,384,622 lines, 34,090 records — a different fiscal-year vintage; per the manifest
+`CRIS_TSS367.pdf`, the same NARA Record Group 164 as FY88, the `RGnnn` file-name
+prefix being a USDA/CRIS designation, not the archival record group) was the first
+check of any SC rule outside FY88. It falsified the "percent required" part of the
+modeling decision above.
 
 - **FY94/RG164 SC values are two-part** (`code 0xA0 0x02 literal`, no percent) —
   e.g. `S3140 0xA0 0x02 Dairy Cattle-Milk`. The percent segment that is present

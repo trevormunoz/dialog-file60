@@ -19,13 +19,14 @@ import record_model.{
   type FieldOccurrence, type Fragment, type Heading, type Identity,
   type Institution, type Location, type Narratives, type Participants,
   type Provisional, type RuleRef, type Subcommodity, type SuppliedRecord,
-  type Supported, Chronology, ClassificationColumns, Classifications,
-  Disagreement, Field, FieldNotYetModeled, FieldOccurrence, FormatDisagreement,
-  HandwrittenAmendment, Heading, Identity, Institution, InvalidAccession,
-  InvalidFieldValue, Location, MarkedValueStart, Narratives, NonEmpty,
-  PairedDate, Participants, PrintedDictionary, Provisional,
+  type Supported, type UndocumentedField, Chronology, ClassificationColumns,
+  Classifications, Disagreement, Field, FieldNotYetModeled, FieldOccurrence,
+  FormatDisagreement, HandwrittenAmendment, Heading, Identity, Institution,
+  InvalidAccession, InvalidFieldValue, Location, MarkedValueStart, Narratives,
+  NonEmpty, PairedDate, Participants, PrintedDictionary, Provisional,
   RequiredFieldNotLocated, RuleRef, Subcommodity, Supplied, Supported,
-  TaggedStart, Unassigned, ValidationAddendum, Witness, WrappedText,
+  TaggedStart, Unassigned, UndocumentedField, ValidationAddendum, Witness,
+  WrappedText,
 }
 
 /// AN rule, PDF p.13 row 1, printed (rules/field-rule-inventory.md batch 1).
@@ -614,7 +615,8 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
       ),
       50,
     )
-  let subcommodity_percentages = sn_not_yet_modeled(record)
+  // SN: source-undocumented, preserved (never a problem) — see sn_undocumented.
+  let subcommodity_percentages = sn_undocumented(record)
   let primary_headings =
     heading_field(
       record,
@@ -650,7 +652,6 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
       problems_of(program_area),
       problems_of(joint_council),
       problems_of(subcommodities),
-      problems_of(subcommodity_percentages),
       problems_of(primary_headings),
       problems_of(general_headings),
     ])
@@ -670,7 +671,7 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
           joint_council: value_of(joint_council),
         ),
         subcommodities: value_of(subcommodities),
-        subcommodity_percentages: value_of(subcommodity_percentages),
+        subcommodity_percentages: subcommodity_percentages,
         primary_headings: value_of(primary_headings),
         general_headings: value_of(general_headings),
       ))
@@ -678,26 +679,25 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
   }
 }
 
-// SN has no dictionary row (rules/field-rule-inventory.md batch 3): it is not
-// a settled field to construct, only one to flag. Any SN occurrence reports
-// FieldNotYetModeled per occurrence; absent is Ok([]) so the surrounding
-// Classifications block can still be built. The model's field type is
-// List(Supported(String)), which on this path is always [].
-fn sn_not_yet_modeled(
-  record: SuppliedRecord,
-) -> Checked(List(Supported(String))) {
-  case occurrences(record, "SN") {
-    [] -> Ok([])
-    occs -> {
-      let assert [first, ..rest] =
-        list.map(occs, fn(occurrence) {
-          let NonEmpty(first, _) = locations(occurrence)
-          FieldNotYetModeled("SN", first)
+// SN has no dictionary row (rules/field-rule-inventory.md): it is SOURCE-
+// undocumented — the validation addendum names SN (with BP) as present in the
+// data but absent from the Data Element Descriptions, and the standing rule is
+// not to infer an SN rule from its data behaviour. So SN is neither a divergence
+// nor a `FieldNotYetModeled` backlog item: each occurrence is PRESERVED as an
+// `UndocumentedField` (raw bytes kept, never checked, with its witness), so a
+// record carrying SN still certifies while the presence is recorded. This never
+// fails — absent is [], present is one entry per readable value (an unreadable
+// occurrence still records its presence with empty bytes, never dropped).
+fn sn_undocumented(record: SuppliedRecord) -> List(UndocumentedField) {
+  list.flat_map(occurrences(record, "SN"), fn(occurrence) {
+    case field_value.field_values(occurrence) {
+      Ok(values) ->
+        list.map(values, fn(value) {
+          UndocumentedField("SN", value, locations(occurrence))
         })
-        as "occs is non-empty in this branch, so list.map's output is non-empty"
-      Error(NonEmpty(first, rest))
+      Error(_) -> [UndocumentedField("SN", <<>>, locations(occurrence))]
     }
-  }
+  })
 }
 
 // PH/GH: a multi-value classification-heading field. Each 0xAC-marked value
