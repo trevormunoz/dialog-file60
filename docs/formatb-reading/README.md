@@ -750,14 +750,37 @@ N` rule. That is correct behavior (the constructor flags a real conflict), not a
 modeling gap.
 
 The honest summary of the generalization test: the Format B **frame** generalizes
-perfectly across the two fiscal-year vintages tested (same NARA record group); one
+perfectly across every fiscal-year vintage tested (all the same NARA record group); one
 overfit **field rule** (SC percent) was found and corrected; one **coverage gap**
 (BP) was filled; one field the source itself declared undocumented (SN) was given
 an honest representation rather than counted as the model's failure; and one format
 ambiguity (the `0xAC` marker/data collision) was resolved by field-aware reading.
 FY94 certifies at 99.997%, reported as clean vs SN-carrying so the figure never
 overclaims, with one genuine `DE` divergence remaining. All counts scoped to these
-two corpora and the `0xAC` marker.
+corpora and the `0xAC` marker.
+
+### FY89: a third corpus, held out, certifies clean with zero new work
+
+The SC/BP/SN/collision changes above were all derived from FY88 and FY94. To test
+whether they capture Format B or just those two files, a **third corpus was held
+out entirely and then run once**: `data/RG164.CRIS.FY89.txt` (3,275,083 lines,
+33,499 records), extracted from the same 2026-09-07 NARA web capture (its payload
+SHA-256 verified against the capture's recorded digest before use). It played no
+part in any rule, reconciliation, or fix.
+
+**FY89 certifies 100% (33,499/33,499): 0 failed, 0 unreadable** — no new
+divergences, no new fields, not even the lone `DE`-repeat FY94 had. A third
+independent corpus certifying clean under rules built without it is the evidence
+the earlier 100%s could not give on their own: this is capture, not fit. (25,814
+of the 33,499 carry SN, reported in the source-undocumented tier as always.)
+
+FY89 also **dates the schema shift**. It already carries BP and SN — like FY94,
+unlike FY88, which had neither — so the CRIS schema additions land sharply at the
+**FY88→FY89 boundary**, the same boundary where the file-name prefix changes
+(`RG310` for FY88 alone, `RG164` from FY89 on). FY88 is thus the outlier vintage;
+FY89–94 look like one coherent later group. This is the two-layer reading (a stable
+Format B envelope around a drifting CRIS schema) shown across three years rather
+than argued from two. FY90, FY91, and FY93 remain held out and unmeasured.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though
