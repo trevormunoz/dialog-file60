@@ -1333,9 +1333,20 @@ pub fn optional(
   case occurrences(record, tag) {
     [] -> Ok(None)
     [one] ->
-      case checked_string(one, tag, rule, length) {
-        Ok(supported) -> Ok(Some(supported))
-        Error(problem) -> Error(NonEmpty(problem, []))
+      // A present tag with an empty (all-pad) value is read as omission, not a
+      // length divergence: in fixed-width card data a blank optional field is
+      // indistinguishable from an absent one. FY88 exercises this only via UP
+      // (12.4% present-but-empty = "no progress-update date yet"). A non-empty
+      // wrong-length value still diverges; empty REQUIRED fields still fail,
+      // because `required` does not take this path.
+      case single_value(one) {
+        Error(Nil) -> Error(NonEmpty(fragment_placeholder(one), []))
+        Ok(<<>>) -> Ok(None)
+        Ok(bytes) ->
+          case check_string_bytes(bytes, one, tag, rule, length) {
+            Ok(supported) -> Ok(Some(supported))
+            Error(problem) -> Error(NonEmpty(problem, []))
+          }
       }
     many -> Error(NonEmpty(non_repeating(many, tag, rule), []))
   }
@@ -1355,9 +1366,15 @@ pub fn optional_bytes(
   case occurrences(record, tag) {
     [] -> Ok(None)
     [one] ->
-      case checked_bytes(one, tag, rule, length) {
-        Ok(supported) -> Ok(Some(supported))
-        Error(problem) -> Error(NonEmpty(problem, []))
+      // Present-but-empty reads as omission, same as `optional` (see its note).
+      case single_value(one) {
+        Error(Nil) -> Error(NonEmpty(fragment_placeholder(one), []))
+        Ok(<<>>) -> Ok(None)
+        Ok(bytes) ->
+          case check_raw_bytes(bytes, one, tag, rule, length) {
+            Ok(supported) -> Ok(Some(supported))
+            Error(problem) -> Error(NonEmpty(problem, []))
+          }
       }
     many -> Error(NonEmpty(non_repeating(many, tag, rule), []))
   }
@@ -1557,21 +1574,6 @@ fn checked_string(
   case single_value(occurrence) {
     Error(Nil) -> Error(fragment_placeholder(occurrence))
     Ok(bytes) -> check_string_bytes(bytes, occurrence, tag, rule, length)
-  }
-}
-
-// The byte-preserving counterpart of `checked_string`, for OB/AP/PR/PB/IN:
-// same presence/length checking, but no UTF-8 decode step, so a non-UTF-8
-// value within the documented length is accepted rather than flagged.
-fn checked_bytes(
-  occurrence: FieldOccurrence,
-  tag: String,
-  rule: RuleRef,
-  length: Length,
-) -> Result(Supported(BitArray), ConstructionProblem) {
-  case single_value(occurrence) {
-    Error(Nil) -> Error(fragment_placeholder(occurrence))
-    Ok(bytes) -> check_raw_bytes(bytes, occurrence, tag, rule, length)
   }
 }
 

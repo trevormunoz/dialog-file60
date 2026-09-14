@@ -234,6 +234,30 @@ pub fn optional_present_returns_some_test() {
   value |> should.equal("ARS")
 }
 
+// optional: a present tag with an empty (all-pad) value reads as absent (None),
+// not a length divergence — a blank fixed-width optional field is omission.
+// FY88 exercises this only via UP (12.4% present-but-empty = no update date yet).
+pub fn optional_present_but_empty_reads_as_absent_test() {
+  let supplied = record([#("UP", "")])
+  construct.optional(supplied, "UP", a_rule(), construct.exact(6))
+  |> should.equal(Ok(None))
+}
+
+// optional: a present, NON-empty value of the wrong length still diverges —
+// empty means omitted, wrong-but-present means nonconformance.
+pub fn optional_present_nonempty_wrong_length_diverges_test() {
+  let supplied = record([#("UP", "8802")])
+  let assert Error(NonEmpty(_, _)) =
+    construct.optional(supplied, "UP", a_rule(), construct.exact(6))
+}
+
+// optional_bytes: an empty byte-payload optional field is likewise absent.
+pub fn optional_bytes_present_but_empty_reads_as_absent_test() {
+  let supplied = record([#("OB", "")])
+  construct.optional_bytes(supplied, "OB", a_rule(), construct.upto(1600))
+  |> should.equal(Ok(None))
+}
+
 // repeating: several occurrences collect into a list of values.
 pub fn repeating_collects_values_test() {
   let supplied = record([#("PF", "Poultry Science"), #("PF", "Dual-Comm Inc")])

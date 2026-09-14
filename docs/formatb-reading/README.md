@@ -608,22 +608,37 @@ scoped to that method and span; FY94 held out).
 runnable `tally` module (`gleam run -m tally -- <path>`), which buckets every
 record's outcome. After modeling the four adjacency fields RN/CG/GY/RG (batch 6
 of the rule inventory), 27,268 records (85.2%) certified a clean `Project`,
-with the remaining failures split between UP length (3,962 records — a
-supplied 4-byte `YYMM` against the dictionary's Exact-6 `YYMMDD`) and
-non-UTF-8 text in the free-text fields (AP 584, PR 221, OB 127, PB 68, DE 8,
-IN 1 — these fit their MAX lengths but the constructor then refused to decode
-them rather than mangle them). Those non-UTF-8 bytes were hypothesised to be
-EBCDIC→ASCII conversion artifacts from the transform lineage the data passed
-through before NARA distribution (the same hypothesis `registry/evidence.json`
-records for `0xAC`/`0xA0`/`0x02`) — evidence to preserve, not noise to drop —
-so OB/AP/DE/PR/PB and IN were switched to the byte-preserving
-`Supported(BitArray)` payload (as SC/PH/GH already kept `BitArray`), dropping
-the UTF-8 decode step while keeping every documented length/requiredness rule
-unchanged. Re-run after that change, **28,054 records (87.6%) certify a clean
-`Project`; 0 are unreadable; 0 fail on unmodeled material.** AP/PR/OB/PB/DE/IN
-are gone from the problem buckets entirely; **UP invalid-length (3,962
-records) is now the only remaining bucket.** All counts are scoped to this
-corpus and marker; FY94 is unmeasured.
+with the remaining failures split between UP (3,962 records) and non-UTF-8 text
+in the free-text fields (AP 584, PR 221, OB 127, PB 68, DE 8, IN 1 — these fit
+their MAX lengths but the constructor then refused to decode them rather than
+mangle them). Those non-UTF-8 bytes were hypothesised to be EBCDIC→ASCII
+conversion artifacts from the transform lineage the data passed through before
+NARA distribution (the same hypothesis `registry/evidence.json` records for
+`0xAC`/`0xA0`/`0x02`) — evidence to preserve, not noise to drop — so
+OB/AP/DE/PR/PB and IN were switched to the byte-preserving `Supported(BitArray)`
+payload (as SC/PH/GH already kept `BitArray`), dropping the UTF-8 decode step
+while keeping every documented length/requiredness rule unchanged. That took
+certification to **28,054 (87.6%)**, leaving UP as the sole remaining divergence.
+
+A UP length census then corrected an earlier guess: the 3,962 non-conforming UP
+values are **not** a 4-byte `YYMM` form — they are **empty** (a present `UP` tag
+with an all-pad value), and UP is the only field in the whole corpus that does
+this (12.4%). In fixed-width, space-padded card data a blank optional field is
+indistinguishable from an absent one, so `optional`/`optional_bytes` now read a
+present-but-empty value as omission (`None`), not a length divergence — a general
+rule that only UP exercises, and one that still fails non-empty wrong-length
+values and empty *required* fields. With that, **all 32,016 FY88 records certify
+a clean `Project` (100%); 0 fail, 0 unreadable.**
+
+**This 100% is a fit, not a validation.** Every reconciliation above (FY optional,
+RN/CG/GY/RG modeled, byte-preserving prose, UP-empty as omission) was
+evidence-grounded, but all were made against FY88; a model reconciled until
+nothing fails will certify that corpus. The constructor keeps discriminating
+power — the tests show it still rejects wrong-length values, missing required
+fields, bad accessions, unmodeled tags, and malformed SC structure — so this is
+not a rubber stamp. But the real test of whether the model captures Format B
+rather than FY88 is **FY94, held out throughout and still unmeasured.** All
+counts are scoped to this corpus and marker.
 
 This run also produced the project's first data-grounded documentary decision.
 The full corpus shows **FY absent in 25.6% of records (8,182/32,016)**, though

@@ -497,6 +497,16 @@ Example 880203. Printed.
 - Optional, 6 digits, YYMMDD. **Model check**: `progress_updated`, optional —
   agrees. (Model field name "progress_updated"; dictionary name "Progress Update
   Date".)
+- **Empty-value finding (2026-09-14, full-corpus tally)**: UP is the ONLY field
+  in FY88 that appears present-but-empty — a `UP` tag line with an all-pad value —
+  in 12.4% of records (3,962/31,949); a length census confirmed the non-6 values
+  are length 0, NOT a 4-byte `YYMM` form (that earlier guess was wrong). Reading:
+  in fixed-width space-padded card data a blank optional field is indistinguishable
+  from an absent one, so a present-but-empty optional value is treated as omission
+  (`None`), not an Exact-6 divergence. Implemented generally in
+  `optional`/`optional_bytes` (only UP exercises it); non-empty wrong-length values
+  and empty *required* fields still diverge. Interpretation (ours), plausibly "no
+  progress update yet"; scoped to FY88, FY94 unmeasured.
 
 ### PP — Progress Period Ending Date (element 26, p.17)
 
