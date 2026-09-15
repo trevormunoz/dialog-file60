@@ -7,6 +7,7 @@ import facade
 import gleam/bit_array
 import gleam/list
 import gleam/option.{None}
+import gleam/string
 import gleeunit/should
 import simplifile
 
@@ -107,4 +108,34 @@ pub fn scan_records_counts_lines_not_ending_in_crlf_test() {
   // The count is a side tally: the span itself is unaffected.
   let assert [span] = scanned.spans
   span.an |> should.equal("1")
+}
+
+// A single-value field (OB) whose wrapped continuation begins with 0xAC. The old
+// uniform reading split it into two values and dropped the 0xAC; the corrected
+// field-aware reading yields ONE value with the 0xAC recovered as data, opened by
+// the field's own tagged start (continuation: false). Design spec gate 3.
+pub fn single_value_field_keeps_line_start_0xac_as_data_test() {
+  let crlf = <<13, 10>>
+  let bytes =
+    bit_array.concat([
+      served_line(<<"<< H":utf8>>, crlf),
+      served_line(<<"$$":utf8>>, crlf),
+      served_line(<<"AN 9000001":utf8>>, crlf),
+      served_line(<<"OB ":utf8, "First part":utf8>>, crlf),
+      // blank tag (cols 1-2), col-3 pad, then 0xAC as the first DATA byte ->
+      // assembly marks this a MarkedValueStart continuation.
+      served_line(<<"  ":utf8, 32, 0xAC, "quoted tail":utf8>>, crlf),
+      served_line(<<">> T":utf8>>, crlf),
+    ])
+  let scanned = facade.scan_records(bytes, 1)
+  let assert [span, ..] = scanned.spans
+  let rec = facade.parse_record(bytes, span, "synthetic", facade.Fy1991plus, 1)
+  let assert Ok(ob) = find_field(rec.fields, "OB")
+
+  ob.values |> list.length |> should.equal(1)
+  let assert [only] = ob.values
+  only.continuation |> should.equal(False)
+  only.line |> should.equal(4)
+  // latin1 decodes 0xAC to U+00AC; the byte survives as data, not a boundary.
+  string.contains(only.raw, "\u{00AC}") |> should.be_true
 }
