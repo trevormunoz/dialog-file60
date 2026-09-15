@@ -18,7 +18,10 @@
   "scripts": {
     "build": "gleam build --target javascript && esbuild scripts/engine-entry.mjs --bundle --format=esm --platform=neutral --outfile=dist/engine.mjs && rollup --config scripts/rollup-dts.config.mjs",
     "prepare": "pnpm run build",
+    "pretest": "pnpm run build",
     "test": "vitest run",
+    "pretypecheck": "pnpm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepublishOnly": "exit 1"
   },
   "devDependencies": {
