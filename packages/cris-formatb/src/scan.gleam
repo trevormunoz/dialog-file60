@@ -7,6 +7,8 @@ import card_image.{type CardImageError}
 import gleam/bit_array
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import js_string
+import latin1
 
 /// The last observed header and trailer, each a complete untrimmed served line.
 pub type FileStructure {
@@ -36,6 +38,43 @@ pub fn scan(
     Error(reason) -> Error(reason)
     Ok(lines) ->
       Ok(walk(lines, base_line, file, None, [], FileStructure(None, None)))
+  }
+}
+
+// The AN slice's start (0-based column 4, after the 2-byte tag + 1-byte blank)
+// and exclusive end. Mirrors offsets.ts's `bytes.subarray(at + DATA_START, at
+// + LINE_BYTES - 2)`: bytes 3..80 of the 82-byte served line — the full line
+// minus the CRLF, NOT the 3..72 data region `card_image.data_value` extracts
+// for ordinary field values (columns 73-80 are the supplier's own use, but
+// offsets.ts's `an` read keeps them, so this matches that, not the narrower
+// data region).
+const an_slice_start: Int = 3
+
+const an_slice_length: Int = 77
+
+/// A record's accession number, read structurally from its AN-tagged line
+/// (bytes 3..80, Latin-1 decoded and JS-trimEnd-trimmed) — no field/fragment
+/// assembly, so it is available even for a record `assembly.assemble` cannot
+/// read. `None` when the record carries no AN line.
+pub fn accession_of(record: ScannedRecord) -> Option(String) {
+  case card_image.split_lines(record.bytes) {
+    Error(_) -> None
+    Ok(lines) -> find_an(lines)
+  }
+}
+
+fn find_an(lines: List(BitArray)) -> Option(String) {
+  case lines {
+    [] -> None
+    [line, ..rest] ->
+      case line {
+        <<"AN":utf8, _:bytes>> ->
+          case bit_array.slice(line, an_slice_start, an_slice_length) {
+            Ok(data) -> Some(js_string.trim_end(latin1.decode(data)))
+            Error(Nil) -> None
+          }
+        _ -> find_an(rest)
+      }
   }
 }
 

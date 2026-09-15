@@ -161,3 +161,22 @@ pub fn scan_the_fixture_yields_one_assemblable_record_test() {
     let assert Ok(_) = field_value.field_values(occ)
   })
 }
+
+// accession_of: the structural AN read (bytes 3..80 of the AN-tagged line,
+// decoded + trim_end), matching offsets.ts's scanRecords `an` extraction.
+pub fn accession_of_reads_the_an_line_test() {
+  let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
+  let assert Ok(result) = scan.scan(bytes, "RG164.CRIS.FY94.txt", 1)
+  let assert [record, ..] = result.records
+  scan.accession_of(record) |> should.equal(Some("9049442"))
+}
+
+// A record with no AN-tagged line has no accession: absence, not an error.
+pub fn accession_of_with_no_an_line_is_none_test() {
+  let separator = line(<<"$$":utf8>>)
+  let non_an = line(<<"PD 860516":utf8>>)
+  let file = bit_array.concat([separator, non_an])
+  let assert Ok(result) = scan.scan(file, "F", 1)
+  let assert [record, ..] = result.records
+  scan.accession_of(record) |> should.equal(None)
+}
