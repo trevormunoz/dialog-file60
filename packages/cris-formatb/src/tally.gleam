@@ -21,12 +21,13 @@ import gleam/result
 import gleam/string
 import record_model.{
   type ConstructionProblem, Disagreement, FieldNotYetModeled, FormatDisagreement,
-  InvalidAccession, InvalidFieldValue, NonEmpty, NonRepeatingFieldRepeated,
+  InvalidAccession, InvalidFieldValue, NonRepeatingFieldRepeated,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
   RuleUnresolved,
 }
 import scan
 import simplifile
+import source_record.{NonEmpty}
 
 const line_bytes: Int = 82
 

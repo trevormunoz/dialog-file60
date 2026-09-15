@@ -15,20 +15,22 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import record_model.{
-  type Chronology, type Classifications, type ConstructionProblem,
-  type FieldOccurrence, type Fragment, type Heading, type Identity,
-  type Institution, type Location, type Narratives, type Participants,
-  type Provisional, type RuleRef, type Subcommodity, type SuppliedRecord,
-  type Supported, type UndocumentedField, Chronology, ClassificationColumns,
-  Classifications, Disagreement, Field, FieldNotYetModeled, FieldOccurrence,
-  FormatDisagreement, HandwrittenAmendment, Heading, Identity, Institution,
-  InvalidAccession, InvalidFieldValue, Location, MarkedValueStart, Narratives,
-  NonEmpty, PairedDate, Participants, PrintedDictionary, Provisional,
+  type Chronology, type Classifications, type ConstructionProblem, type Heading,
+  type Identity, type Institution, type Narratives, type Participants,
+  type Provisional, type RuleRef, type Subcommodity, type Supported,
+  type UndocumentedField, Chronology, ClassificationColumns, Classifications,
+  Disagreement, FieldNotYetModeled, FormatDisagreement, HandwrittenAmendment,
+  Heading, Identity, Institution, InvalidAccession, InvalidFieldValue,
+  Narratives, PairedDate, Participants, PrintedDictionary, Provisional,
   RelatedFieldsDisagree, RequiredFieldNotLocated, RuleRef, Subcommodity,
-  Supplied, Supported, TaggedStart, Unassigned, UndocumentedField,
-  ValidationAddendum, Witness, WrappedText,
+  Supplied, Supported, UndocumentedField, ValidationAddendum,
 }
 import segment
+import source_record.{
+  type FieldOccurrence, type Fragment, type Location, type SuppliedRecord, Field,
+  FieldOccurrence, Location, MarkedValueStart, NonEmpty, TaggedStart, Unassigned,
+  Witness, WrappedText,
+}
 
 /// AN rule, PDF p.13 row 1, printed (rules/field-rule-inventory.md batch 1).
 const an_rule: RuleRef = RuleRef(
@@ -105,7 +107,7 @@ fn non_repeating(
 // non-empty list, so the first occurrence seeds the NonEmpty.
 fn all_locations(
   occurrences: List(FieldOccurrence),
-) -> record_model.NonEmpty(Location) {
+) -> source_record.NonEmpty(Location) {
   case occurrences {
     [] -> NonEmpty(placeholder_location, [])
     [first, ..rest] -> {
@@ -1345,7 +1347,7 @@ fn value_of(checked: Checked(a)) -> a {
 // character class is never checked (the dictionary "A,N" is not a literal class).
 
 pub type Checked(a) =
-  Result(a, record_model.NonEmpty(ConstructionProblem))
+  Result(a, source_record.NonEmpty(ConstructionProblem))
 
 /// A documented byte-length bound. Every field's length is one of these, so the
 /// dictionary's own distinctions are honored uniformly and none is quietly widened
@@ -1518,7 +1520,7 @@ fn bounded_nonempty_checked(
   max_count: Int,
   repeating_fn: fn(SuppliedRecord, String, RuleRef, Length) ->
     Checked(List(Supported(a))),
-) -> Checked(record_model.NonEmpty(Supported(a))) {
+) -> Checked(source_record.NonEmpty(Supported(a))) {
   let occ = occurrences(record, tag)
   case occ {
     [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
@@ -1560,7 +1562,7 @@ pub fn bounded_nonempty(
   rule: RuleRef,
   length: Length,
   max_count: Int,
-) -> Checked(record_model.NonEmpty(Supported(String))) {
+) -> Checked(source_record.NonEmpty(Supported(String))) {
   bounded_nonempty_checked(record, tag, rule, length, max_count, repeating)
 }
 
@@ -1587,7 +1589,7 @@ pub fn bounded_nonempty_bytes(
   rule: RuleRef,
   length: Length,
   max_count: Int,
-) -> Checked(record_model.NonEmpty(Supported(BitArray))) {
+) -> Checked(source_record.NonEmpty(Supported(BitArray))) {
   bounded_nonempty_checked(
     record,
     tag,
@@ -1630,7 +1632,7 @@ pub fn required_nonempty(
   tag: String,
   rule: RuleRef,
   length: Length,
-) -> Checked(record_model.NonEmpty(Supported(String))) {
+) -> Checked(source_record.NonEmpty(Supported(String))) {
   case occurrences(record, tag) {
     [] -> Error(NonEmpty(required_not_located(record, tag, rule), []))
     _ ->
@@ -1897,7 +1899,7 @@ fn single_value(occurrence: FieldOccurrence) -> Result(BitArray, Nil) {
   |> result.replace_error(Nil)
 }
 
-fn locations(occurrence: FieldOccurrence) -> record_model.NonEmpty(Location) {
+fn locations(occurrence: FieldOccurrence) -> source_record.NonEmpty(Location) {
   let FieldOccurrence(_tag, NonEmpty(first, rest)) = occurrence
   NonEmpty(fragment_location(first), list.map(rest, fragment_location))
 }
@@ -1913,7 +1915,7 @@ fn fragment_location(fragment: Fragment) -> Location {
 fn disagreement(
   kind: record_model.DisagreementKind,
   rule: RuleRef,
-  examined: record_model.NonEmpty(Location),
+  examined: source_record.NonEmpty(Location),
   method: String,
 ) -> ConstructionProblem {
   Disagreement(FormatDisagreement(

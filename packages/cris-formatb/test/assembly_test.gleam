@@ -7,8 +7,8 @@ import card_image
 import gleam/bit_array
 import gleam/list
 import gleeunit/should
-import record_model
 import simplifile
+import source_record
 
 // The byte offset is file-absolute, computed from the base's first line:
 // (first_line - 1) * 82. This reproduces the fixture's own extraction record
@@ -18,7 +18,7 @@ pub fn line_location_is_file_absolute_from_the_base_test() {
     assembly.SourceBase(file: "RG164.CRIS.FY94.txt", first_line: 83_052)
 
   // The record's first line (index 0): the "$$" separator at file line 83052.
-  let assert record_model.Location(
+  let assert source_record.Location(
     file: "RG164.CRIS.FY94.txt",
     first_line: 83_052,
     byte_offset: 6_810_182,
@@ -26,7 +26,7 @@ pub fn line_location_is_file_absolute_from_the_base_test() {
   ) = assembly.line_location(base, 0)
 
   // The AN line (index 1, file line 83053): one 82-byte line further in.
-  let assert record_model.Location(
+  let assert source_record.Location(
     file: "RG164.CRIS.FY94.txt",
     first_line: 83_053,
     byte_offset: 6_810_264,
@@ -47,12 +47,12 @@ pub fn line_role_boundary_on_a_separator_line_test() {
 pub fn line_role_opens_a_field_on_a_tagged_line_test() {
   let base = assembly.SourceBase("F", 100)
   let line = <<"AN 9049442":utf8>>
-  let assert Ok(assembly.Opens("AN", record_model.TaggedStart(witness))) =
+  let assert Ok(assembly.Opens("AN", source_record.TaggedStart(witness))) =
     assembly.line_role(base, 1, line, 0xAC)
   // The witness carries the whole line's bytes and its file-absolute location.
-  let record_model.Witness(location: loc, bytes: bytes) = witness
+  let source_record.Witness(location: loc, bytes: bytes) = witness
   let assert True = bytes == line
-  let assert record_model.Location(
+  let assert source_record.Location(
     file: "F",
     first_line: 101,
     byte_offset: 8200,
@@ -63,14 +63,14 @@ pub fn line_role_opens_a_field_on_a_tagged_line_test() {
 pub fn line_role_continues_wrapped_when_col4_is_not_the_marker_test() {
   let base = assembly.SourceBase("F", 100)
   let line = <<"   H, SOYBEAN":utf8>>
-  let assert Ok(assembly.Continues(record_model.WrappedText(_))) =
+  let assert Ok(assembly.Continues(source_record.WrappedText(_))) =
     assembly.line_role(base, 5, line, 0xAC)
 }
 
 pub fn line_role_continues_marked_when_col4_is_the_marker_test() {
   let base = assembly.SourceBase("F", 100)
   let line = <<"   ":utf8, 0xAC, "A5000":utf8>>
-  let assert Ok(assembly.Continues(record_model.MarkedValueStart(_))) =
+  let assert Ok(assembly.Continues(source_record.MarkedValueStart(_))) =
     assembly.line_role(base, 5, line, 0xAC)
 }
 
@@ -88,13 +88,13 @@ pub fn parts_of_groups_tagged_lines_into_fields_test() {
   let base = assembly.SourceBase("F", 100)
   let lines = [<<"$$":utf8>>, <<"AN 9049442":utf8>>, <<"PD 860516":utf8>>]
   let assert Ok([
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       "AN",
-      record_model.NonEmpty(record_model.TaggedStart(_), []),
+      source_record.NonEmpty(source_record.TaggedStart(_), []),
     )),
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       "PD",
-      record_model.NonEmpty(record_model.TaggedStart(_), []),
+      source_record.NonEmpty(source_record.TaggedStart(_), []),
     )),
   ]) = assembly.parts_of(lines, base, 0xAC)
 }
@@ -103,11 +103,11 @@ pub fn parts_of_attaches_a_wrapped_continuation_to_its_field_test() {
   let base = assembly.SourceBase("F", 100)
   let lines = [<<"TI THE PEAC":utf8>>, <<"   H, SOYBEAN":utf8>>]
   let assert Ok([
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       "TI",
-      record_model.NonEmpty(
-        record_model.TaggedStart(_),
-        [record_model.WrappedText(_)],
+      source_record.NonEmpty(
+        source_record.TaggedStart(_),
+        [source_record.WrappedText(_)],
       ),
     )),
   ]) = assembly.parts_of(lines, base, 0xAC)
@@ -117,11 +117,11 @@ pub fn parts_of_attaches_a_marked_continuation_to_its_field_test() {
   let base = assembly.SourceBase("F", 100)
   let lines = [<<"AC A4900":utf8>>, <<"   ":utf8, 0xAC, "A5000":utf8>>]
   let assert Ok([
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       "AC",
-      record_model.NonEmpty(
-        record_model.TaggedStart(_),
-        [record_model.MarkedValueStart(_)],
+      source_record.NonEmpty(
+        source_record.TaggedStart(_),
+        [source_record.MarkedValueStart(_)],
       ),
     )),
   ]) = assembly.parts_of(lines, base, 0xAC)
@@ -129,7 +129,7 @@ pub fn parts_of_attaches_a_marked_continuation_to_its_field_test() {
 
 pub fn parts_of_reports_an_orphan_continuation_as_unassigned_test() {
   let base = assembly.SourceBase("F", 100)
-  let assert Ok([record_model.Unassigned(_)]) =
+  let assert Ok([source_record.Unassigned(_)]) =
     assembly.parts_of([<<"   orphan text":utf8>>], base, 0xAC)
 }
 
@@ -166,21 +166,21 @@ fn fixture_an_line() -> BitArray {
 pub fn assemble_builds_a_supplied_record_from_fixture_lines_test() {
   let base = assembly.SourceBase("RG164.CRIS.FY94.txt", 83_052)
   let record = bit_array.append(fixture_separator_line(), fixture_an_line())
-  let assert Ok(record_model.SuppliedRecord(witness: witness, parts: parts)) =
+  let assert Ok(source_record.SuppliedRecord(witness: witness, parts: parts)) =
     assembly.assemble(record, base, 0xAC)
 
   // The separator yields no part; the AN line is one field.
   let assert [
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       "AN",
-      record_model.NonEmpty(record_model.TaggedStart(_), []),
+      source_record.NonEmpty(source_record.TaggedStart(_), []),
     )),
   ] = parts
 
   // The whole-record witness spans both lines (164 bytes) from the base's line.
-  let record_model.Witness(location: loc, bytes: bytes) = witness
+  let source_record.Witness(location: loc, bytes: bytes) = witness
   let assert True = bytes == record
-  let assert record_model.Location(
+  let assert source_record.Location(
     file: "RG164.CRIS.FY94.txt",
     first_line: 83_052,
     byte_offset: 6_810_182,
@@ -243,17 +243,17 @@ pub fn assemble_a_real_marked_field_end_to_end_test() {
   >>
   let record = bit_array.concat([ac_opener, ac_a5000, ac_a4900, ac_a4900])
   let base = assembly.SourceBase("RG164.CRIS.FY94.txt", 83_083)
-  let assert Ok(record_model.SuppliedRecord(parts: parts, ..)) =
+  let assert Ok(source_record.SuppliedRecord(parts: parts, ..)) =
     assembly.assemble(record, base, 0xAC)
   let assert [
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       "AC",
-      record_model.NonEmpty(
-        record_model.TaggedStart(_),
+      source_record.NonEmpty(
+        source_record.TaggedStart(_),
         [
-          record_model.MarkedValueStart(_),
-          record_model.MarkedValueStart(_),
-          record_model.MarkedValueStart(_),
+          source_record.MarkedValueStart(_),
+          source_record.MarkedValueStart(_),
+          source_record.MarkedValueStart(_),
         ],
       ),
     )),
@@ -285,20 +285,20 @@ const expected_fragment_counts = [
 
 // A Field's tag and fragment count; an Unassigned part is flagged so a stray
 // one would break the tag comparison rather than pass silently.
-fn part_summary(part: record_model.RecordPart) -> #(String, Int) {
+fn part_summary(part: source_record.RecordPart) -> #(String, Int) {
   case part {
-    record_model.Field(record_model.FieldOccurrence(
+    source_record.Field(source_record.FieldOccurrence(
       tag,
-      record_model.NonEmpty(_, rest),
+      source_record.NonEmpty(_, rest),
     )) -> #(tag, 1 + list.length(rest))
-    record_model.Unassigned(_) -> #("<<unassigned>>", 0)
+    source_record.Unassigned(_) -> #("<<unassigned>>", 0)
   }
 }
 
 pub fn assemble_the_whole_fixture_record_test() {
   let assert Ok(record) = simplifile.read_bits(fixture_path)
   let base = assembly.SourceBase("RG164.CRIS.FY94.txt", 83_052)
-  let assert Ok(record_model.SuppliedRecord(witness: witness, parts: parts)) =
+  let assert Ok(source_record.SuppliedRecord(witness: witness, parts: parts)) =
     assembly.assemble(record, base, 0xAC)
 
   // Every part is a field in the expected order, with the expected fragment
@@ -310,10 +310,10 @@ pub fn assemble_the_whole_fixture_record_test() {
   |> should.equal(expected_fragment_counts)
 
   // The whole-record witness holds the file's bytes and its file-absolute span.
-  let record_model.Witness(location: loc, bytes: bytes) = witness
+  let source_record.Witness(location: loc, bytes: bytes) = witness
   bytes |> should.equal(record)
   loc
-  |> should.equal(record_model.Location(
+  |> should.equal(source_record.Location(
     file: "RG164.CRIS.FY94.txt",
     first_line: 83_052,
     byte_offset: 6_810_182,

@@ -16,11 +16,12 @@ import simplifile
 
 import record_model.{
   type RuleRef, Disagreement, FieldNotYetModeled, FormatDisagreement, Heading,
-  Identity, InvalidAccession, InvalidFieldValue, Narratives, NonEmpty,
+  Identity, InvalidAccession, InvalidFieldValue, Narratives,
   NonRepeatingFieldRepeated, Participants, PrintedDictionary, Provisional,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
   RuleRef, Subcommodity, Supplied, Supported, UndocumentedField,
 }
+import source_record.{NonEmpty}
 
 // A throwaway rule for exercising the generic field checkers.
 fn a_rule() -> RuleRef {
@@ -41,7 +42,7 @@ fn a_rule() -> RuleRef {
 // single-line data width (cols 4-72) wraps onto blank-tag continuation lines,
 // the same wrapped-continuation joining the reading layer performs on real
 // data — and assembles the whole into a SuppliedRecord.
-fn record(pairs: List(#(String, String))) -> record_model.SuppliedRecord {
+fn record(pairs: List(#(String, String))) -> source_record.SuppliedRecord {
   let lines =
     [served_line("$$", ""), ..[]]
     |> list.append(
@@ -68,7 +69,7 @@ fn spaces(n: Int) -> BitArray {
 // carry non-UTF-8 bytes (the SC/PH/GH 0xA0 separator).
 fn record_bytes(
   pairs: List(#(String, BitArray)),
-) -> record_model.SuppliedRecord {
+) -> source_record.SuppliedRecord {
   let lines =
     [served_line("$$", ""), ..[]]
     |> list.append(list.flat_map(pairs, fn(p) { wrapped_lines(p.0, p.1) }))
@@ -784,13 +785,13 @@ fn full_record_pairs() -> List(#(String, String)) {
   ]
 }
 
-fn full_record() -> record_model.SuppliedRecord {
+fn full_record() -> source_record.SuppliedRecord {
   record(full_record_pairs())
 }
 
 // A record with an orphan continuation line (no tagged field open above it):
 // assembly emits this as an Unassigned part, never a Field occurrence.
-fn record_with_orphan_continuation() -> record_model.SuppliedRecord {
+fn record_with_orphan_continuation() -> source_record.SuppliedRecord {
   let boundary = served_line("$$", "")
   let orphan = served_line_bytes("  ", <<"stray data":utf8>>)
   let bytes = bit_array.concat([boundary, orphan])

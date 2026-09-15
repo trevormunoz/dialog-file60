@@ -7,9 +7,9 @@ import gleam/bit_array
 import gleam/list
 import gleam/option.{None, Some}
 import gleeunit/should
-import record_model
 import scan
 import simplifile
+import source_record
 
 fn line(prefix: BitArray) -> BitArray {
   let pad =
@@ -52,19 +52,19 @@ pub fn scanned_records_assemble_with_absolute_locations_test() {
   let assert Ok(scan.ScanResult(records, _)) = scan.scan(file, "F", 100)
   list.length(records) |> should.equal(2)
   list.each(records, fn(record) {
-    let assert Ok(record_model.SuppliedRecord(
+    let assert Ok(source_record.SuppliedRecord(
       witness,
-      [record_model.Field(occ)],
+      [source_record.Field(occ)],
     )) = assembly.assemble(record.bytes, record.base, 0xAC)
     witness.location
-    |> should.equal(record_model.Location(
+    |> should.equal(source_record.Location(
       "F",
       record.base.first_line,
       { record.base.first_line - 1 } * 82,
       164,
     ))
     witness.bytes |> should.equal(record_bytes)
-    let assert record_model.NonEmpty(record_model.TaggedStart(an), []) =
+    let assert source_record.NonEmpty(source_record.TaggedStart(an), []) =
       occ.fragments
     an.location |> should.equal(assembly.line_location(record.base, 1))
     field_value.field_values(occ)
@@ -145,11 +145,11 @@ pub fn scan_the_fixture_yields_one_assemblable_record_test() {
   |> should.equal(assembly.SourceBase("RG164.CRIS.FY94.txt", 83_052))
   record.bytes |> should.equal(bytes)
   structure |> should.equal(scan.FileStructure(None, None))
-  let assert Ok(record_model.SuppliedRecord(witness, parts)) =
+  let assert Ok(source_record.SuppliedRecord(witness, parts)) =
     assembly.assemble(record.bytes, record.base, 0xAC)
   witness.bytes |> should.equal(bytes)
   witness.location
-  |> should.equal(record_model.Location(
+  |> should.equal(source_record.Location(
     "RG164.CRIS.FY94.txt",
     83_052,
     6_810_182,
@@ -157,7 +157,7 @@ pub fn scan_the_fixture_yields_one_assemblable_record_test() {
   ))
   list.length(parts) |> should.equal(56)
   list.each(parts, fn(part) {
-    let assert record_model.Field(occ) = part
+    let assert source_record.Field(occ) = part
     let assert Ok(_) = field_value.field_values(occ)
   })
 }

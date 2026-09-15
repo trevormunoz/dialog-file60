@@ -6,11 +6,11 @@ import field_value
 import gleam/bit_array
 import gleam/list
 import gleeunit/should
-import record_model.{
+import simplifile
+import source_record.{
   type Witness, Field, FieldOccurrence, Location, MarkedValueStart, NonEmpty,
   SuppliedRecord, TaggedStart, Witness, WrappedText,
 }
-import simplifile
 
 fn pad(n: Int) -> BitArray {
   list.repeat(<<0x20>>, times: n) |> bit_array.concat

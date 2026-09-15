@@ -3,14 +3,14 @@
 //// The source citation is machine-derived: the enclosing file scan knows the
 //// file it opened and counts lines as it splits records, so a SourceBase (file
 //// name + the record's first line number) is handed down, never entered by a
-//// human per record. See record_model.gleam for the target types and
+//// human per record. See source_record.gleam for the target types and
 //// card_image.gleam for the per-line reading this builds on.
 
 import card_image
 import gleam/bit_array
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import record_model.{
+import source_record.{
   type Fragment, type Location, type RecordPart, type Witness, Field,
   FieldOccurrence, Location, MarkedValueStart, NonEmpty, TaggedStart, Unassigned,
   Witness, WrappedText,
@@ -181,7 +181,7 @@ pub fn assemble(
   record: BitArray,
   base: SourceBase,
   marker: Int,
-) -> Result(record_model.SuppliedRecord, AssemblyError) {
+) -> Result(source_record.SuppliedRecord, AssemblyError) {
   case card_image.split_lines(record) {
     Error(reason) -> Error(LineUnreadable(reason))
     Ok(lines) ->
@@ -196,7 +196,7 @@ pub fn assemble(
               byte_length: bit_array.byte_size(record),
             )
           let witness = Witness(location: location, bytes: record)
-          Ok(record_model.SuppliedRecord(witness: witness, parts: parts))
+          Ok(source_record.SuppliedRecord(witness: witness, parts: parts))
         }
       }
   }

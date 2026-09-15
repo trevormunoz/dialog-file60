@@ -6,6 +6,7 @@
 import gleam/list
 import gleeunit/should
 import record_model
+import source_record
 
 // Plain ASCII bytes render as the equivalent string.
 pub fn render_ascii_bytes_test() {
@@ -32,7 +33,7 @@ pub fn render_high_byte_as_latin1_pound_sign_test() {
 fn sup(value: String) -> record_model.Supported(String) {
   record_model.Supported(
     value,
-    record_model.NonEmpty(record_model.Location("fixture", 1, 0, 0), []),
+    source_record.NonEmpty(source_record.Location("fixture", 1, 0, 0), []),
   )
 }
 

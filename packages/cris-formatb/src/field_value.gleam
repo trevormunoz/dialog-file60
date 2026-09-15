@@ -5,7 +5,7 @@
 import card_image.{type CardImageError}
 import gleam/bit_array
 import gleam/list
-import record_model.{
+import source_record.{
   type FieldOccurrence, type Fragment, FieldOccurrence, MarkedValueStart,
   NonEmpty, TaggedStart, WrappedText,
 }

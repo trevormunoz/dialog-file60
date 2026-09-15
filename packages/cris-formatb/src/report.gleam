@@ -17,11 +17,12 @@ import gleam/string
 import record_model.{
   type ConstructionProblem, type DisagreementKind, type Supported, Disagreement,
   FieldNotYetModeled, FormatDisagreement, Identity, InvalidAccession,
-  InvalidFieldValue, NonEmpty, NonRepeatingFieldRepeated, Participants,
+  InvalidFieldValue, NonRepeatingFieldRepeated, Participants,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
   RuleUnresolved, Supported,
 }
 import scan
+import source_record.{type SuppliedRecord, NonEmpty}
 
 /// Render up to `max_records` records from `bytes`, plus a summary over all
 /// records scanned. `marker` is the profile continuation byte — 0xAC per
@@ -86,10 +87,7 @@ fn evaluate(record: scan.ScannedRecord, marker: Int) -> #(String, Bool) {
   }
 }
 
-fn identity_line(
-  supplied: record_model.SuppliedRecord,
-  where: String,
-) -> #(String, Bool) {
+fn identity_line(supplied: SuppliedRecord, where: String) -> #(String, Bool) {
   case construct.identity(supplied) {
     Ok(Identity(Supported(acc, _), Supported(pn, _))) -> #(
       where <> ": identity OK — AN=" <> accession.to_string(acc) <> " PN=" <> pn,
@@ -106,7 +104,7 @@ fn identity_line(
   }
 }
 
-fn participants_line(supplied: record_model.SuppliedRecord) -> String {
+fn participants_line(supplied: SuppliedRecord) -> String {
   case construct.participants(supplied) {
     Ok(Participants(institution, investigators)) ->
       "  participants OK — institution="
@@ -121,7 +119,7 @@ fn participants_line(supplied: record_model.SuppliedRecord) -> String {
   }
 }
 
-fn chronology_line(supplied: record_model.SuppliedRecord) -> String {
+fn chronology_line(supplied: SuppliedRecord) -> String {
   case construct.chronology(supplied) {
     Ok(chron) -> "  chronology OK — FY=" <> optional_value(chron.fiscal_year)
     Error(NonEmpty(first, rest)) ->
@@ -131,7 +129,7 @@ fn chronology_line(supplied: record_model.SuppliedRecord) -> String {
   }
 }
 
-fn classifications_line(supplied: record_model.SuppliedRecord) -> String {
+fn classifications_line(supplied: SuppliedRecord) -> String {
   case construct.classifications(supplied) {
     Ok(c) ->
       "  classifications OK — "
@@ -167,7 +165,7 @@ fn column_code_count(columns: record_model.ClassificationColumns) -> Int {
 // DE up to 2400), so the report shows presence per field, not the text
 // itself — the same concise-summary shape as `classifications_line`'s
 // counts, not a raw dump.
-fn narratives_line(supplied: record_model.SuppliedRecord) -> String {
+fn narratives_line(supplied: SuppliedRecord) -> String {
   case construct.narratives(supplied) {
     Ok(n) ->
       "  narratives OK — OB="
@@ -199,7 +197,7 @@ fn presence(field: option.Option(Supported(a))) -> String {
 // checks, composed and re-checked as a whole. Renders only the title (the
 // one field guaranteed short and meant for display) rather than dumping the
 // whole opaque `Project`.
-fn project_line(supplied: record_model.SuppliedRecord) -> String {
+fn project_line(supplied: SuppliedRecord) -> String {
   case construct.project(supplied) {
     Ok(project) ->
       "  project OK — title=\""
