@@ -19,7 +19,7 @@ import record_model.{
   FieldNotYetModeled, FormatDisagreement, Identity, InvalidAccession,
   InvalidFieldValue, NonRepeatingFieldRepeated, Participants,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RuleUnresolved, Supported,
+  RuleUnresolved, Supported, TagNotAscii,
 }
 import scan
 import source_record.{type SuppliedRecord, NonEmpty}
@@ -229,6 +229,7 @@ fn describe(problem: ConstructionProblem) -> String {
     Disagreement(FormatDisagreement(kind, _, _, _)) -> describe_kind(kind)
     RuleUnresolved(tag, _, question) -> tag <> " rule unresolved: " <> question
     FieldNotYetModeled(tag, _) -> tag <> " not yet modeled"
+    TagNotAscii(tag, _) -> tag <> " tag is not ASCII"
   }
 }
 
@@ -264,6 +265,5 @@ fn accession_error(reason: accession.AccessionError) -> String {
 fn assembly_error(problem: assembly.AssemblyError) -> String {
   case problem {
     assembly.LineUnreadable(_) -> "a card line was not readable"
-    assembly.TagNotAscii(_) -> "a field tag was not ASCII"
   }
 }

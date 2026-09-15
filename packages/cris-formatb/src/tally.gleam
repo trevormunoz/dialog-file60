@@ -23,7 +23,7 @@ import record_model.{
   type ConstructionProblem, Disagreement, FieldNotYetModeled, FormatDisagreement,
   InvalidAccession, InvalidFieldValue, NonRepeatingFieldRepeated,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RuleUnresolved,
+  RuleUnresolved, TagNotAscii,
 }
 import scan
 import simplifile
@@ -154,6 +154,7 @@ fn bucket(problem: ConstructionProblem) -> String {
     Disagreement(FormatDisagreement(kind, _, _, _)) -> kind_bucket(kind)
     RuleUnresolved(tag, _, _) -> tag <> " rule-unresolved"
     FieldNotYetModeled(tag, _) -> tag <> " not-yet-modeled"
+    TagNotAscii(tag, _) -> tag <> " tag-not-ascii"
   }
 }
 

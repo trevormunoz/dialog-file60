@@ -19,7 +19,7 @@ import record_model.{
   Identity, InvalidAccession, InvalidFieldValue, Narratives,
   NonRepeatingFieldRepeated, Participants, PrintedDictionary, Provisional,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RuleRef, Subcommodity, Supplied, Supported, UndocumentedField,
+  RuleRef, Subcommodity, Supplied, Supported, TagNotAscii, UndocumentedField,
 }
 import source_record.{NonEmpty}
 
@@ -85,6 +85,33 @@ fn served_line_bytes(tag: String, value: BitArray) -> BitArray {
   let body = bit_array.concat([<<tag:utf8, 0x20>>, value])
   let pad = spaces(80 - bit_array.byte_size(body))
   bit_array.concat([body, pad, <<0x0d, 0x0a>>])
+}
+
+// Like `served_line_bytes`, but the tag itself comes in as raw bytes (exactly
+// 2) rather than a UTF-8-encoded String, so a test can express a tag whose
+// bytes are not ASCII/UTF-8 (correction #3: 0xAC 0x41 -> latin1 "¬A").
+fn served_line_raw_tag_bytes(tag: BitArray, value: BitArray) -> BitArray {
+  let body = bit_array.concat([tag, <<0x20>>, value])
+  let pad = spaces(80 - bit_array.byte_size(body))
+  bit_array.concat([body, pad, <<0x0d, 0x0a>>])
+}
+
+// Like `record_bytes`, but appends one extra field line whose tag is the raw
+// (non-ASCII) `tag_bytes` rather than a String tag — for exercising the
+// reader/validator boundary on a non-ASCII tag.
+fn record_with_raw_tag(
+  pairs: List(#(String, BitArray)),
+  tag_bytes: BitArray,
+  value: BitArray,
+) -> source_record.SuppliedRecord {
+  let lines =
+    [served_line("$$", ""), ..[]]
+    |> list.append(list.flat_map(pairs, fn(p) { wrapped_lines(p.0, p.1) }))
+    |> list.append([served_line_raw_tag_bytes(tag_bytes, value)])
+  let bytes = bit_array.concat(lines)
+  let assert Ok(supplied) =
+    assembly.assemble(bytes, assembly.SourceBase("T", 1), 0xAC)
+  supplied
 }
 
 // The one-or-more served lines a value needs: a value up to 69 bytes (cols
@@ -876,6 +903,33 @@ pub fn project_with_unassigned_part_reports_field_not_yet_modeled_test() {
     list.any([first, ..rest], fn(problem) {
       case problem {
         FieldNotYetModeled("<unassigned>", _) -> True
+        _ -> False
+      }
+    })
+}
+
+// Correction #3: a non-ASCII tag (raw bytes 0xAC 0x41 -> latin1 "¬A") is read
+// by the reader as an ordinary field (no panic, no reader-side rejection —
+// see assembly_test.gleam), so it falls into the same generic unmodeled-
+// material pass as NI above. But because its tag carries a codepoint >= 0x80,
+// `unmodeled_material` reports the dedicated TagNotAscii problem instead of
+// the generic FieldNotYetModeled for that field.
+pub fn project_with_non_ascii_tag_reports_tag_not_ascii_test() {
+  let pairs = list.map(full_record_pairs(), fn(p) { #(p.0, <<p.1:utf8>>) })
+  let supplied = record_with_raw_tag(pairs, <<0xAC, 0x41>>, <<"50":utf8>>)
+  let assert Error(NonEmpty(first, rest)) = construct.project(supplied)
+  let problems = [first, ..rest]
+  let assert True =
+    list.any(problems, fn(problem) {
+      case problem {
+        TagNotAscii("¬A", _) -> True
+        _ -> False
+      }
+    })
+  let assert False =
+    list.any(problems, fn(problem) {
+      case problem {
+        FieldNotYetModeled("¬A", _) -> True
         _ -> False
       }
     })

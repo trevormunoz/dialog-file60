@@ -14,6 +14,7 @@ import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 import record_model.{
   type Chronology, type Classifications, type ConstructionProblem, type Heading,
   type Identity, type Institution, type Narratives, type Participants,
@@ -23,7 +24,7 @@ import record_model.{
   Heading, Identity, Institution, InvalidAccession, InvalidFieldValue,
   Narratives, PairedDate, Participants, PrintedDictionary, Provisional,
   RelatedFieldsDisagree, RequiredFieldNotLocated, RuleRef, Subcommodity,
-  Supplied, Supported, UndocumentedField, ValidationAddendum,
+  Supplied, Supported, TagNotAscii, UndocumentedField, ValidationAddendum,
 }
 import segment
 import source_record.{
@@ -1227,10 +1228,16 @@ const unassigned_tag: String = "<unassigned>"
 
 // Every part of the record outside the modeled-tag set: a Field occurrence
 // whose tag this module does not compose into `project`, or an Unassigned
-// part. Each contributes one FieldNotYetModeled problem, so a record carrying
-// unmodeled material cannot be silently certified Ok. SN and HP are members
-// of `modeled_tags` (their own constructors already flag every occurrence),
-// so this generic pass does not re-flag them — no double-flagging.
+// part. Each contributes one problem, so a record carrying unmodeled material
+// cannot be silently certified Ok. SN and HP are members of `modeled_tags`
+// (their own constructors already flag every occurrence), so this generic
+// pass does not re-flag them — no double-flagging. A tag carrying a
+// codepoint >= 0x80 (correction #3: the reader reads every tag with total
+// latin1 and never rejects — assembly.gleam) reports the dedicated
+// TagNotAscii problem INSTEAD of the generic FieldNotYetModeled, since it
+// supersedes the generic unmodeled flag for that field; a non-ASCII tag can
+// never be in `modeled_tags` (all 51 are ASCII), so this only refines an
+// already-flagged field, never hides a modeled one.
 fn unmodeled_material(record: SuppliedRecord) -> List(ConstructionProblem) {
   list.filter_map(record.parts, fn(part) {
     case part {
@@ -1239,13 +1246,23 @@ fn unmodeled_material(record: SuppliedRecord) -> List(ConstructionProblem) {
           True -> Error(Nil)
           False -> {
             let NonEmpty(first, _) = locations(occurrence)
-            Ok(FieldNotYetModeled(occurrence.tag, first))
+            case has_non_ascii_codepoint(occurrence.tag) {
+              True -> Ok(TagNotAscii(occurrence.tag, first))
+              False -> Ok(FieldNotYetModeled(occurrence.tag, first))
+            }
           }
         }
       Unassigned(witness) ->
         Ok(FieldNotYetModeled(unassigned_tag, witness.location))
     }
   })
+}
+
+// Whether `tag` carries any codepoint >= 0x80 (i.e. is not ASCII).
+fn has_non_ascii_codepoint(tag: String) -> Bool {
+  tag
+  |> string.to_utf_codepoints
+  |> list.any(fn(cp) { string.utf_codepoint_to_int(cp) >= 0x80 })
 }
 
 /// The top-level composition: every group and field the model currently

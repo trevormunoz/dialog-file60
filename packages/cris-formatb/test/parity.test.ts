@@ -169,6 +169,24 @@ it("gate 3: oracle splits a single-value 0xAC field; facade joins it", () => {
   expect(only.continuation).toBeFalsy();
 });
 
+it("gate 4 (correction #3): non-ASCII tag (0xAC 0x41) reads as a field via latin1, no panic, matches the oracle", () => {
+  // tags are ASCII strings everywhere else in this file, so `fld` (which
+  // charCode-encodes a string tag) can't express this — build the raw tag
+  // bytes directly, as the oracle's own latin1 decode would read them:
+  // 0xAC 0x41 -> "¬A".
+  const bytes = new Uint8Array([
+    ...line("<< H"), ...line("$$"), ...fld("AN", "9000001"),
+    ...line(0xac, 0x41, " ", "50"),
+    ...line(">> T"),
+  ]);
+  const { spans } = tsScan(bytes);
+  const span = spans[0]!;
+  const ts = tsParse(bytes, span, "synthetic", "fy1991plus", 1);
+  expect(() => gParse(bytes, span, "synthetic", "fy1991plus", 1)).not.toThrow();
+  const g = gParse(bytes, span, "synthetic", "fy1991plus", 1);
+  assertFieldLevelParity(g, ts);
+});
+
 describe.runIf(RUN_CORPUS)("strict byte-parity: Gleam facade == TS oracle (full corpus)", () => {
   // Opt-in (CRIS_PARITY_CORPUS=1) AND data/ present. When both hold, this is
   // the real gate: every record, both profiles, not a sample.
