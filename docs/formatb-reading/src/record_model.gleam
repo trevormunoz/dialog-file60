@@ -6,6 +6,7 @@
 //// it to bypass the rule inventory.
 
 import accession.{type Accession, type AccessionError}
+import gleam/list
 import gleam/option.{type Option}
 import gleam/string
 
@@ -295,6 +296,112 @@ pub type ClassificationColumns {
     program_area: List(Supported(String)),
     joint_council: List(Supported(String)),
   )
+}
+
+/// One classification allocation line: the position-aligned tuple across the
+/// seven columns, with CT as the line's `percent` (field order RP, AC, CM, FS,
+/// CT, PA, JC — the PC-heading order). This is a DERIVED VIEW, produced by
+/// `classification_rows`, never a stored or certified structure: the source
+/// documents only "columnar display", so the one-to-one alignment is a
+/// census-observed regularity (equal counts in 100% of FY88/FY89/FY94 records —
+/// rules/field-rule-inventory.md classification census 2026-09-14), NOT a
+/// documented rule. The stored `ClassificationColumns` (seven independent lists)
+/// remains the source-faithful representation.
+pub type ClassificationRow {
+  ClassificationRow(
+    problem: Supported(String),
+    activity: Supported(String),
+    commodity: Supported(String),
+    science: Supported(String),
+    percent: Supported(String),
+    program_area: Supported(String),
+    joint_council: Supported(String),
+  )
+}
+
+/// Project the seven classification columns into position-aligned rows: value i
+/// of every column forms row i. Returns `Error(Nil)` when the columns are not all
+/// the same length — i.e. the undocumented alignment does not hold for this
+/// record — rather than silently truncating or padding. This OFFERS the observed
+/// alignment to a caller that wants rows; it makes no claim the alignment always
+/// holds, and it enforces nothing at construction. See `ClassificationRow`.
+pub fn classification_rows(
+  columns: ClassificationColumns,
+) -> Result(List(ClassificationRow), Nil) {
+  let ClassificationColumns(
+    activity:,
+    commodity:,
+    science:,
+    problem:,
+    product_percent:,
+    program_area:,
+    joint_council:,
+  ) = columns
+  let n = list.length(problem)
+  case
+    list.length(activity) == n
+    && list.length(commodity) == n
+    && list.length(science) == n
+    && list.length(product_percent) == n
+    && list.length(program_area) == n
+    && list.length(joint_council) == n
+  {
+    True ->
+      Ok(zip_classification_rows(
+        problem,
+        activity,
+        commodity,
+        science,
+        product_percent,
+        program_area,
+        joint_council,
+      ))
+    False -> Error(Nil)
+  }
+}
+
+// Zip seven equal-length classification columns into rows. Called only after
+// `classification_rows` has verified the lengths match, so every column steps in
+// lock-step; the base case is reached with all seven simultaneously empty.
+fn zip_classification_rows(
+  problem: List(Supported(String)),
+  activity: List(Supported(String)),
+  commodity: List(Supported(String)),
+  science: List(Supported(String)),
+  percent: List(Supported(String)),
+  program_area: List(Supported(String)),
+  joint_council: List(Supported(String)),
+) -> List(ClassificationRow) {
+  case
+    problem,
+    activity,
+    commodity,
+    science,
+    percent,
+    program_area,
+    joint_council
+  {
+    [rp, ..rp_rest],
+      [ac, ..ac_rest],
+      [cm, ..cm_rest],
+      [fs, ..fs_rest],
+      [ct, ..ct_rest],
+      [pa, ..pa_rest],
+      [jc, ..jc_rest]
+    -> [
+      ClassificationRow(rp, ac, cm, fs, ct, pa, jc),
+      ..zip_classification_rows(
+        rp_rest,
+        ac_rest,
+        cm_rest,
+        fs_rest,
+        ct_rest,
+        pa_rest,
+        jc_rest,
+      )
+    ]
+    _, _, _, _, _, _, _ -> []
+  }
 }
 
 /// A classification heading value (PH, GH): a fixed-width code and a literal,

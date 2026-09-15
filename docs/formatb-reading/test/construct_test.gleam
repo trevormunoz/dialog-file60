@@ -7,10 +7,12 @@ import accession.{WrongByteLength}
 import assembly
 import construct
 import gleam/bit_array
+import gleam/int
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
 import gleeunit/should
+import simplifile
 
 import record_model.{
   type RuleRef, Disagreement, FieldNotYetModeled, FormatDisagreement, Heading,
@@ -1000,6 +1002,45 @@ pub fn classifications_sn_pairs_with_sc_by_position_test() {
   ] = c.subcommodity_percentages
   first |> should.equal(<<"040%":utf8>>)
   second |> should.equal(<<"060%":utf8>>)
+}
+
+// B (regularity guard): the census-observed classification alignment, pinned on
+// committed real bytes. The fixture record (FY94 9049442) carries four
+// classification lines; `classification_rows` zips them position-for-position and
+// the CT percents sum to 100 — the regularity the full-corpus census found in
+// 100% of FY88/FY89/FY94 records. This alignment is NOT enforced in construction
+// (it has no documentary warrant — the source documents columnar DISPLAY only;
+// see rules/field-rule-inventory.md classification census 2026-09-14). The test
+// guards the observed regularity against silent regression on real data.
+pub fn classification_rows_fixture_zips_four_aligned_lines_test() {
+  let assert Ok(bytes) =
+    simplifile.read_bits(
+      "../../packages/cris-formatb/fixtures/fy94-9049442.bin",
+    )
+  let assert Ok(supplied) =
+    assembly.assemble(
+      bytes,
+      assembly.SourceBase("RG164.CRIS.FY94.txt", 1),
+      0xAC,
+    )
+  let assert Ok(c) = construct.classifications(supplied)
+  let assert Ok(rows) = record_model.classification_rows(c.columns)
+  list.length(rows) |> should.equal(4)
+  let assert [first, ..] = rows
+  first.problem.value |> should.equal("R304")
+  first.activity.value |> should.equal("A4900")
+  first.commodity.value |> should.equal("C1000")
+  first.science.value |> should.equal("F0513")
+  first.percent.value |> should.equal("042%")
+  first.program_area.value |> should.equal("P3.13")
+  first.joint_council.value |> should.equal("J2A")
+  // CT is the per-line percent; the four lines sum to 100.
+  let total =
+    list.fold(rows, 0, fn(acc, row) {
+      let assert Ok(n) = int.parse(string.replace(row.percent.value, "%", ""))
+      acc + n
+    })
+  total |> should.equal(100)
 }
 
 // An AC value below the documented MIN 5 is a divergence, not silently

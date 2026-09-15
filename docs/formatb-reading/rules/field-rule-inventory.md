@@ -758,9 +758,40 @@ format" (CT: "Max 15 percentages").
   display rule, not a data-alignment claim. **So the model's `ClassificationColumns`
   as seven independent ordered lists (not aligned tuples) is vindicated by the
   source, and equal lengths in one record remain evidence to pursue, not proof.**
+- **Full-corpus alignment census (2026-09-14) — strong evidence, deliberately NOT
+  enforced.** All seven columns are 0xAC multi-value (as SC). Per record, split each
+  column on 0xAC and count: the seven counts are **equal in 100% of records across
+  all three corpora** — FY88 32,016/32,016, FY89 33,499/33,499, FY94 34,090/34,090,
+  zero exceptions. CT is the per-line percent (its values carry `%`), and the CT
+  fragments **sum to 100% in every FY89 and FY94 record**, and in all but **25 FY88
+  records** — those 25 are genuine under-allocations (e.g. a lone `033%`, or three
+  lines `035%+035%+025%=95%`), so a "CT sums to 100" rule is false and is not posited.
+  Worked example (FY94 rec 3, six aligned lines): `R101|A4100|C0100|F1524|020%|P1.01|J1A`,
+  `…|F1525|010%|…`, `…|F1527|010%|…`, `…|F1528|020%|…`, `…|F2020|030%|…`,
+  `…|F2421|010%|…` — CT sums to 100.
+  - **Why not enforced (contrast with the SN↔SC bond).** SN↔SC is enforceable because
+    the positional binding is *documented* (the FY1991 agency note names it). The
+    classification columns have **no such documentary statement**: the Data Element
+    Dictionary describes only "columnar format" (display), and the 1982 Manual of
+    Classification — which would be the place a per-line percentage-allocation rule
+    could be quoted — is **not in hand**. A `RelatedFieldsDisagree` count-bond built
+    from the census alone would be *inferring a rule from data*, the move the SN row
+    explicitly forbids. The 100%-equal census is the strongest possible **evidence to
+    pursue**; it is not the documentary **proof** the discipline requires to enforce.
+  - **The design cost that confirmed the decision.** Folding the columns into an
+    aligned `ClassificationRow` list (and any enforced count-bond) would need
+    `EvidenceGrade`'s first *non-documentary* grade — every existing grade
+    (`PrintedDictionary`, `HandwrittenAmendment`, `ValidationAddendum`) traces to a
+    written artifact; a census-only grade does not — and it would strain `RuleRef`,
+    whose `document`/`pdf_page` fields have nothing to point at. That widens the
+    model's provenance claim from *documentary-only* to *documentary-or-observed*.
+    Judged too costly to introduce for a claim no source backs; the seven-list model
+    stands. **Warrant to revisit**: a 1982-Manual passage documenting per-line
+    percentage allocation would supply the missing proof and justify the row model.
 - **Ready**: repetition, per-value length ranges, optionality. **Not ready**: any
-  tuple/alignment relation (unsupported), char-class checks (A,N), and the
-  "Max 15" upper bound is a runtime check the list type does not encode.
+  tuple/alignment relation (strong census evidence, no documentary warrant — see the
+  2026-09-14 census above), char-class checks (A,N), and the "Max 15" upper bound is
+  a runtime check the list type does not encode.
 
 ### Subcommodity SC (elem 39) and the undocumented SN
 SC: printed, A,N, **MAX 2599 MIN 51**, Repeating Y, Always N; two index sub-rows
