@@ -2008,9 +2008,10 @@ fn rpa_problem(
 }
 
 // Every RP value's attestation miss against `fy`'s warrant set, folded into
-// `base`. An unreadable value (non-UTF-8 bytes) is silently skipped here —
-// `flat_values`/`project_core` already report it via `fragment_placeholder`
-// when relevant, and attestation is not the place to duplicate that.
+// `base`. A non-UTF-8 value is silently skipped here — `project_core` already
+// reports it: an in-bounds non-text value as `InvalidFieldValue` ("not valid
+// text") via the per-value check, and a value whose field could not be split
+// as a `fragment_placeholder`. Attestation is not the place to duplicate that.
 fn merge_rpa_attestations(
   base: record_model.ConstructionResult,
   record: SuppliedRecord,
