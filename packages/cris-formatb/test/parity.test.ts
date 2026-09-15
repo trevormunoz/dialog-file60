@@ -37,6 +37,55 @@ function readBytes(url: URL): Uint8Array {
   return new Uint8Array(readFileSync(url));
 }
 
+// mirrors field_cardinality.gleam (source of truth); test-only copy.
+const SINGLE_VALUE_TAGS = new Set([
+  "AN","PN","TI","PS","PT","AS","DS","IC","PI","CY","ST","ZP","RE","CG","RG",
+  "RN","OC","PD","SD","SX","TD","TX","FY","GY","UP","PP","PX","BT","AT","DT",
+  "OB","AP","DE","PR","PB",
+]);
+
+// Field-level parity-except-sourced-corrections (design spec gates 1-2). Multi/
+// unsourced tags must match the frozen oracle exactly. A single-value tag either
+// matches exactly (no 0xAC) or diverges in EXACTLY the corrected shape: oracle
+// split >=2, facade joined to 1, continuation false, opener line/offset kept,
+// 0xAC recovered as data. Any other difference fails.
+function assertFieldLevelParity(g: any, ts: any): void {
+  // Every record-level field the whole-record JSON.stringify used to cover, so
+  // this comparator is not weaker than what it replaces (record.ts:7-12).
+  expect(g.file).toBe(ts.file);
+  expect(g.an).toBe(ts.an);
+  expect(g.firstLine).toBe(ts.firstLine);
+  expect(g.lastLine).toBe(ts.lastLine);
+  expect(g.offset).toBe(ts.offset);
+  expect(g.length).toBe(ts.length);
+  expect(g.orphanContinuations).toBe(ts.orphanContinuations);
+  expect(g.fields.length).toBe(ts.fields.length);
+  for (let i = 0; i < ts.fields.length; i++) {
+    const gf = g.fields[i], tf = ts.fields[i];
+    expect(gf.tag).toBe(tf.tag);
+    if (!SINGLE_VALUE_TAGS.has(tf.tag)) {
+      expect(JSON.stringify(gf)).toBe(JSON.stringify(tf)); // gate 1
+      continue;
+    }
+    if (JSON.stringify(gf) === JSON.stringify(tf)) continue; // single-value, no 0xAC
+    // gate 2 — shaped differential
+    expect(tf.values.length).toBeGreaterThanOrEqual(2);
+    expect(gf.values.length).toBe(1);
+    expect(gf.lineStart).toBe(tf.lineStart);
+    expect(gf.lineEnd).toBe(tf.lineEnd);
+    expect(gf.offset).toBe(tf.offset);
+    expect(gf.length).toBe(tf.length);
+    const only = gf.values[0];
+    // SourceValue.continuation is `continuation?: true` (record.ts:5): present
+    // only when true, ABSENT otherwise (never the literal false). The merged
+    // value is opened by the tagged start, so it must be falsy/absent here.
+    expect(only.continuation).toBeFalsy();
+    expect(only.line).toBe(tf.values[0].line);
+    expect(only.offset).toBe(tf.values[0].offset);
+    expect(only.raw.includes("¬")).toBe(true);
+  }
+}
+
 function assertScanParity(bytes: Uint8Array): { spans: RecordSpan[] } {
   const ts = tsScan(bytes);
   const g = gScan(bytes);
@@ -61,7 +110,7 @@ async function assertParseParity(
     for (const span of spans) {
       const ts = tsParse(bytes, span, file, profile, 1);
       const g = gParse(bytes, span, file, profile, 1);
-      expect(JSON.stringify(g)).toBe(JSON.stringify(ts));
+      assertFieldLevelParity(g, ts);
       n++;
       if (n % yieldEvery === 0) {
         await new Promise((resolve) => setImmediate(resolve));
@@ -86,6 +135,38 @@ describe("strict byte-parity: Gleam facade == TS oracle (committed fixtures)", (
       await assertParseParity(bytes, spans, name);
     });
   }
+});
+
+// 82-byte line: tag cols 1-2, pad col 3, data from col 4; CRLF at 80-81.
+function line(...parts: Array<string | number>): number[] {
+  const content: number[] = [];
+  for (const p of parts)
+    if (typeof p === "string") for (let i = 0; i < p.length; i++) content.push(p.charCodeAt(i));
+    else content.push(p);
+  const b = new Array(82).fill(0x20);
+  for (let i = 0; i < Math.min(content.length, 80); i++) b[i] = content[i]!;
+  b[80] = 0x0d; b[81] = 0x0a; return b;
+}
+const fld = (tag: string, ...d: Array<string | number>) => line(tag, " ", ...d);
+
+it("gate 3: oracle splits a single-value 0xAC field; facade joins it", () => {
+  const bytes = new Uint8Array([
+    ...line("<< H"), ...line("$$"), ...fld("AN", "9000001"),
+    ...fld("OB", "First part"),
+    ...fld("  ", 0xac, "quoted tail"), // 0xac is the first DATA byte -> marker
+    ...line(">> T"),
+  ]);
+  const { spans } = tsScan(bytes);
+  const span = spans[0]!;
+  const ts = tsParse(bytes, span, "synthetic", "fy1991plus", 1);
+  const g = gParse(bytes, span, "synthetic", "fy1991plus", 1);
+  const tf = ts.fields.find((f: any) => f.tag === "OB")!;
+  const gf = g.fields.find((f: any) => f.tag === "OB")!;
+  expect(tf.values.length).toBeGreaterThanOrEqual(2); // old reading splits
+  expect(gf.values.length).toBe(1);                   // corrected reading joins
+  const only = gf.values[0]!;
+  expect(only.raw.includes("¬")).toBe(true);
+  expect(only.continuation).toBeFalsy();
 });
 
 describe.runIf(RUN_CORPUS)("strict byte-parity: Gleam facade == TS oracle (full corpus)", () => {
