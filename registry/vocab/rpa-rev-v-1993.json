@@ -147,7 +147,7 @@
     },
     {
       "code": "210",
-      "label": "Control of Insects and External Parasites Affecting Livestock, Poultry, Fish,",
+      "label": "Control of Insects and External Parasites Affecting Livestock, Poultry, Fish, and Other Animals",
       "source_page": 3,
       "method": "pdftotext-layout"
     },
@@ -165,7 +165,7 @@
     },
     {
       "code": "213",
-      "label": "Protect Livestock, Poultry, Fish, and Other Animals from Toxic Chemicals,",
+      "label": "Protect Livestock, Poultry, Fish, and Other Animals from Toxic Chemicals, Poisonous Plants, and Other Hazards",
       "source_page": 3,
       "method": "pdftotext-layout"
     },
@@ -237,19 +237,19 @@
     },
     {
       "code": "311",
-      "label": "Improvement of Biological Efficiency in Production of Livestock, Poultry, Fish,",
+      "label": "Improvement of Biological Efficiency in Production of Livestock, Poultry, Fish, and Other Animals",
       "source_page": 4,
       "method": "pdftotext-layout"
     },
     {
       "code": "312",
-      "label": "Environmental Stress in Production of Livestock, Poultry, Fish, and Other",
+      "label": "Environmental Stress in Production of Livestock, Poultry, Fish, and Other Animals",
       "source_page": 4,
       "method": "pdftotext-layout"
     },
     {
       "code": "313",
-      "label": "Production Management Systems for Livestock, Poultry, Fish, and Other",
+      "label": "Production Management Systems for Livestock, Poultry, Fish, and Other Animals",
       "source_page": 4,
       "method": "pdftotext-layout"
     },
@@ -261,7 +261,7 @@
     },
     {
       "code": "315",
-      "label": "Improvement of Structures, Facilities, and General Purpose Farm Supplies and",
+      "label": "Improvement of Structures, Facilities, and General Purpose Farm Supplies and Equipment",
       "source_page": 4,
       "method": "pdftotext-layout"
     },
@@ -273,7 +273,7 @@
     },
     {
       "code": "317",
-      "label": "Mechanization and Structures Used in Production of Livestock, Poultry, Fish,",
+      "label": "Mechanization and Structures Used in Production of Livestock, Poultry, Fish, and Other Animals",
       "source_page": 4,
       "method": "pdftotext-layout"
     },
@@ -363,7 +363,7 @@
     },
     {
       "code": "502",
-      "label": "Development of Markets and Efficient Marketing of Timber and Related",
+      "label": "Development of Markets and Efficient Marketing of Timber and Related Products",
       "source_page": 5,
       "method": "pdftotext-layout"
     },
@@ -447,13 +447,13 @@
     },
     {
       "code": "701",
-      "label": "Insure Food Products Free of Toxic Contaminants, Including Residues from",
+      "label": "Insure Food Products Free of Toxic Contaminants, Including Residues from Agricultural and Other Sources",
       "source_page": 5,
       "method": "pdftotext-layout"
     },
     {
       "code": "702",
-      "label": "Protect Food and Feed Supplies from Harmful Microorganisms and Naturally",
+      "label": "Protect Food and Feed Supplies from Harmful Microorganisms and Naturally Occurring Toxins",
       "source_page": 5,
       "method": "pdftotext-layout"
     },
@@ -507,7 +507,7 @@
     },
     {
       "code": "802",
-      "label": "Individual and Family Decision Making and Resource Use and",
+      "label": "Individual and Family Decision Making and Resource Use and Family Functioning",
       "source_page": 5,
       "method": "pdftotext-layout"
     },
