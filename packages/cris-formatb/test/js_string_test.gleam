@@ -15,6 +15,17 @@ pub fn trim_strips_both_ends_test() {
   js_string.trim("  100%  ") |> should.equal("100%")
 }
 
+// JS .trimEnd() strips a trailing CR LF pair character by character. A
+// grapheme-based walk sees "\r\n" as ONE grapheme cluster, which is not in the
+// whitespace set, and leaves it — so this pins the oracle's behaviour.
+pub fn trim_end_strips_trailing_crlf_pair_test() {
+  js_string.trim_end("AB \r\n") |> should.equal("AB")
+}
+
+pub fn trim_strips_leading_and_trailing_crlf_pair_test() {
+  js_string.trim("\r\nAB\r\n") |> should.equal("AB")
+}
+
 pub fn trim_keeps_nel_u0085_test() {
   // JS .trim() does NOT strip U+0085 (NEL); we must match JS, not Gleam stdlib.
   js_string.trim("\u{0085}X\u{0085}") |> should.equal("\u{0085}X\u{0085}")

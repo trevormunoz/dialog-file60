@@ -5,9 +5,17 @@
 //// decode — the bytes' actual code page is unknown (see
 //// registry/evidence.json); `decode` just gives every byte a visible glyph
 //// rather than asserting what it means.
+////
+//// On the JS target `decode` is `@external` to the oracle's own
+//// String.fromCharCode loop (latin1_ffi.mjs, mirroring src-ts/bytes.ts): the
+//// Gleam body below costs ~160 ns per byte on that target (a two-object
+//// BitArray slice per byte, a Result per codepoint, a non-tail-recursive
+//// list, then a join). The Gleam body remains as the fallback for other
+//// targets.
 
 import gleam/string
 
+@external(javascript, "./latin1_ffi.mjs", "decode")
 pub fn decode(bytes: BitArray) -> String {
   bytes
   |> to_codepoints
