@@ -348,6 +348,12 @@ needs a closer reading of the display/classification documentation and more
 records. Equal lengths here are evidence to pursue, not sufficient proof.
 This question emerges within the project account, not as an isolated SN exception.
 
+**Resolved** — see "Classification alignment: offered as a derived view, not
+enforced as a rule" below. A full-corpus census confirms equal counts in 100% of
+records, but the source documents only columnar *display*, so the alignment is
+offered as a fallible projection (`classification_rows`), never enforced; the
+seven-column store stands.
+
 ### 6. Documentary prescriptions become construction obligations
 
 PDF p. 13's AN row specifies numeric, exact length seven, nonrepeating, always
@@ -822,6 +828,48 @@ errors (one expected `LoadedRecord` unused-constructor warning — `build_projec
 resolved the other, for `Project`), and `gleam format --check src test` clean.
 `simplifile` moved to `[dependencies]` and `argv` was added, for the entrypoint
 and the `tally` corpus-analysis module; the reference TS parser is unchanged.
+
+### Classification alignment: offered as a derived view, not enforced as a rule
+
+The open question from §5 above — do the seven classification columns (AC, CM,
+FS, RP, CT, PA, JC) constitute one linked allocation per position, or seven
+independent lists? — is now **resolved, and resolved in favour of restraint.**
+
+A full-corpus census settled the shape of the data. Each column is a 0xAC
+multi-value field (like SC), and per record the seven columns have **equal value
+counts in 100% of records across all three corpora** — FY88 32,016/32,016, FY89
+33,499/33,499, FY94 34,090/34,090, zero exceptions. CT is the per-line percent
+(its values carry `%`), and the CT values **sum to 100% in every FY89 and FY94
+record**, and in all but **25 FY88 records** — those 25 are genuine
+under-allocations (e.g. a lone `033%`, or three lines summing to 95%), so "CT
+sums to 100" is a strong tendency, not a rule. Worked example (FY94 record
+9049442, four aligned lines): `R304|A4900|C1000|F0513|042%|P3.13|J2A` … through
+`R307|A4900|C2600|F0312|015%|P3.11|J2A`, CT summing to 100.
+
+That is the strongest possible **evidence** for positional alignment. It is not
+**proof**, and the distinction is the whole point. Unlike the SN↔SC bond — which
+is enforced because an agency note *documents* the pairing — the classification
+columns have **no documentary statement of alignment**: the Data Element
+Dictionary describes only "columnar display" (a display behaviour, §5), and the
+1982 Manual of Classification, which could document per-line percentage
+allocation, is not in hand. Enforcing a count-bond from the census alone would be
+**inferring a rule from data** — the exact move the SN treatment forbids. It would
+also force the model's first *non-documentary* `EvidenceGrade` and strain
+`RuleRef` (whose `document`/`pdf_page` fields would have nothing to point at),
+widening the model's provenance claim from documentary-only to
+documentary-or-observed. Judged too costly for a claim no source backs.
+
+So the alignment is **offered, never claimed.** `record_model.classification_rows`
+is a pure projection: it zips the seven columns into `ClassificationRow` values
+when their lengths match, and returns `Error(Nil)` when they do not — degrading
+loudly rather than silently truncating. The stored `ClassificationColumns` (seven
+source-faithful lists) is unchanged, and `EvidenceGrade`, `RuleRef`, and the
+certification tiers are untouched. The observed regularity is pinned executably by
+a regression test over committed real bytes (the FY94 9049442 fixture — four rows,
+CT summing to 100) plus three projection unit tests; `gleam test` **162 passed**,
+`gleam check` and `gleam format --check` clean. The warrant to revisit is
+explicit: a 1982-Manual passage documenting per-line percentage allocation would
+supply the missing proof and justify promoting the view to an enforced row model.
 
 ## Checkout observation
 
