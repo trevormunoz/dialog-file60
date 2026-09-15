@@ -12,6 +12,12 @@ gleam_stdlib = ">= 1.0.0 and < 2.0.0"
 # which reads a Format B file from disk and prints each record's checked Identity.
 simplifile = ">= 2.7.0 and < 3.0.0"
 argv = ">= 1.0.0 and < 2.0.0"
+# javascript.gleam's List->Array marshalling (gleam/javascript/array.from_list),
+# the JS boundary behind the facade bundle.
+gleam_javascript = ">= 0.8.0 and < 2.0.0"
 
 [dev_dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
+
+[javascript]
+typescript_declarations = true
