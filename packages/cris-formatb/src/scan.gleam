@@ -55,7 +55,11 @@ const an_slice_length: Int = 77
 /// A record's accession number, read structurally from its AN-tagged line
 /// (bytes 3..80, Latin-1 decoded and JS-trimEnd-trimmed) — no field/fragment
 /// assembly, so it is available even for a record `assembly.assemble` cannot
-/// read. `None` when the record carries no AN line.
+/// read. Returns the FIRST AN-tagged line whose trimmed value is non-empty,
+/// matching `offsets.ts`'s `!open.an` guard: a blank AN line ("" after trim) is
+/// skipped and a later AN line may supply the value. `None` when no AN line
+/// carries a non-empty value (the facade maps that to the contract's "" — the
+/// same absence the oracle exposes).
 pub fn accession_of(record: ScannedRecord) -> Option(String) {
   case card_image.split_lines(record.bytes) {
     Error(_) -> None
@@ -70,8 +74,15 @@ fn find_an(lines: List(BitArray)) -> Option(String) {
       case line {
         <<"AN":utf8, _:bytes>> ->
           case bit_array.slice(line, an_slice_start, an_slice_length) {
-            Ok(data) -> Some(js_string.trim_end(latin1.decode(data)))
-            Error(Nil) -> None
+            Ok(data) -> {
+              let value = js_string.trim_end(latin1.decode(data))
+              // Empty (blank AN) is skipped, as the oracle's `!open.an` guard does.
+              case value {
+                "" -> find_an(rest)
+                _ -> Some(value)
+              }
+            }
+            Error(Nil) -> find_an(rest)
           }
         _ -> find_an(rest)
       }

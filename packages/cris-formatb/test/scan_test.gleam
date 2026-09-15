@@ -180,3 +180,21 @@ pub fn accession_of_with_no_an_line_is_none_test() {
   let assert [record, ..] = result.records
   scan.accession_of(record) |> should.equal(None)
 }
+
+// A blank AN line (data region trims to "") is SKIPPED, and a later non-empty AN
+// line supplies the value — matching offsets.ts's `!open.an` guard, under which a
+// falsy (empty) AN keeps scanning. Built directly as a ScannedRecord.
+pub fn accession_of_skips_blank_an_and_takes_the_next_test() {
+  let bytes =
+    bit_array.concat([line(<<"AN":utf8>>), line(<<"AN 5551212":utf8>>)])
+  let record = scan.ScannedRecord(assembly.SourceBase("F", 1), bytes)
+  scan.accession_of(record) |> should.equal(Some("5551212"))
+}
+
+// When every AN line is blank, there is no non-empty value: None (the facade maps
+// it to the contract's "", the same absence the oracle exposes).
+pub fn accession_of_all_blank_an_lines_is_none_test() {
+  let bytes = bit_array.concat([line(<<"AN":utf8>>), line(<<"AN":utf8>>)])
+  let record = scan.ScannedRecord(assembly.SourceBase("F", 1), bytes)
+  scan.accession_of(record) |> should.equal(None)
+}
