@@ -1,6 +1,7 @@
 {
   "name": "@barcstory/cris-formatb",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "src-ts/index.ts",
   "types": "src-ts/index.ts",
@@ -13,10 +14,12 @@
   "bin": {
     "cris-formatb": "src-ts/cli.ts"
   },
+  "files": ["dist", "src-ts"],
   "scripts": {
     "build": "gleam build --target javascript && esbuild scripts/engine-entry.mjs --bundle --format=esm --platform=neutral --outfile=dist/engine.mjs && rollup --config scripts/rollup-dts.config.mjs",
     "prepare": "pnpm run build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "exit 1"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
