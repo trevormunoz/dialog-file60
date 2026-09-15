@@ -105,13 +105,13 @@ test("terminal.display_mode is chosen: the reader picks what the period terminal
 // package is shared with other workspace projects and must not import the app
 // registry. It cites the keys its behavior is drawn from in comments instead of
 // registry.get() calls. This test checks three sources of citation: registry.get() calls
-// anywhere in src and packages/*/src, the comment-cited keys in packages/cris-formatb/src
+// anywhere in src and packages/*/src, the comment-cited keys in packages/cris-formatb/src-ts
 // specifically, and the `registry: "..."` literals in src/dialog/map.ts (MAP entries name
 // a key without ever calling registry.get() themselves -- describeLine resolves them).
 test("every key referenced in source exists in the registry", () => {
   const calls = matchesIn([...tsFiles("src"), ...packageSrcDirs().flatMap(tsFiles)], /registry\.get\("([^"]+)"\)/g);
 
-  const commentCited = matchesIn(tsFiles("packages/cris-formatb/src"), /Registry(?: keys)?:\s*([^\n*]+)/g)
+  const commentCited = matchesIn(tsFiles("packages/cris-formatb/src-ts"), /Registry(?: keys)?:\s*([^\n*]+)/g)
     .flatMap(line => line.split(",").map(k => k.trim()).filter(Boolean));
 
   const mapCited = matchesIn(["src/dialog/map.ts"], /registry: "([^"]+)"/g);
@@ -140,7 +140,7 @@ test("every registry source key resolves to a citation in words.ts", () => {
 
 // The forward check above proves every key USED in source exists in the
 // registry; it says nothing about a registry key nothing reads. This reverse check scans the
-// same source trees (src, packages/cris-formatb/src, scripts) for each known key's exact
+// same source trees (src, packages/cris-formatb/src-ts, scripts) for each known key's exact
 // text, quoted (registry.get("key"), map.ts's registry: "key" literals, a citation array like
 // panel.ts's `evidence: [...]`) or bare in a comment ("Registry keys: a, b, c"), and fails on
 // a key found by neither -- except the few named here as deliberately declared but unread,
@@ -151,7 +151,7 @@ const DECLARED_BUT_UNREAD: Record<string, string> = {
 };
 
 test("every registry key is referenced from source, or is named on the declared-but-unread allowlist", () => {
-  const files = ["src", "packages/cris-formatb/src", "scripts"].flatMap(tsFiles);
+  const files = ["src", "packages/cris-formatb/src-ts", "scripts"].flatMap(tsFiles);
   expect(files.length).toBeGreaterThan(10); // a broken scan must fail loudly, not pass on an empty set
   const quoted = /"([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+){1,4})"/g;
   const bare = /\b([a-z][a-z0-9_]*(?:\.[A-Za-z0-9_]+){1,4})\b/g;

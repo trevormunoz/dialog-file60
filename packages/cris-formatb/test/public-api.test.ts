@@ -1,11 +1,11 @@
 // test/public-api.test.ts
 import { test, expect } from "vitest";
-import * as api from "../src/index";
-import { scanRecords, parseRecord, field, fields } from "../src/index";
+import * as api from "../src-ts/index";
+import { scanRecords, parseRecord, field, fields } from "../src-ts/index";
 import type {
   RecordSpan, FileStructure, ScanResult,
   SourceValue, SourceField, LogicalRecord, Profile,
-} from "../src/index";
+} from "../src-ts/index";
 
 const EXPECTED_VALUE_EXPORTS = [
   "scanRecords", "parseRecord", "field", "fields",

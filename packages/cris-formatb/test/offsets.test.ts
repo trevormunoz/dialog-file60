@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { lineToOffset, offsetToLine, scanRecords } from "../src/offsets";
+import { lineToOffset, offsetToLine, scanRecords } from "../src-ts/offsets";
 
 const bytes = new Uint8Array(readFileSync(new URL("../fixtures/fy94-9049442.bin", import.meta.url)));
 

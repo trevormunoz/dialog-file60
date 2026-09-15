@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { LINE_BYTES } from "../src/index";
+import { LINE_BYTES } from "../src-ts/index";
 
 // Asserting LINE_BYTES equals its own literal definition (82) would only fail if someone
 // edited the constant -- it never touches real bytes. This ties it to the committed fixture

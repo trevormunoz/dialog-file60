@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
-import { scanRecords } from "../src/offsets";
-import { parseRecord, field, fields } from "../src/record";
+import { scanRecords } from "../src-ts/offsets";
+import { parseRecord, field, fields } from "../src-ts/record";
 
 const bytes = new Uint8Array(readFileSync(new URL("../fixtures/fy94-9049442.bin", import.meta.url)));
 const { spans: [span] } = scanRecords(bytes, 83052);

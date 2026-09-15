@@ -5,7 +5,7 @@ import { join } from "node:path";
 // and the shared Format B reader never touch the DOM -- src/terminal (the sink) and
 // src/inspect (the panel) are the only places that do. This held in code but nothing
 // enforced it; this pins it.
-const ROOTS = ["src/dialog", "src/retrieval", "src/loader", "src/registry", "src/cast", "packages/cris-formatb/src"];
+const ROOTS = ["src/dialog", "src/retrieval", "src/loader", "src/registry", "src/cast", "packages/cris-formatb/src-ts"];
 const FORBIDDEN = [/\bdocument\./, /\bwindow\./, /\bHTMLElement\b/, /\binnerHTML\b/];
 
 function walk(dir: string): string[] {

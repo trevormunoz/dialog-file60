@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { runCli, CliError } from "../src/cli";
+import { runCli, CliError } from "../src-ts/cli";
 
-// These tests spawn no subprocess. Spawning `npx tsx src/cli.ts ...` from inside a Vitest
+// These tests spawn no subprocess. Spawning `npx tsx src-ts/cli.ts ...` from inside a Vitest
 // test is the exact pattern the rest of the repository warns has deadlocked a parallel run.
 // runCli() is the CLI's argv handling exported as a pure function; these tests call it
 // in-process instead. Fixture paths are resolved to absolute file URLs rather than relying on

@@ -1,4 +1,4 @@
-import { scanRecords } from "../src/offsets";
+import { scanRecords } from "../src-ts/offsets";
 
 /** Builds one 82-byte line: `text` left-justified, space-padded, CRLF-terminated. */
 function makeLine(text: string): Uint8Array {
