@@ -7,24 +7,27 @@
 // docs/gleam-spike/gleam_scan/src/gleam_scan.gleam): same pattern, this
 // package's actual module names and build paths.
 //
-// Pre-bundle (this task, Task 11): imports straight from
-// `build/dev/javascript/...`. Task 12 (bundling — NOT done here) repoints
-// these at `../dist/engine.mjs`.
+// Task 12 (bundling): the runtime import resolves to the single
+// self-contained `dist/engine.mjs` esbuild bundles from
+// `scripts/engine-entry.mjs` (javascript.mjs + facade.mjs + the Option/
+// BitArray helpers those need — javascript.gleam stays thin per Task 10 and
+// doesn't re-export them itself, so the entry gathers them). Types resolve
+// to the sibling `dist/engine.d.mts` rollup-plugin-dts bundles from
+// `scripts/engine-entry.d.mts` over the gleam-generated `.d.mts` files —
+// see the design note on that file for the `.d.mts` bundling approach.
 //
 // Key-insertion order in marshalValue/marshalField below is chosen to match
 // record.ts's own object-literal order exactly, so JSON.stringify of the two
 // is byte-for-byte identical (the parity harness, test/parity.test.ts,
 // depends on this).
 
-import { BitArray$BitArray } from "../build/dev/javascript/prelude.mjs";
 import {
+  BitArray$BitArray,
   scan_records,
   parse_record,
   spans_array,
   record_fields_array,
   field_values_array,
-} from "../build/dev/javascript/cris_formatb/javascript.mjs";
-import {
   type RecordSpan$ as GleamSpan,
   type SourceValue$ as GleamValue,
   type SourceField$ as GleamField,
@@ -60,11 +63,9 @@ import {
   LogicalRecord$LogicalRecord$length as recLength,
   LogicalRecord$LogicalRecord$an as recAn,
   LogicalRecord$LogicalRecord$orphan_continuations as recOrphan,
-} from "../build/dev/javascript/cris_formatb/facade.mjs";
-import {
   Option$isSome,
   Option$Some$0,
-} from "../build/dev/javascript/gleam_stdlib/gleam/option.mjs";
+} from "../dist/engine.mjs";
 
 import type { RecordSpan, FileStructure, ScanResult } from "./offsets";
 import type { SourceValue, SourceField, LogicalRecord } from "./record";
