@@ -1213,7 +1213,7 @@ const sf_rule: RuleRef = RuleRef(
 // This is the boundary `unmodeled_material` checks a record's parts against:
 // nothing outside this set, and no Unassigned material, may pass through
 // `project` uncounted (record_model.gleam: "no `remaining` escape hatch").
-const modeled_tags: List(String) = [
+pub const modeled_tags: List(String) = [
   "AN", "PN", "TI", "PS", "PT", "SF", "IN", "AS", "DS", "IC", "PI", "CY", "ST",
   "ZP", "RE", "CG", "RG", "RN", "OC", "PF", "PD", "SD", "SX", "TD", "TX", "FY",
   "GY", "UP", "PP", "PX", "BP", "BT", "AT", "DT", "AC", "CM", "FS", "RP", "CT",
