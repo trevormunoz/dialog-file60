@@ -19,7 +19,7 @@ import record_model.{
   FieldNotYetModeled, FormatDisagreement, Identity, InvalidAccession,
   InvalidFieldValue, NonRepeatingFieldRepeated, Participants,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RuleUnresolved, Supported,
+  RpaCodeNotAttested, RuleUnresolved, Supported,
 }
 import scan
 import source_record.{type SuppliedRecord, NonEmpty}
@@ -232,7 +232,13 @@ fn describe(problem: ConstructionProblem) -> String {
   }
 }
 
-fn describe_kind(kind: DisagreementKind) -> String {
+// Not part of this package's public API — annotated @internal so the report
+// test module can exercise it directly for RpaCodeNotAttested, which nothing
+// in the current scan -> assemble -> construct pipeline emits yet (that
+// wiring is a later task, so there is no record-bytes path through
+// report.report that reaches this arm).
+@internal
+pub fn describe_kind(kind: DisagreementKind) -> String {
   case kind {
     RequiredFieldNotLocated(tag) -> tag <> " required field not located"
     NonRepeatingFieldRepeated(tag, occurrences) ->
@@ -250,6 +256,8 @@ fn describe_kind(kind: DisagreementKind) -> String {
       <> int.to_string(maximum)
     RelatedFieldsDisagree(_tags, reason) ->
       "related fields disagree: " <> reason
+    RpaCodeNotAttested(code, warrant_set) ->
+      "RPA " <> code <> " not attested in " <> warrant_set
   }
 }
 

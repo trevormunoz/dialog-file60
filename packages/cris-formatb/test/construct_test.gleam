@@ -19,7 +19,8 @@ import record_model.{
   Identity, InvalidAccession, InvalidFieldValue, Narratives,
   NonRepeatingFieldRepeated, Participants, PrintedDictionary, Provisional,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RuleRef, Subcommodity, Supplied, Supported, UndocumentedField,
+  RpaCodeNotAttested, RuleRef, Subcommodity, Supplied, Supported,
+  UndocumentedField,
 }
 import source_record.{NonEmpty}
 
@@ -897,6 +898,71 @@ pub fn project_with_sn_certifies_carrying_undocumented_field_test() {
   let assert Ok(project) = construct.project(record_bytes(pairs))
   let assert [UndocumentedField("SN", _, _)] =
     record_model.project_undocumented_fields(project)
+}
+
+// --- project_with_vintage: opt-in RPA attestation, project() unchanged ------
+
+// full_record_pairs() carries no RP pair, so this appends one rather than
+// replacing an existing entry (the classification columns are independently
+// optional, so the appended RP does not disturb the other groups).
+fn full_record_with_rp(code: String) -> source_record.SuppliedRecord {
+  record(list.append(full_record_pairs(), [#("RP", code)]))
+}
+
+fn has_rpa_not_attested(
+  problems: source_record.NonEmpty(record_model.ConstructionProblem),
+  code: String,
+) -> Bool {
+  let NonEmpty(first, rest) = problems
+  list.any([first, ..rest], fn(problem) {
+    case problem {
+      Disagreement(FormatDisagreement(RpaCodeNotAttested(c, _), _, _, _)) ->
+        c == code
+      _ -> False
+    }
+  })
+}
+
+fn is_ok(result: record_model.ConstructionResult) -> Bool {
+  case result {
+    Ok(_) -> True
+    Error(_) -> False
+  }
+}
+
+// An RP value that canonicalizes but is absent from the FY88 warrant set
+// (Rev IV) reports RpaCodeNotAttested for its 3-digit code.
+pub fn rpa_unattested_reports_for_fy88_test() {
+  let supplied = full_record_with_rp("R999")
+  let assert Error(problems) =
+    construct.project_with_vintage(supplied, Some(88))
+  has_rpa_not_attested(problems, "999") |> should.equal(True)
+}
+
+// An RP value present in the FY88 warrant set stays clean.
+pub fn rpa_attested_code_is_clean_for_fy88_test() {
+  let supplied = full_record_with_rp("R101")
+  construct.project_with_vintage(supplied, Some(88))
+  |> is_ok
+  |> should.equal(True)
+}
+
+// No corpus FY -> attestation not run; matches plain project() even for a
+// code that would fail attestation if it were checked.
+pub fn rpa_check_skipped_without_vintage_test() {
+  let supplied = full_record_with_rp("R999")
+  construct.project_with_vintage(supplied, None)
+  |> is_ok
+  |> should.equal(True)
+}
+
+// project(record) delegates to project_with_vintage(record, None): unchanged
+// behavior, confirmed against the same unattested-looking RP code.
+pub fn project_unchanged_ignores_rpa_attestation_test() {
+  let supplied = full_record_with_rp("R999")
+  construct.project(supplied)
+  |> is_ok
+  |> should.equal(True)
 }
 
 // --- DE: the aggregate 2400 bound in isolation, and the 60-byte accepting edge
