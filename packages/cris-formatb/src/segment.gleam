@@ -5,6 +5,8 @@
 
 import gleam/bit_array
 import gleam/list
+import gleam/option.{type Option, None, Some}
+import gleam/string
 
 // Split on every 0x02 byte, returning all segments in order (n separators ->
 // n+1 segments; no 0x02 -> one segment). The segment count is how parse_heading
@@ -44,6 +46,40 @@ fn ends_with_0xa0(bytes: BitArray) -> Bool {
       case bit_array.slice(bytes, size - 1, 1) {
         Ok(<<0xA0>>) -> True
         _ -> False
+      }
+  }
+}
+
+const sep = "\u{00A0}\u{0002}"
+
+pub type HeadingParts {
+  HeadingParts(
+    code: Option(String),
+    label: Option(String),
+    percent: Option(String),
+  )
+}
+
+// Facade-parity port of src-ts/record.ts:19-30's splitSegments: split an
+// already-decoded value at the FIRST occurrence of the 0xA0 0x02 separator
+// into code/label; when percent_in_block (FY1988), split the tail again at
+// the next separator to pull percent. Returns UNTRIMMED pieces (pure
+// structure, no js_string dependency) — the caller trims per field.
+pub fn split_heading_segments(
+  raw: String,
+  percent_in_block: Bool,
+) -> HeadingParts {
+  case string.split_once(raw, sep) {
+    Error(Nil) -> HeadingParts(None, None, None)
+    Ok(#(code, rest)) ->
+      case percent_in_block {
+        False -> HeadingParts(Some(code), Some(rest), None)
+        True ->
+          case string.split_once(rest, sep) {
+            Error(Nil) -> HeadingParts(Some(code), Some(rest), None)
+            Ok(#(label, percent)) ->
+              HeadingParts(Some(code), Some(label), Some(percent))
+          }
       }
   }
 }
