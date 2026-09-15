@@ -14,7 +14,7 @@
 
 - **Frozen public surface.** No change to `@barcstory/cris-formatb`'s types or the generated `.d.mts`. `SourceField.values` stays `List(SourceValue)`; the correction changes value *count/bytes/metadata*, never the shape.
 - **Bundle purity.** `src/field_cardinality.gleam` MUST NOT import `construct` (validator symbols in `dist/engine.mjs` fail `test/bundle-boundary.test.ts`). Any cross-check against `construct` lives in a *test* only.
-- **Gates (run from `packages/cris-formatb`).** `gleam test`, `gleam check`, `gleam format --check src test` must pass; the package build (`pnpm run build`) must succeed; `pnpm test` (vitest) green. Never commit broken code.
+- **Gates (run from `packages/cris-formatb`).** `gleam test`, `gleam check`, `gleam format --check src test` must pass; the package build (`pnpm run build`) must succeed; `pnpm run typecheck` (tsc `--noEmit`, catches type errors vitest does not) and `pnpm test` (vitest) green. Never commit broken code.
 - **Full-corpus parity is opt-in:** `CRIS_PARITY_CORPUS=1 pnpm exec vitest run test/parity.test.ts` (needs `data/` present). Committed fixtures always run.
 - **Forensics are throwaway.** The corpus scan (Task 4) is stdlib Python/shell kept in the scratchpad, never committed (Gleam = checked rules, Python = throwaway forensics).
 - **The 35 corrected single-value tags** (Manual-documented non-repeating): AN PN TI PS PT AS DS IC PI CY ST ZP RE CG RG RN OC PD SD SX TD TX FY GY UP PP PX BT AT DT OB AP DE PR PB. Everything else in `modeled_tags` (the 13 repeating tags, plus the undocumented SN, BP, and HP) and every unknown tag → MultiValue = old reading. **This list appears in three places** — `field_cardinality.gleam` (source of truth), `SINGLE_VALUE_TAGS` in `parity.test.ts`, and the Task 4 scan — each MUST carry a comment pointing at `field_cardinality.gleam`; drift where a tag is single in Gleam but missing from the TS set fails gate 1, and Task 4↔harness drift is caught by Task 4 Step 3.
@@ -339,8 +339,9 @@ it("gate 3: oracle splits a single-value 0xAC field; facade joins it", () => {
   const gf = g.fields.find((f: any) => f.tag === "OB")!;
   expect(tf.values.length).toBeGreaterThanOrEqual(2); // old reading splits
   expect(gf.values.length).toBe(1);                   // corrected reading joins
-  expect(gf.values[0].raw.includes("¬")).toBe(true);
-  expect(gf.values[0].continuation).toBeFalsy();
+  const only = gf.values[0]!; // bind once: values[0] is possibly-undefined under noUncheckedIndexedAccess
+  expect(only.raw.includes("¬")).toBe(true);
+  expect(only.continuation).toBeFalsy();
 });
 ```
 (`fld("  ", 0xac, ...)` puts the pad at col 3 and `0xAC` at col 4 — the byte assembly reads to classify a `MarkedValueStart`.)
@@ -404,7 +405,7 @@ Render a sample of changed records through the emulator on the pre-correction co
 - [ ] **Step 4: Final gates + land.**
 
 ```bash
-cd packages/cris-formatb && gleam format --check src test && gleam check && gleam test && pnpm run build
+cd packages/cris-formatb && gleam format --check src test && gleam check && gleam test && pnpm run build && pnpm run typecheck
 cd ../.. && pnpm test
 ```
 Expected: all green. Then land per the user's Ship/Show/Ask choice (do not push without the user's say-so). Record H1/H3/H4 sign-offs in the H1 sourcing note so the correction's human gates are auditable.
