@@ -138,18 +138,28 @@ export function parseRecord(
   span: RecordSpan,
   file: string,
   profile: Profile,
-  bufferBaseLine: number,
+  bufferBaseLine?: number,
 ): LogicalRecord {
-  // Parity with record.ts:44-50 — a span falling outside the buffer throws
-  // there; reproduce it at the boundary so the oracle matches. (record.ts's
-  // other throw, the missing-bufferBaseLine size check, is unreachable here:
-  // the Gleam engine makes bufferBaseLine mandatory, so the facade always
-  // supplies it.)
-  const start = (span.firstLine - bufferBaseLine) * LINE_BYTES;
+  // Parity with record.ts:32-50 — bufferBaseLine is optional there too: a
+  // caller passing exactly the span's own bytes (a slice fixture, cli.ts's
+  // usage) omits it and gets span.firstLine as the default; a larger buffer
+  // (a whole-corpus read) must state where it begins. Reproduce both of
+  // record.ts's throws at the boundary — the undefined-bufferBaseLine size
+  // check and the span-outside-buffer check — so the oracle matches. The
+  // Gleam engine itself has no optional parameters, so this always resolves
+  // to a concrete number before calling it.
+  if (bufferBaseLine === undefined && bytes.length !== span.length) {
+    throw new Error(
+      `parseRecord: buffer is ${bytes.length} bytes but span lines ${span.firstLine}-${span.lastLine} ` +
+        `(an ${span.an || "?"}) is ${span.length} bytes; pass bufferBaseLine for a larger buffer`,
+    );
+  }
+  const base = bufferBaseLine ?? span.firstLine;
+  const start = (span.firstLine - base) * LINE_BYTES;
   if (start < 0 || start + span.length > bytes.length) {
     throw new Error(
       `span lines ${span.firstLine}-${span.lastLine} (an ${span.an || "?"}) fall outside the buffer: ` +
-        `buffer starts at line ${bufferBaseLine} and is ${bytes.length} bytes`,
+        `buffer starts at line ${base} and is ${bytes.length} bytes`,
     );
   }
   const gSpan = makeSpan(
@@ -166,7 +176,7 @@ export function parseRecord(
     gSpan,
     file,
     gProfile,
-    bufferBaseLine,
+    base,
   );
   return {
     file: recFile(r),
