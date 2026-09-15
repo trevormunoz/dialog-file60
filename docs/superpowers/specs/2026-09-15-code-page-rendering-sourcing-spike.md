@@ -65,6 +65,45 @@ context-dependent, non-injective, shift-toggled, and overstruck. Therefore any
 rendering fix is **inference by construction**, which fails the corrections
 program's "never infer a rule from data" bar.
 
+## Web-research pass (2026-09-15) — mechanism sourced, bytes not
+
+A follow-up open-web spike (WebSearch/WebFetch) searched for a documented
+DIALOG/CRIS/IBM special-character set assigning the observed byte values. Result:
+**no byte-assigning source found**, but a real partial:
+
+- **RFC 183 (Winett, IETF, 1971), "EBCDIC Codes and Their Mapping to ASCII"**
+  (https://www.rfc-editor.org/rfc/rfc183.txt) authoritatively documents the
+  *apparatus* this residue uses: EBCDIC `0E`=SO / `0F`=SI graphic-set shift,
+  backspace overstrike, and native superscript-digit graphics. So the SO/SI +
+  overstrike + EBCDIC-superscript **mechanism is now citable**, not just inferred.
+- **But the byte assignment does not match.** RFC 183 places superscripts
+  *sequentially* at B0–B9 and superscript-minus at A0; the corpus fingerprint is
+  *scattered* (1@`0xA3`, 2@`0xA5`, 3@`0xB7`, 4@`0xA9`, 5@`0xA7`, 6@`0xB6`;
+  superscript − @ `0xB5`). Only 6@`0xB6` coincides. The scatter matches no
+  published EBCDIC page — consistent with a **custom/non-standard host code page**.
+- **The two top archive-only leads were fetched (Wayback back up) — both
+  negative:**
+  - DIALOG **File 60 (CRIS) bluesheet** —
+    `https://web.archive.org/web/19980423153346id_/http://library.dialog.com:80/bluesheets/html/bl0060.html`
+    (1998 capture). Field/format/index descriptions and a "Special Features"
+    section covering classification codes/headings — no character-encoding byte
+    table, none of the fingerprint bytes. A dump of the entire `library.dialog.com`
+    Wayback holdings (8,286 URLs) found **no** diacritic/superscript/character-set
+    document at all; DIALOG's public docs are search-command-oriented.
+  - **AGRICOLA main spec** —
+    `https://web.archive.org/web/20090326205441id_/http://agricola.nal.usda.gov/help/AGRICOLADoc2006.pdf`
+    (`AGRICOLADoc2006.pdf`, Nov 2006). A **modern MARC-8/UTF-8** cataloging spec
+    that post-dates the EBCDIC-tape convention entirely; points only to LC MARC-8
+    (different byte values). No legacy byte table, none of the fingerprint bytes.
+
+Net: **the deferral stands, now on firm ground** — the two highest-probability
+primary sources are exhausted, not merely un-fetched. #2's *mechanism* is sourced
+(RFC 183); its *specific byte assignment* is undocumented across the held NARA
+PDFs, standard EBCDIC pages, the open web, and these two archive leads. Remaining
+(lower-probability) candidates: a DIALOG/host **input / record-format** or
+**database-loading** manual, or the original CRIS→DIALOG **tape-loading spec** —
+not the per-file bluesheet or the modern cataloging spec.
+
 ## Decision & guidance for a future speculative layer
 
 - **Deferred as a correction.** Do not present a rendered glyph as truth or on the
@@ -73,9 +112,14 @@ program's "never infer a rule from data" bar.
   keep the raw `BitArray` as the record of truth; render corrections as a *labeled*
   overlay carrying per-byte confidence; and model the **SO/SI shift + overstrike
   machine**, not a flat table (a flat lookup would misrender exactly the
-  hardest, SO/SI-bracketed and overstruck regions). The only routes to a *sourced*
-  map are NARA's actual conversion table (undated 1995–2018; not in these PDFs) or
-  a printout of a *scientific* record (none exists in hand).
+  hardest, SO/SI-bracketed and overstruck regions). The remaining routes to a
+  *sourced* byte→glyph map, in likely order: (1) a DIALOG/host **input /
+  record-format** or **database-loading** manual, or the original CRIS→DIALOG
+  **tape-loading spec**; (2) NARA's actual EBCDIC→ASCII conversion table (undated
+  1995–2018; not in the captured PDFs); (3) a printout of a *scientific* CRIS
+  record where the high bytes render as glyphs (none in hand). Already checked and
+  negative: the DIALOG File 60 bluesheet, the AGRICOLA cataloging spec, standard
+  EBCDIC code pages, and the open web. The *mechanism* is sourced to RFC 183.
 - **Next:** correction #3 (non-ASCII tags), which is determinate and sourceable.
 
 All statements of absence above are provisional on wider reading.
