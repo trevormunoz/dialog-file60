@@ -138,10 +138,7 @@ pub fn assembly_owns_profile_marker_classification_test() {
 
 // Actual fixture slices, not reconstructed lines: source lines 83083-83086.
 pub fn ac_field_joins_to_its_four_values_test() {
-  let assert Ok(bytes) =
-    simplifile.read_bits(
-      "../../packages/cris-formatb/fixtures/fy94-9049442.bin",
-    )
+  let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
   let assert Ok(ac_bytes) = bit_array.slice(bytes, 31 * 82, 4 * 82)
   let assert Ok(SuppliedRecord(_, [Field(occ)])) =
     assembly.assemble(
@@ -162,10 +159,7 @@ pub fn ac_field_joins_to_its_four_values_test() {
 }
 
 pub fn fixture_title_wrap_joins_without_an_inserted_space_test() {
-  let assert Ok(bytes) =
-    simplifile.read_bits(
-      "../../packages/cris-formatb/fixtures/fy94-9049442.bin",
-    )
+  let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
   let assert Ok(ti_bytes) = bit_array.slice(bytes, 18 * 82, 2 * 82)
   let assert Ok(SuppliedRecord(_, [Field(occ)])) =
     assembly.assemble(

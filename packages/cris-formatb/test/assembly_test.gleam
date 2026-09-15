@@ -265,7 +265,7 @@ pub fn assemble_a_real_marked_field_end_to_end_test() {
 // derived from the fixture. This is the one test that reads the actual bytes
 // end to end (via simplifile), not embedded literals. ---
 
-const fixture_path = "../../packages/cris-formatb/fixtures/fy94-9049442.bin"
+const fixture_path = "fixtures/fy94-9049442.bin"
 
 // The 56 field tags in order, and each field's fragment count (opener plus its
 // attached continuations), computed by walking fixtures/fy94-9049442.bin.

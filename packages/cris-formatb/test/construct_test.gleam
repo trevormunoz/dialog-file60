@@ -1013,10 +1013,7 @@ pub fn classifications_sn_pairs_with_sc_by_position_test() {
 // see rules/field-rule-inventory.md classification census 2026-09-14). The test
 // guards the observed regularity against silent regression on real data.
 pub fn classification_rows_fixture_zips_four_aligned_lines_test() {
-  let assert Ok(bytes) =
-    simplifile.read_bits(
-      "../../packages/cris-formatb/fixtures/fy94-9049442.bin",
-    )
+  let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
   let assert Ok(supplied) =
     assembly.assemble(
       bytes,

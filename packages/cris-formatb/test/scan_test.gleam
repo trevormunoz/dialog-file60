@@ -138,10 +138,7 @@ pub fn header_inside_open_record_preserves_contiguous_source_bytes_test() {
 }
 
 pub fn scan_the_fixture_yields_one_assemblable_record_test() {
-  let assert Ok(bytes) =
-    simplifile.read_bits(
-      "../../packages/cris-formatb/fixtures/fy94-9049442.bin",
-    )
+  let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
   let assert Ok(scan.ScanResult([record], structure)) =
     scan.scan(bytes, "RG164.CRIS.FY94.txt", 83_052)
   record.base

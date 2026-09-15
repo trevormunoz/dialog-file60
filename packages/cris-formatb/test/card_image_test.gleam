@@ -159,7 +159,7 @@ pub fn line_of_exactly_72_bytes_extracts_test() {
 }
 
 // --- Corpus-grounded: exact bytes copied from fixture
-// packages/cris-formatb/fixtures/fy94-9049442.bin (AN 9049442). These are the
+// fixtures/fy94-9049442.bin (AN 9049442). These are the
 // real served lines, byte for byte, not reconstructions. ---
 
 // File line 83053 (AN): the identity the whole record hangs on.
