@@ -139,17 +139,21 @@ pub fn trim_trailing_spaces(region: BitArray) -> BitArray {
 
 // The length up to and including the last non-space byte: `index` is the
 // current position, `keep` the length after the last non-space seen so far.
-// A BitArray admits non-byte-aligned values, so matching a leading byte plus
-// the rest and the empty array is not exhaustive; a non-byte-aligned remainder
-// falls through to the catch-all, keeping the match total (see accession.gleam).
+// Walks by index (`<<_:bytes-size(index), byte, _:bytes>>`) rather than
+// peeling `<<byte, rest:bytes>>`: on the JS target the peel allocates a view
+// and a wrapper per byte, the indexed peek allocates nothing, and this runs
+// on every value of every record. A BitArray admits non-byte-aligned values,
+// so the match is not exhaustive on its own; a non-byte-aligned remainder (or
+// the end of the bytes) falls through to the catch-all, keeping the match
+// total (see accession.gleam).
 fn kept_length(bytes: BitArray, index: Int, keep: Int) -> Int {
   case bytes {
-    <<byte, rest:bytes>> -> {
+    <<_:bytes-size(index), byte, _:bytes>> -> {
       let keep = case byte == ascii_space {
         True -> keep
         False -> index + 1
       }
-      kept_length(rest, index + 1, keep)
+      kept_length(bytes, index + 1, keep)
     }
     _ -> keep
   }
