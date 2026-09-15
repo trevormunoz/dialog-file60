@@ -7,7 +7,7 @@ import {
   scanRecords as oracleScan,
   parseRecord as oracleParse,
   type Profile,
-} from "../../packages/cris-formatb/src/index.ts";
+} from "../../packages/cris-formatb/src-ts/index.ts";
 
 const FIX = fileURLToPath(new URL("../../packages/cris-formatb/fixtures", import.meta.url));
 const SEP_A = 0xa0;
