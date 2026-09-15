@@ -1,0 +1,599 @@
+{
+  "source": "Manual of Classification of Agricultural and Forestry Research, Revision V (1993)",
+  "issue_date": "1993-02",
+  "source_file": "manual-rev-v-1993.pdf",
+  "sha256": "49240351b680942cc0fad354774fc3d763c67447ef91bef5138de5ac3b6e7b75",
+  "extracted": true,
+  "searched_scope": "`pdftotext -layout manual-rev-v-1993.pdf -` PDF pages 3-6 (RESEARCH PROBLEM AREA (RPA) table of contents, GOAL I-IX); source_page is the PDF's physical page number (the TOC prints no page numbers of its own)",
+  "code_count": 98,
+  "rows": [
+    {
+      "code": "101",
+      "label": "Appraisal of Soil Resources",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "102",
+      "label": "Soil, Plant, Water, Nutrient Relationships",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "103",
+      "label": "Management of Saline and Sodic Soils and Salinity",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "104",
+      "label": "Alternative Uses of Land",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "105",
+      "label": "Conservation and Efficient Use of Water",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "106",
+      "label": "Efficient Drainage and Irrigation Systems and Facilities",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "107",
+      "label": "Watershed Protection and Management",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "108",
+      "label": "Economic and Legal Problems in Management of Water and Watersheds",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "109",
+      "label": "Adaptation to Weather and Weather Modification",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "110",
+      "label": "Appraisal of Forest and Range Resources",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "111",
+      "label": "Biology, Culture, and Management of Forests and Timber-Related Crops",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "112",
+      "label": "Improvement of Range Resources",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "113",
+      "label": "Remote Sensing",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "114",
+      "label": "Research on Management of Research",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "201",
+      "label": "Control of Insects Affecting Forests",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "202",
+      "label": "Control of Diseases, Parasites, and Nematodes Affecting Forests",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "203",
+      "label": "Prevention and Control of Forest and Range Fires",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "204",
+      "label": "Control of Insects, Mites, Slugs, and Snails on Fruit and Vegetable Crops",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "205",
+      "label": "Control of Diseases and Nematodes of Fruit and Vegetable Crops",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "206",
+      "label": "Control of Weeds and Other Hazards of Fruit and Vegetable Crops",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "207",
+      "label": "Control of Insects, Mites, Snails, and Slugs Affecting Field Crops and Range",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "208",
+      "label": "Control of Diseases and Nematodes of Field Crops and Range",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "209",
+      "label": "Control of Weeds and Other Hazards of Field Crops and Range",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "210",
+      "label": "Control of Insects and External Parasites Affecting Livestock, Poultry, Fish,",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "211",
+      "label": "Control of Diseases of Livestock, Poultry, Fish, and Other Animals",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "212",
+      "label": "Control of Internal Parasites of Livestock, Poultry, Fish, and Other Animals",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "213",
+      "label": "Protect Livestock, Poultry, Fish, and Other Animals from Toxic Chemicals,",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "214",
+      "label": "Protection of Plants, Animals, and Man from Harmful Effects of Pollution",
+      "source_page": 3,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "301",
+      "label": "Genetics and Breeding of Forest Trees",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "302",
+      "label": "New and Improved Forest Engineering Systems",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "303",
+      "label": "Economics of Timber Production",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "304",
+      "label": "Improvement of Biological Efficiency of Fruit and Vegetable Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "305",
+      "label": "Mechanization of Fruit and Vegetable Crop Production",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "306",
+      "label": "Production Management Systems for Fruits and Vegetables",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "307",
+      "label": "Improvement of Biological Efficiency of Field Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "308",
+      "label": "Mechanization of Production of Field Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "309",
+      "label": "Production Management Systems for Field Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "310",
+      "label": "Reproductive Performance of Livestock, Poultry, Fish, and Other Animals",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "311",
+      "label": "Improvement of Biological Efficiency in Production of Livestock, Poultry, Fish,",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "312",
+      "label": "Environmental Stress in Production of Livestock, Poultry, Fish, and Other",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "313",
+      "label": "Production Management Systems for Livestock, Poultry, Fish, and Other",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "314",
+      "label": "Bees and Other Pollinating Insects",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "315",
+      "label": "Improvement of Structures, Facilities, and General Purpose Farm Supplies and",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "316",
+      "label": "Farm Business Management",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "317",
+      "label": "Mechanization and Structures Used in Production of Livestock, Poultry, Fish,",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "318",
+      "label": "Non-Commodity-Oriented Biological Technology and Biometry",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "401",
+      "label": "New and Improved Forest Products",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "402",
+      "label": "Production of Fruit and Vegetable Crops with Improved Acceptability",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "403",
+      "label": "New and Improved Fruit and Vegetable Products and Byproducts",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "404",
+      "label": "Quality Maintenance in Storing and Marketing Fruits and Vegetables",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "405",
+      "label": "Production of Field Crops with Improved Acceptability",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "406",
+      "label": "New and Improved Food Products from Field Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "407",
+      "label": "New and Improved Feed, Textile, and Industrial Products from Field Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "408",
+      "label": "Quality Maintenance in Storing and Marketing Field Crops",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "409",
+      "label": "Production of Animal Products with Improved Acceptability",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "410",
+      "label": "New and Improved Meat, Milk, Eggs, and Other Animal Food Products",
+      "source_page": 4,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "411",
+      "label": "New and Improved Non-Food Animal Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "412",
+      "label": "Quality Maintenance in Marketing Animal Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "501",
+      "label": "Improvement of Grades and Standards--Crop and Animal Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "502",
+      "label": "Development of Markets and Efficient Marketing of Timber and Related",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "503",
+      "label": "Efficiency in Marketing Agricultural Products and Production Inputs",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "506",
+      "label": "Supply, Demand, and Price Analysis--Crop and Animal Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "507",
+      "label": "Competitive Interrelationships in Agriculture",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "508",
+      "label": "Development of Domestic Markets for Farm Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "509",
+      "label": "Performance of Marketing Systems",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "510",
+      "label": "Group Action and Market Power",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "511",
+      "label": "Improvement in Agricultural Statistics",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "512",
+      "label": "Improvement of Grades and Standards--Forest Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "513",
+      "label": "Supply, Demand, and Price Analysis--Forest Products",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "601",
+      "label": "Foreign Market Development",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "602",
+      "label": "Evaluation of Foreign Food Aid Programs",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "603",
+      "label": "Technical Assistance to Developing Countries",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "604",
+      "label": "Product Development and Marketing for Foreign Markets",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "701",
+      "label": "Insure Food Products Free of Toxic Contaminants, Including Residues from",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "702",
+      "label": "Protect Food and Feed Supplies from Harmful Microorganisms and Naturally",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "703",
+      "label": "Food Choices, Habits, and Consumption",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "704",
+      "label": "Home and Commercial Food Service",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "705",
+      "label": "Selection and Care of Clothing and Household Textiles",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "706",
+      "label": "Control of Insect Pests of Man and His Belongings",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "707",
+      "label": "Prevent Transmission of Animal Diseases and Parasites to Man",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "708",
+      "label": "Human Nutrition",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "709",
+      "label": "Reduction of Hazards to Health and Safety",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "801",
+      "label": "Housing",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "802",
+      "label": "Individual and Family Decision Making and Resource Use and",
+      "source_page": 5,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "803",
+      "label": "Causes of Poverty Among Rural People",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "804",
+      "label": "Improvement of Economic Potential of Rural People",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "805",
+      "label": "Communication and Education Processes",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "806",
+      "label": "Individual and Family Adjustment to Change",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "807",
+      "label": "Structural Changes in Agriculture",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "808",
+      "label": "Government Programs to Balance Farm Output and Market Demand",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "901",
+      "label": "Alleviation of Soil, Water, and Air Pollution and Disposal of Wastes",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "902",
+      "label": "Outdoor Recreation",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "903",
+      "label": "Multiple Use Potential of Forest Land and Evaluation of Forestry Programs",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "904",
+      "label": "Fish and Other Aquatic Life, Fur-Bearing Animals, and Other Wildlife",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "905",
+      "label": "Trees to Enhance Rural and Urban Environment",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "906",
+      "label": "Culture and Protection of Ornamentals and Turf",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "907",
+      "label": "Improved Income Opportunities in Rural Communities",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    },
+    {
+      "code": "908",
+      "label": "Improvement of Rural Community Institutions and Services",
+      "source_page": 6,
+      "method": "pdftotext-layout"
+    }
+  ]
+}

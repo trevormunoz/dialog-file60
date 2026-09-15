@@ -1,0 +1,599 @@
+{
+  "source": "CRIS National Summary, Fiscal Year 1994 Funds and Scientist Years — Table D",
+  "issue_date": "1994",
+  "source_file": "tables/94tables.txt",
+  "sha256": "523525bebc2a3f3416dce0a0fb27b3c7cf0f55468e3a3e9143d263918e71badd",
+  "extracted": true,
+  "searched_scope": "tables/94tables.txt lines 178-301 (Table D: National Summary USDA, SAES And Other Institutions, Fiscal Year 1994 Funds (Thousands) And Scientist Years), excluding 'Goal Total' subtotal lines and code 990 UNCLASSIFIED; source_page=0 (plain-text table, no page numbers — scope is the line range above)",
+  "code_count": 98,
+  "rows": [
+    {
+      "code": "101",
+      "label": "APPRAIS OF SOIL RES",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "102",
+      "label": "SOIL PLNT WTR NUTRI",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "103",
+      "label": "MGMT OF SALINE SOIL",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "104",
+      "label": "ALTERN USE OF LAND",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "105",
+      "label": "CONSERV USE OF WATE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "106",
+      "label": "DRAIN AND IRRIGATIO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "107",
+      "label": "WATERSHED PROT & MG",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "108",
+      "label": "ECON LEG PROB OF WA",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "109",
+      "label": "WEATHER ADAPT & MOD",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "110",
+      "label": "APPRAIS FORST & RAN",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "111",
+      "label": "BIOL CULT MGMT FORS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "112",
+      "label": "IMPROV RANGE RESOR",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "113",
+      "label": "REMOTE SENSING",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "114",
+      "label": "RSCH ON MGMT OF RSC",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "201",
+      "label": "CNTRL FORST INSECTS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "202",
+      "label": "CONTROL FOREST DIS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "203",
+      "label": "FOREST FIRE PROTECT",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "204",
+      "label": "CNTR PESTS FRT & VE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "205",
+      "label": "CNTR DISE FRT & VEG",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "206",
+      "label": "CNTR WEEDS FRT & VE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "207",
+      "label": "CNTR PESTS FLD CROP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "208",
+      "label": "CNTR DIS FIELD CROP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "209",
+      "label": "CNTR WEEDS FLD CROP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "210",
+      "label": "CONTR PESTS ANIMALS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "211",
+      "label": "CONTR DIS ANIMALS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "212",
+      "label": "CNTR INTER PARASITE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "213",
+      "label": "PROT ANMLS FROM TOX",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "214",
+      "label": "PROTECT FROM POLLUT",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "301",
+      "label": "GENET BREED FORST T",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "302",
+      "label": "IMP FOREST ENG SYS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "303",
+      "label": "ECON TIMBER PRODUCT",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "304",
+      "label": "IMP BIO EFF FRT & V",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "305",
+      "label": "MECH PROD FRT & VEG",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "306",
+      "label": "PROD MGMT SYS F & V",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "307",
+      "label": "IMP BIO EFF FLD CRP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "308",
+      "label": "MECH PROD FIELD CRO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "309",
+      "label": "PROD MGMT SYS FLD C",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "310",
+      "label": "ANIMAL REPRODUCTION",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "311",
+      "label": "IMP BIO EFF ANML PR",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "312",
+      "label": "ENV STRESS IN ANML",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "313",
+      "label": "PROD MGMT SYS ANML",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "314",
+      "label": "BEES OTH POLLNTNG I",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "315",
+      "label": "IMP STRUC FARM SUPP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "316",
+      "label": "FARM BUSINESS MGMT",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "317",
+      "label": "MECH/STRUCTS ANML P",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "318",
+      "label": "NON-COM BIO TECH/BI",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "401",
+      "label": "NEW IMP FOREST PROD",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "402",
+      "label": "PROD F & V IMP ACCE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "403",
+      "label": "NEW & IMP F&V PROD",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "404",
+      "label": "MKT QUAL FRTS & VEG",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "405",
+      "label": "PROD FLD CROP IMP A",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "406",
+      "label": "NEW IMP FOOD FLD CR",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "407",
+      "label": "NEW IMP NON-FOOD FC",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "408",
+      "label": "MKT QUAL FIELD CROP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "409",
+      "label": "PROD ANML PR IMP AC",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "410",
+      "label": "IMP MEAT MILK EGG P",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "411",
+      "label": "IMP NON-FOOD ANML P",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "412",
+      "label": "MKT QUAL ANIMAL PRO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "501",
+      "label": "IMP GRADES & STANDS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "502",
+      "label": "MKTG TIMBER PRODUCT",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "503",
+      "label": "MKTG EFF AGRI PRODS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "506",
+      "label": "SPLY DEMAND AND PRI",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "507",
+      "label": "COMP REL IN AGRIC",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "508",
+      "label": "DOMESTIC MKT DEVELP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "509",
+      "label": "PERFORMANCE MKTG SY",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "510",
+      "label": "GROUP ACT MKT POWER",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "511",
+      "label": "IMP AGRIC STATISTIC",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "512",
+      "label": "IMP GRADES FRST PRO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "513",
+      "label": "PRICE ANAL FRST PRO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "601",
+      "label": "FGN MKT DEVELP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "602",
+      "label": "EVAL FGN FOOD AID P",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "603",
+      "label": "TECH AID DEV CRTY",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "604",
+      "label": "PRD DVLPMT/MKTG FRG",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "701",
+      "label": "TOX RES IN FOOD",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "702",
+      "label": "FOOD PROT FROM TOX",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "703",
+      "label": "FOOD CONSUMP HABITS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "704",
+      "label": "HOME COMM FOOD SERV",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "705",
+      "label": "SEL CARE CLOTH & TE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "706",
+      "label": "CONTR INSECTS AFF M",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "707",
+      "label": "TRANS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "708",
+      "label": "HUMAN NUTRITION",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "709",
+      "label": "REDUCE HAZ HLTH & S",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "801",
+      "label": "RURAL HOUSING",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "802",
+      "label": "INDIV & FAM DEC MAK",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "803",
+      "label": "RURAL POVERTY",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "804",
+      "label": "ECON POTENT RURL PE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "805",
+      "label": "COMMUNICAT RURAL PE",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "806",
+      "label": "ADJUSTMENT TO CHANG",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "807",
+      "label": "AGRIC ECONOMIC CHAN",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "808",
+      "label": "GOV'T PROGRAMS",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "901",
+      "label": "ALLEV POLLUTION",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "902",
+      "label": "OUTDOOR RECREATION",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "903",
+      "label": "MULTI-USE-FOREST PO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "904",
+      "label": "WLDLFE AND FISH ECO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "905",
+      "label": "TREES BEAUTIFICATIO",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "906",
+      "label": "ORNAMENT & TURF DEV",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "907",
+      "label": "RURAL INCOME IMP",
+      "source_page": 0,
+      "method": "annual-table"
+    },
+    {
+      "code": "908",
+      "label": "RURAL INSTITUT IMP",
+      "source_page": 0,
+      "method": "annual-table"
+    }
+  ]
+}
