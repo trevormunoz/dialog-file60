@@ -17,7 +17,6 @@
 //// "Out of scope / deferred".
 
 import assembly
-import card_image
 import field_value
 import gleam/bit_array
 import gleam/list
@@ -110,12 +109,10 @@ const marker_byte: Int = 0xAC
 pub fn scan_records(bytes: BitArray, base_line: Int) -> ScanResult {
   let assert Ok(scanned) = scan.scan(bytes, "", base_line)
     as "scan_records requires a Format B buffer whose length is a whole multiple of 82 bytes"
-  let assert Ok(lines) = card_image.split_lines(bytes)
-    as "scan.scan above already proved this buffer is line-aligned"
   ScanResult(
     spans: list.map(scanned.records, record_span_of),
     structure: file_structure_of(scanned.structure),
-    bad_lines: count_bad_lines(lines),
+    bad_lines: count_bad_lines(bytes, 0, 0),
   )
 }
 
@@ -148,20 +145,16 @@ fn structure_text(line: BitArray) -> String {
 }
 
 // Lines whose last two bytes are not CRLF (full-corpus check), matching
-// offsets.ts:48. Not tracked by scan.scan, so computed here directly.
-fn count_bad_lines(lines: List(BitArray)) -> Int {
-  list.fold(lines, 0, fn(acc, line) {
-    case ends_with_crlf(line) {
-      True -> acc
-      False -> acc + 1
-    }
-  })
-}
-
-fn ends_with_crlf(line: BitArray) -> Bool {
-  case bit_array.slice(line, 80, 2) {
-    Ok(<<0x0D, 0x0A>>) -> True
-    _ -> False
+// offsets.ts:48. Not tracked by scan.scan, so computed here directly: a walk
+// by byte offset over the (line-aligned) buffer, peeking bytes 80-81 of each
+// line with no per-line allocation. The catch-all is the end of the buffer.
+fn count_bad_lines(bytes: BitArray, at: Int, acc: Int) -> Int {
+  case bytes {
+    <<_:bytes-size(at), _:bytes-size(80), 0x0D, 0x0A, _:bytes>> ->
+      count_bad_lines(bytes, at + line_bytes, acc)
+    <<_:bytes-size(at), _:bytes-size(line_bytes), _:bytes>> ->
+      count_bad_lines(bytes, at + line_bytes, acc + 1)
+    _ -> acc
   }
 }
 

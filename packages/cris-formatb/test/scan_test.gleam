@@ -6,6 +6,7 @@ import field_value
 import gleam/bit_array
 import gleam/list
 import gleam/option.{None, Some}
+import gleam/string
 import gleeunit/should
 import scan
 import simplifile
@@ -197,4 +198,31 @@ pub fn accession_of_all_blank_an_lines_is_none_test() {
   let bytes = bit_array.concat([line(<<"AN":utf8>>), line(<<"AN":utf8>>)])
   let record = scan.ScannedRecord(assembly.SourceBase("F", 1), bytes)
   scan.accession_of(record) |> should.equal(None)
+}
+
+// A record whose byte count is not a whole number of lines cannot be walked
+// line by line: None, never a partial read of a ragged tail.
+pub fn accession_of_ragged_record_is_none_test() {
+  let record =
+    scan.ScannedRecord(assembly.SourceBase("F", 1), <<"AN 9049442":utf8>>)
+  scan.accession_of(record) |> should.equal(None)
+}
+
+// The AN line may sit anywhere in the record, and its value keeps columns
+// 73-80 (bytes 3..80) as offsets.ts does, so a value running into those
+// columns is not cut at column 72.
+pub fn accession_of_reads_the_full_77_byte_slice_test() {
+  let pad = list.repeat(<<32>>, times: 69) |> bit_array.concat
+  let long = <<"AN ":utf8, pad:bits, "ABCDEFGH":utf8>>
+  let record =
+    scan.ScannedRecord(
+      assembly.SourceBase("F", 1),
+      bit_array.concat([
+        line(<<"$$":utf8>>),
+        line(<<"PD 860516":utf8>>),
+        line(long),
+      ]),
+    )
+  let assert Some(value) = scan.accession_of(record)
+  value |> should.equal(string.repeat(" ", 69) <> "ABCDEFGH")
 }

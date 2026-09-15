@@ -4,6 +4,7 @@
 //// is test/parity.test.ts against src-ts/record.ts + offsets.ts.
 
 import facade
+import gleam/bit_array
 import gleam/list
 import gleam/option.{None}
 import gleeunit/should
@@ -72,4 +73,38 @@ pub fn profile_gates_the_percent_split_test() {
   let assert Ok(fy91_ac) = find_field(fy91.fields, "AC")
   { fy88_ac.values |> list.map(fn(v) { v.raw }) }
   |> should.equal(fy91_ac.values |> list.map(fn(v) { v.raw }))
+}
+
+fn served_line(prefix: BitArray, ending: BitArray) -> BitArray {
+  let pad =
+    list.repeat(<<32>>, times: 80 - bit_array.byte_size(prefix))
+    |> bit_array.concat
+  bit_array.concat([prefix, pad, ending])
+}
+
+// bad_lines counts every line whose bytes 80-81 are not CR LF (offsets.ts:48),
+// header/trailer/separator lines included, and is 0 for a clean file.
+pub fn scan_records_counts_lines_not_ending_in_crlf_test() {
+  let crlf = <<13, 10>>
+  let clean =
+    bit_array.concat([
+      served_line(<<"<< H":utf8>>, crlf),
+      served_line(<<"$$":utf8>>, crlf),
+      served_line(<<"AN 1":utf8>>, crlf),
+      served_line(<<">> T":utf8>>, crlf),
+    ])
+  facade.scan_records(clean, 1).bad_lines |> should.equal(0)
+
+  let dirty =
+    bit_array.concat([
+      served_line(<<"<< H":utf8>>, <<10, 13>>),
+      served_line(<<"$$":utf8>>, crlf),
+      served_line(<<"AN 1":utf8>>, <<32, 10>>),
+      served_line(<<">> T":utf8>>, <<13, 13>>),
+    ])
+  let scanned = facade.scan_records(dirty, 1)
+  scanned.bad_lines |> should.equal(3)
+  // The count is a side tally: the span itself is unaffected.
+  let assert [span] = scanned.spans
+  span.an |> should.equal("1")
 }
