@@ -8,7 +8,7 @@
 import accession.{type Accession, type AccessionError}
 import gleam/list
 import gleam/option.{type Option}
-import gleam/string
+import latin1
 
 /// A list guaranteed to hold at least one element: `first` plus any `rest`.
 pub type NonEmpty(a) {
@@ -85,20 +85,7 @@ pub type Supported(a) {
 /// actual code page is unknown (see registry/evidence.json); `render` just
 /// gives every byte a visible glyph rather than asserting what it means.
 pub fn render(bytes: BitArray) -> String {
-  bytes
-  |> bit_array_to_latin1_codepoints
-  |> string.from_utf_codepoints
-}
-
-fn bit_array_to_latin1_codepoints(bytes: BitArray) -> List(UtfCodepoint) {
-  case bytes {
-    <<byte, rest:bytes>> -> {
-      let assert Ok(codepoint) = string.utf_codepoint(byte)
-        as "every byte 0..255 is a valid Latin-1/Unicode code point"
-      [codepoint, ..bit_array_to_latin1_codepoints(rest)]
-    }
-    _ -> []
-  }
+  latin1.decode(bytes)
 }
 
 /// A field whose requiredness is not settled — asserted only on lower-grade
