@@ -23,7 +23,7 @@ import record_model.{
   type ConstructionProblem, Disagreement, FieldNotYetModeled, FormatDisagreement,
   InvalidAccession, InvalidFieldValue, NonRepeatingFieldRepeated,
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RuleUnresolved,
+  RpaCodeNotAttested, RuleUnresolved,
 }
 import scan
 import simplifile
@@ -165,6 +165,7 @@ fn kind_bucket(kind: record_model.DisagreementKind) -> String {
     InvalidFieldValue(tag, reason) -> tag <> " invalid-" <> reason_class(reason)
     RepetitionLimitExceeded(tag, _, _) -> tag <> " repetition-limit"
     RelatedFieldsDisagree(_, _) -> "related-fields-disagree"
+    RpaCodeNotAttested(_, _) -> "RP rpa-not-attested"
   }
 }
 

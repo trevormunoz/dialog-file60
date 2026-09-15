@@ -118,6 +118,7 @@ pub type DisagreementKind {
   InvalidFieldValue(tag: String, reason: String)
   RepetitionLimitExceeded(tag: String, actual: Int, maximum: Int)
   RelatedFieldsDisagree(tags: NonEmpty(String), reason: String)
+  RpaCodeNotAttested(code: String, warrant_set: String)
 }
 
 pub type FormatDisagreement {
