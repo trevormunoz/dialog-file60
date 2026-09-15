@@ -16,7 +16,8 @@
   },
   "files": ["dist", "src-ts"],
   "scripts": {
-    "prebuild": "node scripts/gen-vocab.mjs",
+    "prebuild": "node scripts/gen-vocab.mjs --check",
+    "gen:vocab": "node scripts/gen-vocab.mjs",
     "build": "gleam build --target javascript && esbuild scripts/engine-entry.mjs --bundle --format=esm --platform=neutral --outfile=dist/engine.mjs && rollup --config scripts/rollup-dts.config.mjs",
     "prepare": "pnpm run build",
     "pretest": "pnpm run build",
