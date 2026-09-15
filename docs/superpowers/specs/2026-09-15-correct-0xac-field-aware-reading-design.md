@@ -89,12 +89,15 @@ pub type Cardinality {
 pub fn cardinality(tag: String) -> Cardinality
 ```
 
-Three buckets. The enumerated table is built in the plan's Task 1 and each
+Three buckets. The enumerated table is built in the plan's Task 1, and each
 bucket-(a) tag is verified non-repeating **against the 1982 Manual of
-Classification directly**, not only against `construct.gleam`'s dispatch — because
-gate 4 proves the table matches `construct`, so a cardinality error `construct`
-already carries would survive both (see Human gate H1). The spec fixes the
-*structure*, not a hand-copied list:
+Classification directly** (Human gate H1). It cannot be cross-checked against
+`construct.gleam`'s dispatch automatically: `construct`'s per-field reader choice
+runs through the private `single_value` (`construct.gleam:1897`), so no test can
+assert the table tracks it. Gate 4 therefore guards only *coverage* (that the
+table classifies exactly `modeled_tags`); *side*-correctness — each tag on the
+right side — rests entirely on H1 plus the hand-verified blast radius (only 4
+records corpus-wide). The spec fixes the *structure*, not a hand-copied list:
 
 - **(a) Single-value, manual-sourced → `SingleValue` → `joined_value`.** The
   **only** tags whose reading changes. These are the tags whose validator
@@ -171,12 +174,16 @@ is built around that limit, over the full corpus (not a sample):
    = the opener; and that the oracle would have split it. Sourced to the FY94
    finding + `evidence.json`. (Corpus checks 1–2 are opt-in,
    `CRIS_PARITY_CORPUS=1`, like the existing harness.)
-4. **Classification completeness (omissions).** A **test-only** check (tests are
-   not bundled) asserts `field_cardinality` classifies exactly `modeled_tags`,
+4. **Classification completeness (omissions only).** A **test-only** check (tests
+   are not bundled) asserts `field_cardinality` classifies exactly `modeled_tags`,
    with bucket (a) = the 35 corrected tags and buckets (b)+(c-known: SN, BP, HP)
-   = MultiValue. **Prerequisite:** `modeled_tags` (`construct.gleam:1216`) is
-   currently private and must be made `pub const` — a one-line export the plan
-   includes; it does not enter the reader bundle (only the test imports it).
+   = MultiValue. This compares the table against a hand-copied expected split, so
+   it catches an *omitted* tag or single-file drift between the module and its
+   test copy — it does **not** cross-check `construct`'s private dispatch, so a
+   wrong-*side* classification is H1's job, not this gate's. **Prerequisite:**
+   `modeled_tags` (`construct.gleam:1216`) is currently private and must be made
+   `pub const` — a one-line export the plan includes; it does not enter the reader
+   bundle (only the test imports it).
 
 **The residual weakness, stated plainly.** Gate 2's shaped differential cannot
 distinguish a *correct* `0xAC`-artifact merge from an *erroneous* merge of
