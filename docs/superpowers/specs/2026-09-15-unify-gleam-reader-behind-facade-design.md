@@ -323,6 +323,19 @@ app never sees an intermediate shape.
 - **Adopting the reader's corrections** on the facade path (the `0xAC` single-value
   fix, field-aware reading, correct EBCDIC rendering) — each is its own later,
   separately-tested behavior change.
+- **Non-ASCII tag bytes (PAR C2, 2026-09-15, deferred).** `assembly` decodes a
+  line's two tag bytes as UTF-8 and returns `TagNotAscii` for a byte `>= 0x80`,
+  where the oracle (`record.ts:58`) uses total `latin1` and never rejects — so the
+  facade panics on a non-ASCII tag while the oracle reads it as a field with an odd
+  tag. UNREACHABLE on the served corpus (all ~100k FY88/FY89/FY94 tags are ASCII;
+  full-corpus parity is green), hence outside the contract. The faithful fix — read
+  tags with `latin1` in the reader and make tag-ASCII-ness a *validator* rule
+  (`construct`/`report`) — is a reader/validator boundary change and is deferred.
+- **CI enforcement of the corpus sweep (PAR C2).** The always-on **fixture** parity
+  (2 real records, both profiles) self-enforces the wiring in the default suite; the
+  exhaustive **full-corpus** parity is opt-in (`CRIS_PARITY_CORPUS=1`, ~9 min) and
+  must be run on any facade/segment/wrapper change. A CI job to run it when `data/`
+  is available (the repo has no CI yet) is a follow-up so parity stays self-enforcing.
 - **Publishing** `@barcstory/cris-formatb` to any registry (now enforced off).
 - **Idiomatic rewrite** of the reader internals beyond what unification needs
   (the Phase-2 sketch's binary-pattern / state-machine refactors) — not required
