@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 test("package.json declares a typecheck script covering root and packages/cris-formatb", () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
   expect(pkg.scripts.typecheck).toBe(
-    "tsc -p tsconfig.json --noEmit && tsc -p packages/cris-formatb/tsconfig.json --noEmit",
+    "pnpm --filter @barcstory/cris-formatb build && tsc -p tsconfig.json --noEmit && tsc -p packages/cris-formatb/tsconfig.json --noEmit",
   );
 });
 
