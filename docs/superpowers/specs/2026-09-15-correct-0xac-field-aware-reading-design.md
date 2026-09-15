@@ -202,9 +202,15 @@ off the `0xAC` path, so a mis-sourced correction can be invisible to every
 automated gate. These four human steps are **required** before landing, and are
 tasks in the plan, not optional review:
 
-- **H1 — Re-source the 35 corrected tags from the 1982 Manual.** Verify each is
-  documented non-repeating in the Manual itself, not merely in `construct.gleam`.
-  Gate 4 proves table == `construct`; only H1 catches an error the two share.
+- **H1 — Re-source the corrected tags from the primary NARA source.** Verify each
+  is documented non-repeating in the source itself, not merely in `construct.gleam`
+  (gate 4 proves table == `construct`; only H1 catches an error the two share). The
+  cardinality attribute lives in the NARA **Data Element Descriptions** dictionary
+  (`367_1DP.pdf`, a `Repeating Field` Y/N column) — *not* the Manual of
+  Classification (which covers the multi-value code vocabularies). **Done
+  2026-09-15** for the corpus-active tags PR/PB (both `Repeating: N`), corroborated
+  for OB/AP/DE and the SC/SF/PH/GH exclusions — see
+  `2026-09-15-0xac-human-gate-signoffs.md`.
 - **H2 — Extend the `0xAC`-absence scan to FY88 + FY89 + FY94** before landing, so
   the statement of absence covers the whole served corpus, not FY88 alone.
 - **H3 — Stratified merge review.** Read at least one real merged record for
