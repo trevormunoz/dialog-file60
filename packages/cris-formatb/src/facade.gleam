@@ -182,8 +182,18 @@ pub fn parse_record(
   let assert Ok(record_bytes) = bit_array.slice(bytes, start, span.length)
     as "span falls outside the supplied buffer"
   let base = assembly.SourceBase(file, span.first_line)
+  // KNOWN, DEFERRED divergence from the oracle (record.ts:58): `assembly` decodes
+  // a line's two tag bytes as UTF-8 and returns `TagNotAscii` for a byte >= 0x80,
+  // whereas the oracle decodes the tag with total `latin1` and never rejects. So a
+  // record whose tag columns carry a non-ASCII byte panics here while the oracle
+  // reads it as a field with an odd tag. This is UNREACHABLE on the served corpus
+  // (FY88/FY89/FY94 tags are ASCII in all ~100k records — full-corpus parity is
+  // green), so it is outside the migration's contract (byte-identical output over
+  // the File 60 data). The faithful fix — read tags with latin1 in the reader and
+  // make tag-ASCII-ness a *validator* rule — is a reader/validator boundary change
+  // deferred with the other corrections. See the design spec's deferred list.
   let assert Ok(supplied) = assembly.assemble(record_bytes, base, marker_byte)
-    as "a scanned record's own bytes must assemble cleanly"
+    as "a scanned record's own bytes assemble cleanly (tags ASCII across the corpus)"
   let percent_in_block = case profile {
     Fy1988 -> True
     Fy1991plus -> False
@@ -230,6 +240,13 @@ fn source_field_of(
   let assert Ok(byte_values) = field_value.field_values(occurrence)
     as "an assembled occurrence's own fragments always yield readable columns"
   let leaders = leader_fragments(fragments)
+  // `field_values` (byte values) and `leader_fragments` (per-value line/offset/
+  // continuation) are two independent folds over the same fragments, paired by
+  // position. `list.zip` truncates silently on a length mismatch, so assert they
+  // agree — if the two folds ever drift, fail loudly here rather than dropping
+  // per-value metadata unnoticed.
+  let assert True = list.length(byte_values) == list.length(leaders)
+    as "field_values and leader_fragments must produce one entry per value"
   let values =
     list.zip(byte_values, leaders)
     |> list.map(fn(pair) { source_value_of(pair.0, pair.1, percent_in_block) })
