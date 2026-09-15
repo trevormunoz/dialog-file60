@@ -86,10 +86,17 @@ pub type Stage {
 /// for BP, an agency phone note, Aug 26 1992); its shape rule rests on observed
 /// data plus any printed precedent, never on a dictionary row for the field
 /// itself. Weaker than a printed row, and not to be mistaken for one.
+///
+/// `ClassificationSource` is a fourth, separate grade for rules warranted by the
+/// Manual of Classification editions or the CRIS annual tables — the *meaning*
+/// codebook, a different document class from the 367_1DP layout dictionary the
+/// other three grades cite. Per-source fidelity (OCR vs born-digital) is NOT
+/// carried here; it lives in the vocabulary dataset's `method` field.
 pub type EvidenceGrade {
   PrintedDictionary
   HandwrittenAmendment
   ValidationAddendum
+  ClassificationSource
 }
 
 pub type RuleRef {

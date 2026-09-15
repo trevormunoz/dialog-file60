@@ -88,3 +88,19 @@ pub fn classification_rows_empty_columns_is_ok_empty_test() {
   let columns = record_model.ClassificationColumns([], [], [], [], [], [], [])
   record_model.classification_rows(columns) |> should.equal(Ok([]))
 }
+
+// --- EvidenceGrade: ClassificationSource -------------------------------------
+
+pub fn classification_source_grade_exists_test() {
+  let rule =
+    record_model.RuleRef(
+      document: "Manual of Classification (Rev IV, 1982)",
+      pdf_page: 0,
+      element: "RPA (35)",
+      assertion: "code appears in the contemporary CRIS RPA classification",
+      interpretation: "vocabulary attestation, provisional",
+      stage: record_model.Supplied,
+      evidence: record_model.ClassificationSource,
+    )
+  rule.evidence |> should.equal(record_model.ClassificationSource)
+}
