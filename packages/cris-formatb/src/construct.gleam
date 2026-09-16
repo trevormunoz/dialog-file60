@@ -1301,16 +1301,36 @@ pub fn project_with_vintage(
   }
 }
 
+/// The project's title (TI): required, non-repeating, MAX 100 (:1179 `ti_rule`).
+pub fn title(record: SuppliedRecord) -> Checked(Supported(String)) {
+  required(record, "TI", ti_rule, upto(100))
+}
+
+/// The project's type (PT): optional, non-repeating, MAX 20 (:1190 `pt_rule`).
+pub fn project_type(
+  record: SuppliedRecord,
+) -> Checked(Option(Supported(String))) {
+  optional(record, "PT", pt_rule, upto(20))
+}
+
+/// The project's subfiles (SF): required, non-empty, repeating, MAX 11 MIN 4
+/// per value, no documented occurrence cap (:1203 `sf_rule`).
+pub fn subfiles(
+  record: SuppliedRecord,
+) -> Checked(source_record.NonEmpty(Supported(String))) {
+  required_nonempty(record, "SF", sf_rule, between(4, 11))
+}
+
 fn project_core(record: SuppliedRecord) -> record_model.ConstructionResult {
   let identity_result = identity(record)
-  let title = required(record, "TI", ti_rule, upto(100))
+  let title = title(record)
   let status_result = status(record)
-  let project_type = optional(record, "PT", pt_rule, upto(20))
+  let project_type = project_type(record)
   let participants_result = participants(record)
   let chronology_result = chronology(record)
   let classifications_result = classifications(record)
   let narratives_result = narratives(record)
-  let subfiles = required_nonempty(record, "SF", sf_rule, between(4, 11))
+  let subfiles = subfiles(record)
   let problems =
     list.flatten([
       problems_of(identity_result),

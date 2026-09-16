@@ -1333,3 +1333,33 @@ pub fn project_with_cg_rg_rn_gy_not_flagged_unmodeled_test() {
     )
   let assert Ok(_project) = construct.project(supplied)
 }
+
+// --- public title/project_type/subfiles constructors ----------------------
+// (extracted from project_core so TI/PT/SF are uniform with every other
+// checked group's own public constructor)
+
+pub fn title_reads_ti_test() {
+  let supplied =
+    record([#("TI", "Watershed protection in irrigated agriculture")])
+  let assert Ok(Supported(value, _)) = construct.title(supplied)
+  value |> should.equal("Watershed protection in irrigated agriculture")
+}
+
+pub fn project_type_reads_pt_test() {
+  let supplied = record([#("PT", "0")])
+  let assert Ok(Some(Supported(value, _))) = construct.project_type(supplied)
+  value |> should.equal("0")
+}
+
+pub fn project_type_missing_is_optional_test() {
+  let supplied = record([#("TI", "Watershed protection")])
+  construct.project_type(supplied) |> should.equal(Ok(None))
+}
+
+pub fn subfiles_reads_sf_test() {
+  let supplied = record([#("SF", "CRIS")])
+  let assert Ok(source_record.NonEmpty(Supported(value, _), rest)) =
+    construct.subfiles(supplied)
+  value |> should.equal("CRIS")
+  rest |> should.equal([])
+}
