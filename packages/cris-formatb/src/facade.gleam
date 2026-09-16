@@ -17,6 +17,7 @@
 //// "Out of scope / deferred".
 
 import assembly
+import field_cardinality
 import field_value
 import gleam/bit_array
 import gleam/list
@@ -175,18 +176,17 @@ pub fn parse_record(
   let assert Ok(record_bytes) = bit_array.slice(bytes, start, span.length)
     as "span falls outside the supplied buffer"
   let base = assembly.SourceBase(file, span.first_line)
-  // KNOWN, DEFERRED divergence from the oracle (record.ts:58): `assembly` decodes
-  // a line's two tag bytes as UTF-8 and returns `TagNotAscii` for a byte >= 0x80,
-  // whereas the oracle decodes the tag with total `latin1` and never rejects. So a
-  // record whose tag columns carry a non-ASCII byte panics here while the oracle
-  // reads it as a field with an odd tag. This is UNREACHABLE on the served corpus
-  // (FY88/FY89/FY94 tags are ASCII in all ~100k records — full-corpus parity is
-  // green), so it is outside the migration's contract (byte-identical output over
-  // the File 60 data). The faithful fix — read tags with latin1 in the reader and
-  // make tag-ASCII-ness a *validator* rule — is a reader/validator boundary change
-  // deferred with the other corrections. See the design spec's deferred list.
+  // No divergence from the oracle here (correction #3, 2026-09-15): `assembly`
+  // decodes a line's two tag bytes with total `latin1`, matching the oracle
+  // (record.ts:58) exactly, and never rejects — a tag carrying a non-ASCII byte
+  // reads as an ordinary (odd-tagged) field, same as the oracle, no panic.
+  // `assemble`'s only remaining error is `LineUnreadable` (a line too short to
+  // read columns), which is unreachable on a scanned record whose lines are
+  // 82-byte-aligned by construction — so this `let assert` never fires on real
+  // data. Whether a tag IS ASCII is now a validator judgment (construct.gleam's
+  // `TagNotAscii` ConstructionProblem), not a reader concern.
   let assert Ok(supplied) = assembly.assemble(record_bytes, base, marker_byte)
-    as "a scanned record's own bytes assemble cleanly (tags ASCII across the corpus)"
+    as "a scanned record's own bytes assemble cleanly (lines are 82-byte-aligned by construction)"
   let percent_in_block = case profile {
     Fy1988 -> True
     Fy1991plus -> False
@@ -230,14 +230,23 @@ fn source_field_of(
   let first_location = location_of(first)
   let line_start = first_location.first_line
   let line_end = location_of(last_fragment).first_line
-  let assert Ok(byte_values) = field_value.field_values(occurrence)
-    as "an assembled occurrence's own fragments always yield readable columns"
-  let leaders = leader_fragments(fragments)
-  // `field_values` (byte values) and `leader_fragments` (per-value line/offset/
-  // continuation) are two independent folds over the same fragments, paired by
-  // position. `list.zip` truncates silently on a length mismatch, so assert they
-  // agree — if the two folds ever drift, fail loudly here rather than dropping
-  // per-value metadata unnoticed.
+  // Cardinality-aware reading (design spec 2026-09-15). A single-value field
+  // joins to ONE value keeping a line-start 0xAC as data; its sole value's
+  // leader is the field's opener (TaggedStart -> continuation: false). A
+  // repeating field splits on the 0xAC marker exactly as before. The two folds
+  // (values, leaders) must stay length-matched, so both are chosen together.
+  let #(byte_values, leaders) = case field_cardinality.cardinality(tag) {
+    field_cardinality.SingleValue -> {
+      let assert Ok(value) = field_value.joined_value(occurrence)
+        as "an assembled occurrence's own fragments always yield readable columns"
+      #([value], [first])
+    }
+    field_cardinality.MultiValue -> {
+      let assert Ok(byte_values) = field_value.field_values(occurrence)
+        as "an assembled occurrence's own fragments always yield readable columns"
+      #(byte_values, leader_fragments(fragments))
+    }
+  }
   let assert True = list.length(byte_values) == list.length(leaders)
     as "field_values and leader_fragments must produce one entry per value"
   let values =

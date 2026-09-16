@@ -138,6 +138,12 @@ pub type ConstructionProblem {
   Disagreement(detail: FormatDisagreement)
   RuleUnresolved(tag: String, examined: Location, question: String)
   FieldNotYetModeled(tag: String, examined: Location)
+  // A field whose tag carries a codepoint >= 0x80 (correction #3): the reader
+  // reads every tag with total latin1 and never rejects (assembly.gleam), so
+  // this judgment — "this tag is not ASCII" — belongs here, at the validator,
+  // not at the reader. Supersedes FieldNotYetModeled for that field; a
+  // non-ASCII tag can never be in `modeled_tags` (all 51 are ASCII).
+  TagNotAscii(tag: String, examined: Location)
 }
 
 /// Result of the intended validator (not implemented):

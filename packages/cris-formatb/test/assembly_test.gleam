@@ -60,6 +60,17 @@ pub fn line_role_opens_a_field_on_a_tagged_line_test() {
   ) = loc
 }
 
+// Correction #3: a non-ASCII tag (0xAC 0x41 -> latin1 "¬A") opens a field
+// like any other tagged line -- no error, no panic. The reader reads with
+// total latin1 and never rejects; judging a tag "not ASCII" is the
+// validator's job now (construct_test.gleam), not the reader's.
+pub fn line_role_opens_a_field_with_a_non_ascii_tag_test() {
+  let base = assembly.SourceBase("F", 100)
+  let line = <<0xAC, 0x41, " 50":utf8>>
+  let assert Ok(assembly.Opens("¬A", source_record.TaggedStart(_))) =
+    assembly.line_role(base, 1, line, 0xAC)
+}
+
 pub fn line_role_continues_wrapped_when_col4_is_not_the_marker_test() {
   let base = assembly.SourceBase("F", 100)
   let line = <<"   H, SOYBEAN":utf8>>

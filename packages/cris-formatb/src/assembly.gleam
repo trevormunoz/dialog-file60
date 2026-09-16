@@ -10,6 +10,7 @@ import card_image
 import gleam/bit_array
 import gleam/list
 import gleam/option.{type Option, None, Some}
+import latin1
 import source_record.{
   type Fragment, type Location, type RecordPart, type Witness, Field,
   FieldOccurrence, Location, MarkedValueStart, NonEmpty, TaggedStart, Unassigned,
@@ -55,14 +56,14 @@ pub type LineRole {
 pub type AssemblyError {
   /// The card-image reading of the line failed (too short, etc.).
   LineUnreadable(reason: card_image.CardImageError)
-  /// A tag's two bytes are not decodable text; carries the raw bytes.
-  TagNotAscii(bytes: BitArray)
 }
 
 /// Interpret one line for the assembly walk, building the model's Witness and
 /// Fragment from the base. A "$$" line is a Boundary; a tagged line Opens a
-/// field (its two tag bytes decoded to text); a continuation Continues one, as
-/// WrappedText or MarkedValueStart per the profile marker.
+/// field (its two tag bytes decoded to text with total latin1 — never
+/// rejected; whether the tag is ASCII is a validator judgment, not a reader
+/// one); a continuation Continues one, as WrappedText or MarkedValueStart per
+/// the profile marker.
 pub fn line_role(
   base: SourceBase,
   line_index: Int,
@@ -73,10 +74,7 @@ pub fn line_role(
   case card_image.classify(line) {
     Ok(card_image.SeparatorLine) -> Ok(Boundary)
     Ok(card_image.TaggedLine(tag_bytes)) ->
-      case bit_array.to_string(tag_bytes) {
-        Ok(tag) -> Ok(Opens(tag, TaggedStart(witness)))
-        Error(Nil) -> Error(TagNotAscii(tag_bytes))
-      }
+      Ok(Opens(latin1.decode(tag_bytes), TaggedStart(witness)))
     Ok(card_image.ContinuationLine) ->
       case card_image.continuation_kind(line, marker) {
         Ok(card_image.Wrapped) -> Ok(Continues(WrappedText(witness)))
