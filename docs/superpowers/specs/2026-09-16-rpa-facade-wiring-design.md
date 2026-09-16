@@ -276,7 +276,9 @@ path (RG310.CRIS.FY88.txt)
   Mitigation: the attestation note surfaces the inferred fiscal year and its file-name
   provenance every run, so the failure is visible, never silent. The `--fy` override
   above is the durable fix. (A mislabeling in a *directory* name no longer matters — the
-  contract reads only the basename.)
+  contract reads only the basename.) In practice the risk is small: the source files are
+  fixed NARA records whose `FY<nn>` names are a durable external convention, not a local
+  artifact anyone re-derives — so the basename genuinely carries the vintage.
 - **Two-digit fiscal years are not century-qualified.** `FY94` is 1994 by corpus
   context; the code treats the warrant map (`88|89|94`) as the authority and makes no
   century claim. No corpus file spans the ambiguous boundary.
