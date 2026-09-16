@@ -129,6 +129,53 @@ pub type Acc {
   )
 }
 
+/// The tier a `ConstructionResult` alone determines: certified-clean,
+/// certified-but-undocumented, certified-but-for-an-RPA-absence, unmodeled-only,
+/// or a genuine structural failure. Covers five of `Tier`'s six variants —
+/// `Unreadable` is not reachable from a `ConstructionResult`, since an
+/// assemble failure never produces one; only `outcome_of` (below) can produce
+/// that tier, from an assemble failure directly.
+pub fn tier_of(result: record_model.ConstructionResult) -> Tier {
+  case result {
+    Ok(project) ->
+      case record_model.project_undocumented_fields(project) {
+        [] -> Certified
+        _ -> CertifiedUndocumented
+      }
+    Error(NonEmpty(first, rest)) -> {
+      let problems = [first, ..rest]
+      case classify_problems(problems) {
+        RpaAbsenceOnly -> CertifiedRpaAbsence
+        UnmodeledMaterialOnly -> UnmodeledOnly
+        StructuralFailure -> Failed
+      }
+    }
+  }
+}
+
+/// One record's outcome: unreadable (assemble failed, no `ConstructionResult`
+/// exists) or constructed (assembled, with its `Tier` and the full
+/// `ConstructionResult` for downstream rendering). The single source of truth
+/// shared by the aggregate `tally` fold below and the NDJSON emitter.
+pub type Outcome {
+  UnreadableRecord(error: assembly.AssemblyError)
+  Constructed(tier: Tier, result: record_model.ConstructionResult)
+}
+
+pub fn outcome_of(
+  record: scan.ScannedRecord,
+  corpus_fy: Option(Int),
+) -> Outcome {
+  let scan.ScannedRecord(base, bytes) = record
+  case assembly.assemble(bytes, base, 0xAC) {
+    Error(error) -> UnreadableRecord(error)
+    Ok(supplied) -> {
+      let result = construct.project_with_vintage(supplied, corpus_fy)
+      Constructed(tier_of(result), result)
+    }
+  }
+}
+
 @internal
 pub fn tally(records: List(scan.ScannedRecord), corpus_fy: Option(Int)) -> Acc {
   list.fold(
@@ -144,52 +191,66 @@ pub fn tally(records: List(scan.ScannedRecord), corpus_fy: Option(Int)) -> Acc {
       problems: dict.new(),
     ),
     fn(acc, record) {
-      let scan.ScannedRecord(base, bytes) = record
       let acc = Acc(..acc, total: acc.total + 1)
-      case assembly.assemble(bytes, base, 0xAC) {
-        Error(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
-        Ok(supplied) ->
-          case construct.project_with_vintage(supplied, corpus_fy) {
-            Ok(project) -> {
-              let acc = Acc(..acc, certified: acc.certified + 1)
-              case record_model.project_undocumented_fields(project) {
-                [] -> acc
-                _ ->
-                  Acc(
-                    ..acc,
-                    certified_undocumented: acc.certified_undocumented + 1,
-                  )
-              }
-            }
-            Error(NonEmpty(first, rest)) -> {
-              let problems = [first, ..rest]
-              let problems_bumped =
-                list.fold(problems, acc.problems, fn(d, p) {
-                  bump(d, bucket(p))
-                })
-              case classify_problems(problems) {
-                RpaAbsenceOnly ->
-                  Acc(
-                    ..acc,
-                    certified: acc.certified + 1,
-                    certified_rpa_absence: acc.certified_rpa_absence + 1,
-                    problems: problems_bumped,
-                  )
-                UnmodeledMaterialOnly ->
-                  Acc(
-                    ..acc,
-                    failed: acc.failed + 1,
-                    unmodeled_only: acc.unmodeled_only + 1,
-                    problems: problems_bumped,
-                  )
-                StructuralFailure ->
-                  Acc(..acc, failed: acc.failed + 1, problems: problems_bumped)
-              }
-            }
-          }
+      case outcome_of(record, corpus_fy) {
+        UnreadableRecord(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
+        Constructed(tier, result) -> bump_for_tier(acc, tier, result)
       }
     },
   )
+}
+
+// Bumps the tally's counters for one record's tier, folding its problems (if
+// any, from `result`) into the histogram. `Unreadable` cannot actually arise
+// here — `outcome_of` only ever produces it as `UnreadableRecord`, matched
+// above, never as `Constructed`'s tier — but `Tier` is matched exhaustively
+// regardless.
+fn bump_for_tier(
+  acc: Acc,
+  tier: Tier,
+  result: record_model.ConstructionResult,
+) -> Acc {
+  case tier {
+    Certified -> Acc(..acc, certified: acc.certified + 1)
+    CertifiedUndocumented ->
+      Acc(
+        ..acc,
+        certified: acc.certified + 1,
+        certified_undocumented: acc.certified_undocumented + 1,
+      )
+    CertifiedRpaAbsence ->
+      Acc(
+        ..acc,
+        certified: acc.certified + 1,
+        certified_rpa_absence: acc.certified_rpa_absence + 1,
+        problems: bump_problems(acc.problems, result),
+      )
+    UnmodeledOnly ->
+      Acc(
+        ..acc,
+        failed: acc.failed + 1,
+        unmodeled_only: acc.unmodeled_only + 1,
+        problems: bump_problems(acc.problems, result),
+      )
+    Failed ->
+      Acc(
+        ..acc,
+        failed: acc.failed + 1,
+        problems: bump_problems(acc.problems, result),
+      )
+    Unreadable -> Acc(..acc, unreadable: acc.unreadable + 1)
+  }
+}
+
+fn bump_problems(
+  counts: Dict(String, Int),
+  result: record_model.ConstructionResult,
+) -> Dict(String, Int) {
+  case result {
+    Ok(_) -> counts
+    Error(NonEmpty(first, rest)) ->
+      list.fold([first, ..rest], counts, fn(d, p) { bump(d, bucket(p)) })
+  }
 }
 
 // Named distinctly from `Tier`'s `UnmodeledOnly` constructor, which shares the
