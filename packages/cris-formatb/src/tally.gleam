@@ -81,6 +81,33 @@ fn read_prefix(
   }
 }
 
+pub type Tier {
+  Certified
+  CertifiedUndocumented
+  CertifiedRpaAbsence
+  UnmodeledOnly
+  Failed
+  Unreadable
+}
+
+pub fn is_certified(tier: Tier) -> Bool {
+  case tier {
+    Certified | CertifiedUndocumented | CertifiedRpaAbsence -> True
+    UnmodeledOnly | Failed | Unreadable -> False
+  }
+}
+
+pub fn tier_name(tier: Tier) -> String {
+  case tier {
+    Certified -> "certified"
+    CertifiedUndocumented -> "certified_undocumented"
+    CertifiedRpaAbsence -> "certified_rpa_absence"
+    UnmodeledOnly -> "unmodeled_only"
+    Failed -> "failed"
+    Unreadable -> "unreadable"
+  }
+}
+
 pub type Acc {
   Acc(
     total: Int,
@@ -148,7 +175,7 @@ pub fn tally(records: List(scan.ScannedRecord), corpus_fy: Option(Int)) -> Acc {
                     certified_rpa_absence: acc.certified_rpa_absence + 1,
                     problems: problems_bumped,
                   )
-                UnmodeledOnly ->
+                UnmodeledMaterialOnly ->
                   Acc(
                     ..acc,
                     failed: acc.failed + 1,
@@ -165,9 +192,11 @@ pub fn tally(records: List(scan.ScannedRecord), corpus_fy: Option(Int)) -> Acc {
   )
 }
 
+// Named distinctly from `Tier`'s `UnmodeledOnly` constructor, which shares the
+// same module (Gleam requires unique constructor names per module).
 type ProblemClass {
   RpaAbsenceOnly
-  UnmodeledOnly
+  UnmodeledMaterialOnly
   StructuralFailure
 }
 
@@ -181,7 +210,7 @@ fn classify_problems(problems: List(ConstructionProblem)) -> ProblemClass {
     True -> RpaAbsenceOnly
     False ->
       case list.all(problems, is_not_yet_modeled) {
-        True -> UnmodeledOnly
+        True -> UnmodeledMaterialOnly
         False -> StructuralFailure
       }
   }
