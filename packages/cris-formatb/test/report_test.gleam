@@ -117,3 +117,29 @@ pub fn describe_rpa_not_attested_test() {
   ))
   |> should.equal("RPA 514 not attested in Rev IV RPA set (glm-ocr-audited)")
 }
+
+// Under a FY88-named file, an unattested RP code shows the active note and the
+// per-record miss. (The record need not certify — report lists problems.)
+pub fn report_attests_rp_under_fy88_name_test() {
+  let bytes =
+    bit_array.concat(list.map(
+      ["$$", "AN 9049442", "PN 1275-21000-008-00D", "RP R999"],
+      line,
+    ))
+  let assert Ok(text) =
+    report.report(bytes, "data/RG310.CRIS.FY88.txt", 1, 0xAC, 100)
+  should.be_true(string.contains(text, "RPA attestation active: FY88"))
+  should.be_true(string.contains(text, "RPA 999 not attested"))
+}
+
+// A file name without an FY token → attestation off → no per-record miss.
+pub fn report_off_without_fy_name_test() {
+  let bytes =
+    bit_array.concat(list.map(
+      ["$$", "AN 9049442", "PN 1275-21000-008-00D", "RP R999"],
+      line,
+    ))
+  let assert Ok(text) = report.report(bytes, "T", 1, 0xAC, 100)
+  should.be_true(string.contains(text, "RPA attestation off"))
+  should.be_false(string.contains(text, "not attested"))
+}
