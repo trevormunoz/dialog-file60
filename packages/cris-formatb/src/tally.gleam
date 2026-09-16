@@ -17,6 +17,7 @@ import gleam/dict.{type Dict}
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import record_model.{
@@ -25,6 +26,7 @@ import record_model.{
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
   RpaCodeNotAttested, RuleUnresolved, TagNotAscii,
 }
+import rpa_attestation
 import scan
 import simplifile
 import source_record.{NonEmpty}
@@ -48,8 +50,15 @@ fn run(path: String, max_lines: Int) -> Nil {
       case scan.scan(prefix, path, 1) {
         Error(_) ->
           io.println("scan failed: " <> path <> " is not 82-byte line aligned")
-        Ok(scan.ScanResult(records, _structure)) ->
-          io.println(render(tally(records), path, line_count))
+        Ok(scan.ScanResult(records, _structure)) -> {
+          let corpus_fy = rpa_attestation.corpus_fy_from_path(path)
+          io.println(render(
+            tally(records, corpus_fy),
+            path,
+            line_count,
+            corpus_fy,
+          ))
+        }
       }
   }
 }
@@ -72,7 +81,7 @@ fn read_prefix(
   }
 }
 
-type Acc {
+pub type Acc {
   Acc(
     total: Int,
     certified: Int,
@@ -80,6 +89,10 @@ type Acc {
     // undocumented field (SN) — preserved, unvalidatable, never hidden. Reported
     // apart from fully-clean certification so 100% never conflates the two.
     certified_undocumented: Int,
+    // Subset of `certified`: records that would certify but for an RPA code
+    // absent from the contemporary vocabulary set — a statement of absence,
+    // never a verdict of invalidity, so it stays in the certified family.
+    certified_rpa_absence: Int,
     failed: Int,
     unreadable: Int,
     // Records whose ONLY problems are FieldNotYetModeled (unmodeled material),
@@ -89,13 +102,15 @@ type Acc {
   )
 }
 
-fn tally(records: List(scan.ScannedRecord)) -> Acc {
+@internal
+pub fn tally(records: List(scan.ScannedRecord), corpus_fy: Option(Int)) -> Acc {
   list.fold(
     records,
     Acc(
       total: 0,
       certified: 0,
       certified_undocumented: 0,
+      certified_rpa_absence: 0,
       failed: 0,
       unreadable: 0,
       unmodeled_only: 0,
@@ -107,7 +122,7 @@ fn tally(records: List(scan.ScannedRecord)) -> Acc {
       case assembly.assemble(bytes, base, 0xAC) {
         Error(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
         Ok(supplied) ->
-          case construct.project(supplied) {
+          case construct.project_with_vintage(supplied, corpus_fy) {
             Ok(project) -> {
               let acc = Acc(..acc, certified: acc.certified + 1)
               case record_model.project_undocumented_fields(project) {
@@ -121,23 +136,62 @@ fn tally(records: List(scan.ScannedRecord)) -> Acc {
             }
             Error(NonEmpty(first, rest)) -> {
               let problems = [first, ..rest]
-              let unmodeled_only = case list.all(problems, is_not_yet_modeled) {
-                True -> acc.unmodeled_only + 1
-                False -> acc.unmodeled_only
-              }
-              Acc(
-                ..acc,
-                failed: acc.failed + 1,
-                unmodeled_only: unmodeled_only,
-                problems: list.fold(problems, acc.problems, fn(d, p) {
+              let problems_bumped =
+                list.fold(problems, acc.problems, fn(d, p) {
                   bump(d, bucket(p))
-                }),
-              )
+                })
+              case classify_problems(problems) {
+                RpaAbsenceOnly ->
+                  Acc(
+                    ..acc,
+                    certified: acc.certified + 1,
+                    certified_rpa_absence: acc.certified_rpa_absence + 1,
+                    problems: problems_bumped,
+                  )
+                UnmodeledOnly ->
+                  Acc(
+                    ..acc,
+                    failed: acc.failed + 1,
+                    unmodeled_only: acc.unmodeled_only + 1,
+                    problems: problems_bumped,
+                  )
+                StructuralFailure ->
+                  Acc(..acc, failed: acc.failed + 1, problems: problems_bumped)
+              }
             }
           }
       }
     },
   )
+}
+
+type ProblemClass {
+  RpaAbsenceOnly
+  UnmodeledOnly
+  StructuralFailure
+}
+
+// A record's non-Ok outcome: RPA-absence-only (certified-class), unmodeled-only
+// (a documented backlog, no divergence), or a structural failure. A record
+// mixing an RPA miss with anything structural is a StructuralFailure — the miss
+// is incidental. (Mixed RPA-absence + unmodeled also falls here; negligible in
+// the ~100%-certified corpora — see the design spec's Known weaknesses.)
+fn classify_problems(problems: List(ConstructionProblem)) -> ProblemClass {
+  case list.all(problems, is_rpa_absence) {
+    True -> RpaAbsenceOnly
+    False ->
+      case list.all(problems, is_not_yet_modeled) {
+        True -> UnmodeledOnly
+        False -> StructuralFailure
+      }
+  }
+}
+
+fn is_rpa_absence(problem: ConstructionProblem) -> Bool {
+  case problem {
+    Disagreement(FormatDisagreement(RpaCodeNotAttested(_, _), _, _, _)) -> True
+    _ -> False
+  }
 }
 
 fn is_not_yet_modeled(problem: ConstructionProblem) -> Bool {
@@ -199,7 +253,13 @@ fn bump(counts: Dict(String, Int), key: String) -> Dict(String, Int) {
   dict.insert(counts, key, next)
 }
 
-fn render(acc: Acc, path: String, line_count: Int) -> String {
+@internal
+pub fn render(
+  acc: Acc,
+  path: String,
+  line_count: Int,
+  corpus_fy: Option(Int),
+) -> String {
   let rows =
     acc.problems
     |> dict.to_list
@@ -220,17 +280,20 @@ fn render(acc: Acc, path: String, line_count: Int) -> String {
     [
       "construct.project tally over " <> path,
       "scanned prefix: " <> int.to_string(line_count) <> " lines (0xAC marker)",
+      rpa_attestation.attestation_note(corpus_fy),
       "",
       "records scanned : " <> int.to_string(acc.total),
       "  certified     : " <> int.to_string(acc.certified),
       "    of which carrying a source-undocumented field (SN), preserved: "
         <> int.to_string(acc.certified_undocumented),
+      "    of which certified but for an unattested RPA code (statement of absence): "
+        <> int.to_string(acc.certified_rpa_absence),
       "  failed        : " <> int.to_string(acc.failed),
       "    of which unmodeled-material only (no documentary divergence): "
         <> int.to_string(acc.unmodeled_only),
       "  unreadable    : " <> int.to_string(acc.unreadable),
       "",
-      "problem buckets (occurrences across all failed records, desc):",
+      "problem buckets (occurrences across all records carrying problems, desc):",
       rows,
     ],
     "\n",
