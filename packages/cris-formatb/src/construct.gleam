@@ -2039,12 +2039,21 @@ fn merge_rpa_attestations(
   let misses =
     list.filter_map(values, fn(pair) {
       let #(bytes, occurrence) = pair
-      case bit_array.to_string(bytes) {
-        Error(_) -> Error(Nil)
-        Ok(text) ->
-          case rpa_attestation.attest(text, set) {
-            Ok(Nil) -> Error(Nil)
-            Error(miss) -> Ok(rpa_problem(miss, occurrence))
+      // Attest only values the base RP length rule (between(4, 74)) accepts.
+      // A value shorter than 4 bytes is already reported as InvalidFieldValue,
+      // so attesting it too would double-report; a real `R###` code is 4 bytes
+      // and still attests. Gate on the raw byte length the base rule measures,
+      // before decoding.
+      case bit_array.byte_size(bytes) >= 4 {
+        False -> Error(Nil)
+        True ->
+          case bit_array.to_string(bytes) {
+            Error(_) -> Error(Nil)
+            Ok(text) ->
+              case rpa_attestation.attest(text, set) {
+                Ok(Nil) -> Error(Nil)
+                Error(miss) -> Ok(rpa_problem(miss, occurrence))
+              }
           }
       }
     })
