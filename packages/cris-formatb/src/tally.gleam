@@ -29,7 +29,7 @@ import record_model.{
 import rpa_attestation
 import scan
 import simplifile
-import source_record.{NonEmpty}
+import source_record.{type SuppliedRecord, NonEmpty}
 
 const line_bytes: Int = 82
 
@@ -154,12 +154,18 @@ pub fn tier_of(result: record_model.ConstructionResult) -> Tier {
 }
 
 /// One record's outcome: unreadable (assemble failed, no `ConstructionResult`
-/// exists) or constructed (assembled, with its `Tier` and the full
-/// `ConstructionResult` for downstream rendering). The single source of truth
-/// shared by the aggregate `tally` fold below and the NDJSON emitter.
+/// exists) or constructed (assembled, with the `SuppliedRecord` `outcome_of`
+/// already built, its `Tier`, and the full `ConstructionResult` for
+/// downstream rendering). Carrying `supplied` here lets the NDJSON emitter
+/// call `project_row.row_of` without a second assemble. The single source of
+/// truth shared by the aggregate `tally` fold below and the NDJSON emitter.
 pub type Outcome {
   UnreadableRecord(error: assembly.AssemblyError)
-  Constructed(tier: Tier, result: record_model.ConstructionResult)
+  Constructed(
+    supplied: SuppliedRecord,
+    tier: Tier,
+    result: record_model.ConstructionResult,
+  )
 }
 
 pub fn outcome_of(
@@ -171,7 +177,7 @@ pub fn outcome_of(
     Error(error) -> UnreadableRecord(error)
     Ok(supplied) -> {
       let result = construct.project_with_vintage(supplied, corpus_fy)
-      Constructed(tier_of(result), result)
+      Constructed(supplied, tier_of(result), result)
     }
   }
 }
@@ -194,7 +200,7 @@ pub fn tally(records: List(scan.ScannedRecord), corpus_fy: Option(Int)) -> Acc {
       let acc = Acc(..acc, total: acc.total + 1)
       case outcome_of(record, corpus_fy) {
         UnreadableRecord(_) -> Acc(..acc, unreadable: acc.unreadable + 1)
-        Constructed(tier, result) -> bump_for_tier(acc, tier, result)
+        Constructed(_supplied, tier, result) -> bump_for_tier(acc, tier, result)
       }
     },
   )
