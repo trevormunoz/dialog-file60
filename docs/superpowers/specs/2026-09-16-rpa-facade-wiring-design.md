@@ -242,6 +242,14 @@ path (RG310.CRIS.FY88.txt)
   buffer show the off note and no attestation problems. A tally test asserts that a
   record whose only problem is an RPA miss lands in `certified` + `certified_rpa_absence`
   and **not** `failed`.
+- **No machine consumer of the output** (verified, statement of absence): an `rg`
+  sweep of `scripts/`, `test/`, `package.json`, and the config/eval dirs on 2026-09-16
+  found nothing that spawns `tally`/`report`/`cris_formatb` and parses their stdout —
+  root `pnpm test` runs the TS facade/regression suites, which import compiled reader
+  functions, not CLI output; the only stdout consumer is `report_test.gleam`, whose
+  assertions are all `string.contains`. The finding holds only as far as that search
+  reached. New output (the note, the sub-count) is nonetheless kept strictly additive
+  and changes no existing line, so any consumer the search missed still matches.
 - **Gate discipline** (memory `dialog-file60-test-baseline`): baseline and final
   check run **root `pnpm test` + `pnpm typecheck`**, not just package `gleam test`.
   No `node:child_process` in any test. `test/archival/*` fail only for the absent
