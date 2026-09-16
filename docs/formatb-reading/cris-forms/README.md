@@ -64,3 +64,9 @@ research-office mirrors, or nifa/reeis Wayback hosts where the file may have
 migrated) revisits it. A ~1997 HTML edition of the same manual survives at
 `web.archive.org/web/19970626010253/http://ctr.uvm.edu/cris/crisman/m_manual.htm`
 but omits AD-419.
+
+The one lead not pursued is the reginfo.gov OMB ICR supporting statements for
+the CRIS collection (CSREES/NIFA, OMB likely 0524-xxxx) — the remaining shot at
+the lost 2005 manual and at sourcing the "PC-based Windows program" phrasing.
+Parked as of 2026-09-16, unlikely to be revisited; reopen there if the question
+comes back.
