@@ -101,6 +101,9 @@ pub fn tally_mixed_structural_and_rpa_is_failed_test() {
     )
   should.be_true(string.contains(text, "certified     : 0"))
   should.be_true(string.contains(text, "failed        : 1"))
+  // The RPA miss genuinely co-occurs with the structural failure (its bucket is
+  // present) — this is what makes the case "mixed", not merely structural.
+  should.be_true(string.contains(text, "rpa-not-attested"))
 }
 
 // No FY in the name → attestation off → the R999 record certifies clean.
