@@ -58,18 +58,35 @@ fn is_all_digits(s: String) -> Bool {
   })
 }
 
-pub fn attest(value: String, set: WarrantSet) -> Result(Nil, RpaMiss) {
+pub type Attestation {
+  Attested(code: String, label: String)
+  NotAttested(miss: RpaMiss)
+  NoWarrantSet
+  NotApplicable
+}
+
+/// The full attestation outcome for one RP value against a warrant set,
+/// carrying the canonical label when attested. `attest` is this, narrowed to
+/// pass/miss.
+pub fn attestation(value: String, set: WarrantSet) -> Attestation {
   case set {
-    NoWarrant -> Ok(Nil)
+    NoWarrant -> NoWarrantSet
     _ ->
       case canonical_code(value) {
-        Error(_) -> Ok(Nil)
+        Error(_) -> NotApplicable
         Ok(code) ->
           case lookup(code, set) {
-            Ok(_) -> Ok(Nil)
-            Error(_) -> Error(RpaMiss(code, set_label(set)))
+            Ok(label) -> Attested(code, label)
+            Error(_) -> NotAttested(RpaMiss(code, set_label(set)))
           }
       }
+  }
+}
+
+pub fn attest(value: String, set: WarrantSet) -> Result(Nil, RpaMiss) {
+  case attestation(value, set) {
+    NotAttested(miss) -> Error(miss)
+    Attested(_, _) | NoWarrantSet | NotApplicable -> Ok(Nil)
   }
 }
 
