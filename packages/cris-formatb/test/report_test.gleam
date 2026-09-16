@@ -5,6 +5,7 @@ import gleam/bit_array
 import gleam/list
 import gleam/string
 import gleeunit/should
+import record_model
 import report
 
 fn line(first: String) -> BitArray {
@@ -100,4 +101,19 @@ pub fn report_shows_project_test() {
   let assert Ok(text) = report.report(bytes, "T", 1, 0xAC, 100)
   should.be_true(string.contains(text, "project OK"))
   should.be_true(string.contains(text, "Watershed protection"))
+}
+
+// describe_kind (private) rendering of an RpaCodeNotAttested divergence.
+// Exercised directly rather than via report.report: nothing in this
+// package's public scan -> assemble -> construct pipeline emits
+// RpaCodeNotAttested yet (that wiring is a later task), so there is no
+// record-bytes path that reaches this arm. describe_kind is annotated
+// @internal in report.gleam — visible within the package for this test,
+// not part of the published API.
+pub fn describe_rpa_not_attested_test() {
+  report.describe_kind(record_model.RpaCodeNotAttested(
+    "514",
+    "Rev IV RPA set (glm-ocr-audited)",
+  ))
+  |> should.equal("RPA 514 not attested in Rev IV RPA set (glm-ocr-audited)")
 }

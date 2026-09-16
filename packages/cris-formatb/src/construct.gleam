@@ -19,13 +19,15 @@ import record_model.{
   type Chronology, type Classifications, type ConstructionProblem, type Heading,
   type Identity, type Institution, type Narratives, type Participants,
   type Provisional, type RuleRef, type Subcommodity, type Supported,
-  type UndocumentedField, Chronology, ClassificationColumns, Classifications,
-  Disagreement, FieldNotYetModeled, FormatDisagreement, HandwrittenAmendment,
-  Heading, Identity, Institution, InvalidAccession, InvalidFieldValue,
-  Narratives, PairedDate, Participants, PrintedDictionary, Provisional,
-  RelatedFieldsDisagree, RequiredFieldNotLocated, RuleRef, Subcommodity,
-  Supplied, Supported, TagNotAscii, UndocumentedField, ValidationAddendum,
+  type UndocumentedField, Chronology, ClassificationColumns,
+  ClassificationSource, Classifications, Disagreement, FieldNotYetModeled,
+  FormatDisagreement, HandwrittenAmendment, Heading, Identity, Institution,
+  InvalidAccession, InvalidFieldValue, Narratives, PairedDate, Participants,
+  PrintedDictionary, Provisional, RelatedFieldsDisagree, RequiredFieldNotLocated,
+  RpaCodeNotAttested, RuleRef, Subcommodity, Supplied, Supported, TagNotAscii,
+  UndocumentedField, ValidationAddendum,
 }
+import rpa_attestation
 import segment
 import source_record.{
   type FieldOccurrence, type Fragment, type Location, type SuppliedRecord, Field,
@@ -1276,7 +1278,30 @@ fn has_non_ascii_codepoint(tag: String) -> Bool {
 /// deliberately out of scope for this composition. `unmodeled_material` adds
 /// a generic pass over every part of the record so no unmodeled tag or
 /// unassigned material can be silently certified alongside a clean modeled set.
+/// Behavior-identical to the pre-attestation `project`: delegates to
+/// `project_with_vintage` with no corpus FY, so attestation never runs.
+/// Existing callers, the facade, and every prior tally stay byte-identical.
 pub fn project(record: SuppliedRecord) -> record_model.ConstructionResult {
+  project_with_vintage(record, None)
+}
+
+/// Like `project`, but when `corpus_fy` names a fiscal year with a warrant
+/// set (`rpa_attestation.warrant_for`), also attests every RP value against
+/// it: each `Error(RpaMiss)` becomes one `RpaCodeNotAttested` problem, folded
+/// into the same `ConstructionResult` `project_core` would have returned.
+/// `option.None` skips the check entirely — identical to plain `project`.
+pub fn project_with_vintage(
+  record: SuppliedRecord,
+  corpus_fy: Option(Int),
+) -> record_model.ConstructionResult {
+  let base = project_core(record)
+  case corpus_fy {
+    None -> base
+    Some(fy) -> merge_rpa_attestations(base, record, fy)
+  }
+}
+
+fn project_core(record: SuppliedRecord) -> record_model.ConstructionResult {
   let identity_result = identity(record)
   let title = required(record, "TI", ti_rule, upto(100))
   let status_result = status(record)
@@ -1962,4 +1987,89 @@ fn required_not_located(
     examined: NonEmpty(location, []),
     method: "scan of the record's tagged occurrences for " <> tag,
   ))
+}
+
+// --- RP attestation: opt-in, vintaged --------------------------------------
+// Re-derives RP values straight from the SuppliedRecord (the same
+// `flat_values` reader `bounded_repeating` uses), rather than reading them
+// back off `base`'s constructed Project — `Project` is opaque outside
+// record_model, and this pass must still find every RP value even when
+// `base` is already an Error (a record failing some other group's check can
+// still carry an unattested RP code worth reporting).
+
+/// The rule cited for an RP attestation problem: a `ClassificationSource`-
+/// graded warrant against the named vintaged vocabulary set, not a printed
+/// 367_1DP.pdf dictionary row.
+fn classification_rule(set_label: String) -> RuleRef {
+  RuleRef(
+    document: set_label,
+    pdf_page: 0,
+    element: "RPA (35)",
+    assertion: "code appears in the contemporary CRIS RPA classification",
+    interpretation: "vocabulary attestation, provisional statement of absence",
+    stage: Supplied,
+    evidence: ClassificationSource,
+  )
+}
+
+fn rpa_problem(
+  miss: rpa_attestation.RpaMiss,
+  occurrence: FieldOccurrence,
+) -> ConstructionProblem {
+  disagreement(
+    RpaCodeNotAttested(miss.code, miss.set_label),
+    classification_rule(miss.set_label),
+    locations(occurrence),
+    "checked RPA code against the " <> miss.set_label,
+  )
+}
+
+// Every RP value's attestation miss against `fy`'s warrant set, folded into
+// `base`. A non-UTF-8 value is silently skipped here — `project_core` already
+// reports it: an in-bounds non-text value as `InvalidFieldValue` ("not valid
+// text") via the per-value check, and a value whose field could not be split
+// as a `fragment_placeholder`. Attestation is not the place to duplicate that.
+fn merge_rpa_attestations(
+  base: record_model.ConstructionResult,
+  record: SuppliedRecord,
+  fy: Int,
+) -> record_model.ConstructionResult {
+  let set = rpa_attestation.warrant_for(fy)
+  let #(values, _extraction) = flat_values(record, "RP")
+  let misses =
+    list.filter_map(values, fn(pair) {
+      let #(bytes, occurrence) = pair
+      case bit_array.to_string(bytes) {
+        Error(_) -> Error(Nil)
+        Ok(text) ->
+          case rpa_attestation.attest(text, set) {
+            Ok(Nil) -> Error(Nil)
+            Error(miss) -> Ok(rpa_problem(miss, occurrence))
+          }
+      }
+    })
+  append_problems(base, misses)
+}
+
+// `additional == []` returns `result` unchanged. Otherwise: `Ok(_)` becomes
+// `Error(NonEmpty(first additional problem, rest))`; an existing
+// `Error(NonEmpty(...))` keeps its own problems first and appends
+// `additional` after them — every problem this record has, from every pass,
+// surfaces together.
+fn append_problems(
+  result: record_model.ConstructionResult,
+  additional: List(ConstructionProblem),
+) -> record_model.ConstructionResult {
+  case additional {
+    [] -> result
+    [first, ..rest] ->
+      case result {
+        Ok(_) -> Error(NonEmpty(first, rest))
+        Error(NonEmpty(existing_first, existing_rest)) ->
+          Error(NonEmpty(
+            existing_first,
+            list.flatten([existing_rest, [first, ..rest]]),
+          ))
+      }
+  }
 }
