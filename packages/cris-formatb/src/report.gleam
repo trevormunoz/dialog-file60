@@ -21,6 +21,7 @@ import record_model.{
   RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
   RpaCodeNotAttested, RuleUnresolved, Supported, TagNotAscii,
 }
+import rpa_attestation
 import scan
 import source_record.{type SuppliedRecord, NonEmpty}
 
@@ -39,7 +40,8 @@ pub fn report(
   case scan.scan(bytes, file, base_line) {
     Error(reason) -> Error(reason)
     Ok(scan.ScanResult(records, _structure)) -> {
-      let outcomes = list.map(records, evaluate(_, marker))
+      let corpus_fy = rpa_attestation.corpus_fy_from_path(file)
+      let outcomes = list.map(records, evaluate(_, marker, corpus_fy))
       let total = list.length(records)
       let valid = list.count(outcomes, fn(outcome) { outcome.1 })
       let shown =
@@ -53,13 +55,18 @@ pub fn report(
         <> " with a checked Identity; "
         <> int.to_string(total - valid)
         <> " with problems."
-      Ok(string.join(list.append(shown, [summary]), "\n\n"))
+      let note = rpa_attestation.attestation_note(corpus_fy)
+      Ok(string.join(list.append(shown, [summary, note]), "\n\n"))
     }
   }
 }
 
 // One record's rendered text and whether its Identity was constructed.
-fn evaluate(record: scan.ScannedRecord, marker: Int) -> #(String, Bool) {
+fn evaluate(
+  record: scan.ScannedRecord,
+  marker: Int,
+  corpus_fy: option.Option(Int),
+) -> #(String, Bool) {
   let scan.ScannedRecord(base, bytes) = record
   let where = "record @ line " <> int.to_string(base.first_line)
   case assembly.assemble(bytes, base, marker) {
@@ -80,7 +87,7 @@ fn evaluate(record: scan.ScannedRecord, marker: Int) -> #(String, Bool) {
           <> "\n"
           <> narratives_line(supplied)
           <> "\n"
-          <> project_line(supplied),
+          <> project_line(supplied, corpus_fy),
         valid,
       )
     }
@@ -197,8 +204,11 @@ fn presence(field: option.Option(Supported(a))) -> String {
 // checks, composed and re-checked as a whole. Renders only the title (the
 // one field guaranteed short and meant for display) rather than dumping the
 // whole opaque `Project`.
-fn project_line(supplied: SuppliedRecord) -> String {
-  case construct.project(supplied) {
+fn project_line(
+  supplied: SuppliedRecord,
+  corpus_fy: option.Option(Int),
+) -> String {
+  case construct.project_with_vintage(supplied, corpus_fy) {
     Ok(project) ->
       "  project OK — title=\""
       <> record_model.project_title(project).value

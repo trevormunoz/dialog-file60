@@ -977,6 +977,20 @@ fn has_rpa_not_attested(
   })
 }
 
+fn has_invalid_field(
+  problems: source_record.NonEmpty(record_model.ConstructionProblem),
+  tag: String,
+) -> Bool {
+  let NonEmpty(first, rest) = problems
+  list.any([first, ..rest], fn(problem) {
+    case problem {
+      Disagreement(FormatDisagreement(InvalidFieldValue(t, _), _, _, _)) ->
+        t == tag
+      _ -> False
+    }
+  })
+}
+
 fn is_ok(result: record_model.ConstructionResult) -> Bool {
   case result {
     Ok(_) -> True
@@ -1017,6 +1031,27 @@ pub fn project_unchanged_ignores_rpa_attestation_test() {
   construct.project(supplied)
   |> is_ok
   |> should.equal(True)
+}
+
+// A bare 3-byte "999" is shorter than the RP length floor (between(4,74)), so
+// project_core already reports it as InvalidFieldValue. Attestation must NOT
+// also report it — no RpaCodeNotAttested for a value the base gate rejects.
+pub fn rpa_short_value_is_not_double_reported_test() {
+  let supplied = full_record_with_rp("999")
+  let assert Error(problems) =
+    construct.project_with_vintage(supplied, Some(88))
+  has_invalid_field(problems, "RP") |> should.equal(True)
+  has_rpa_not_attested(problems, "999") |> should.equal(False)
+}
+
+// A real 4-byte R### miss is single-reported: RpaCodeNotAttested, and NOT an
+// InvalidFieldValue (R999 is a valid RP length).
+pub fn rpa_valid_length_miss_is_single_reported_test() {
+  let supplied = full_record_with_rp("R999")
+  let assert Error(problems) =
+    construct.project_with_vintage(supplied, Some(88))
+  has_rpa_not_attested(problems, "999") |> should.equal(True)
+  has_invalid_field(problems, "RP") |> should.equal(False)
 }
 
 // --- DE: the aggregate 2400 bound in isolation, and the 60-byte accepting edge
