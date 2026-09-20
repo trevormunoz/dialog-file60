@@ -6,7 +6,7 @@
 import facade
 import gleam/bit_array
 import gleam/list
-import gleam/option.{None}
+import gleam/option.{None, Some}
 import gleam/string
 import gleeunit/should
 import simplifile
@@ -49,31 +49,53 @@ pub fn parse_record_projects_the_fixture_record_test() {
   second.continuation |> should.equal(True)
 }
 
-// FY1988's percent_in_block wiring reaches split_heading_segments: an
-// FY1988 SC-shaped value with two separators yields a percent, the same
-// value read as FY1991plus keeps the tail whole in label (no percent).
+// The profile's percent_in_block wiring must reach split_heading_segments
+// through the full facade parse. A value carrying TWO 0xA0 0x02 separators
+// ("code<sep>label<sep>100%") splits differently by profile: FY1988
+// (percent_in_block) pulls the trailing "100%" into `percent`; FY1991plus
+// keeps the whole tail in `label` and leaves `percent` absent. Asserting that
+// differential — Some vs None on the SAME bytes — is what proves the gate is
+// live end-to-end: a gate collapsed to a constant fails one of the two
+// branches. (The fixture's own AC values are bare codes with no separator, so
+// they cannot exercise this; a synthetic two-separator value is used instead,
+// as segment_test does at the unit level.)
 pub fn profile_gates_the_percent_split_test() {
-  let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
+  let crlf = <<13, 10>>
+  let sep = <<0xA0, 0x02>>
+  let value =
+    bit_array.concat([
+      <<"SC ":utf8, "C0600":utf8>>,
+      sep,
+      <<"Apples":utf8>>,
+      sep,
+      <<"100%":utf8>>,
+    ])
+  let bytes =
+    bit_array.concat([
+      served_line(<<"<< H":utf8>>, crlf),
+      served_line(<<"$$":utf8>>, crlf),
+      served_line(<<"AN 9000001":utf8>>, crlf),
+      served_line(value, crlf),
+      served_line(<<">> T":utf8>>, crlf),
+    ])
   let scanned = facade.scan_records(bytes, 1)
   let assert [span, ..] = scanned.spans
 
-  let fy88 =
-    facade.parse_record(bytes, span, "RG164.CRIS.FY94.txt", facade.Fy1988, 1)
-  let fy91 =
-    facade.parse_record(
-      bytes,
-      span,
-      "RG164.CRIS.FY94.txt",
-      facade.Fy1991plus,
-      1,
-    )
+  let fy88 = facade.parse_record(bytes, span, "synthetic", facade.Fy1988, 1)
+  let fy91 = facade.parse_record(bytes, span, "synthetic", facade.Fy1991plus, 1)
+  let assert Ok(fy88_sc) = find_field(fy88.fields, "SC")
+  let assert Ok(fy91_sc) = find_field(fy91.fields, "SC")
+  let assert [fy88_v] = fy88_sc.values
+  let assert [fy91_v] = fy91_sc.values
 
-  // Both profiles read the same underlying bytes, so a value's raw text is
-  // profile-independent even though its code/label/percent split is not.
-  let assert Ok(fy88_ac) = find_field(fy88.fields, "AC")
-  let assert Ok(fy91_ac) = find_field(fy91.fields, "AC")
-  { fy88_ac.values |> list.map(fn(v) { v.raw }) }
-  |> should.equal(fy91_ac.values |> list.map(fn(v) { v.raw }))
+  // Same underlying value: identical raw text and identical leading code under
+  // both profiles...
+  fy88_v.raw |> should.equal(fy91_v.raw)
+  fy88_v.code |> should.equal(Some("C0600"))
+  fy91_v.code |> should.equal(Some("C0600"))
+  // ...but ONLY FY1988 pulls the trailing percent; FY1991plus leaves it absent.
+  fy88_v.percent |> should.equal(Some("100%"))
+  fy91_v.percent |> should.equal(None)
 }
 
 fn served_line(prefix: BitArray, ending: BitArray) -> BitArray {

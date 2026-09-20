@@ -45,6 +45,7 @@ pub fn parse(input: BitArray) -> Result(Accession, AccessionError) {
 pub fn to_string(accession: Accession) -> String {
   let Accession(bytes) = accession
   let assert Ok(text) = bit_array.to_string(bytes)
+    as "the retained bytes were validated as seven ASCII digits, so decoding succeeds"
   text
 }
 

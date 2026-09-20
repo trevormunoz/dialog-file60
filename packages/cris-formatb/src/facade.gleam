@@ -6,15 +6,24 @@
 //// 2026-09-15-unify-gleam-reader-behind-facade-design.md §2 for the
 //// field-by-field mapping and Task 9 of the matching plan.
 ////
-//// Strict byte-parity with src-ts/record.ts + src-ts/offsets.ts (the oracle)
-//// is the gate (test/parity.test.ts, run over the compiled bundle), so this
-//// module deliberately reproduces the oracle's own quirks: `splitSegments`
-//// runs on the value's already-`trimEnd`'d raw text, a value's `line`/
-//// `offset` come from whichever fragment opened it (not every fragment that
-//// contributed bytes to it), and a field's `lineEnd`/`length` grow with its
-//// last continuation line. The mature reader's corrections (the `0xAC`
-//// single-value fix, etc.) are NOT adopted here — see the design spec's
-//// "Out of scope / deferred".
+//// Parity with src-ts/record.ts + src-ts/offsets.ts (the oracle) is the gate
+//// (test/parity.test.ts, run over the compiled bundle), so this module
+//// deliberately reproduces the oracle's own quirks: `splitSegments` runs on
+//// the value's already-`trimEnd`'d raw text, a value's `line`/`offset` come
+//// from whichever fragment opened it (not every fragment that contributed
+//// bytes to it), and a field's `lineEnd`/`length` grow with its last
+//// continuation line.
+////
+//// The one intended departure from the oracle is the sourced `0xAC`
+//// single-value correction (docs/superpowers/specs/
+//// 2026-09-15-correct-0xac-field-aware-reading-design.md): a single-value
+//// field (`field_cardinality.SingleValue`) joins ALL its fragments into one
+//// value, keeping a line-start `0xAC` as data rather than splitting on it the
+//// way the oracle does. This deliberately breaks byte-parity for those fields,
+//// so the gate is field-level parity-EXCEPT-that-correction, not whole-record
+//// byte-equality: see test/parity.test.ts's `assertFieldLevelParity` (gates
+//// 1-2) and the gate-3/4 cases. Repeating fields (`MultiValue`) still split on
+//// `0xAC` exactly as the oracle does.
 
 import assembly
 import field_cardinality

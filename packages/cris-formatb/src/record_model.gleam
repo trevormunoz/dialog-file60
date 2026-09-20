@@ -439,12 +439,6 @@ pub opaque type Project {
   )
 }
 
-/// Loading is a distinct assertion, not a mandatory UD in the supplied bytes.
-/// No public construction path until the loading rules are specified.
-pub opaque type LoadedRecord {
-  LoadedRecord(supplied: Project, dialog_update: Supported(String))
-}
-
 /// Smart constructor for the opaque `Project`. Performs no checking itself —
 /// it exists so `construct.project` can assemble a `Project` only after every
 /// field/group has been independently checked and found problem-free; the

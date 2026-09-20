@@ -31,8 +31,8 @@ import rpa_attestation
 import segment
 import source_record.{
   type FieldOccurrence, type Fragment, type Location, type SuppliedRecord, Field,
-  FieldOccurrence, Location, MarkedValueStart, NonEmpty, TaggedStart, Unassigned,
-  Witness, WrappedText,
+  FieldOccurrence, MarkedValueStart, NonEmpty, TaggedStart, Unassigned, Witness,
+  WrappedText,
 }
 
 /// AN rule, PDF p.13 row 1, printed (rules/field-rule-inventory.md batch 1).
@@ -111,26 +111,22 @@ fn non_repeating(
 fn all_locations(
   occurrences: List(FieldOccurrence),
 ) -> source_record.NonEmpty(Location) {
-  case occurrences {
-    [] -> NonEmpty(placeholder_location, [])
-    [first, ..rest] -> {
-      let NonEmpty(l0, l0_rest) = locations(first)
-      let more =
-        list.flat_map(rest, fn(occurrence) {
-          let NonEmpty(f, r) = locations(occurrence)
-          [f, ..r]
-        })
-      NonEmpty(l0, list.append(l0_rest, more))
-    }
-  }
+  // Only ever called for a repeated / limit-exceeded field, which by definition
+  // has >= 2 occurrences (non_repeating and repetition_limit are reached only
+  // from the `many` arm of a cardinality match). Asserting that here keeps every
+  // returned Location a real witness — the alternative, a `file: ""` placeholder
+  // for the empty case, would put a provenance-less Location into a
+  // FormatDisagreement's `examined` span, which this validator never should.
+  let assert [first, ..rest] = occurrences
+    as "all_locations is called only for a field with >= 2 occurrences"
+  let NonEmpty(l0, l0_rest) = locations(first)
+  let more =
+    list.flat_map(rest, fn(occurrence) {
+      let NonEmpty(f, r) = locations(occurrence)
+      [f, ..r]
+    })
+  NonEmpty(l0, list.append(l0_rest, more))
 }
-
-const placeholder_location: Location = Location(
-  file: "",
-  first_line: 0,
-  byte_offset: 0,
-  byte_length: 0,
-)
 
 fn resolve_accession(
   an: FieldOccurrence,
@@ -1347,7 +1343,9 @@ fn project_core(record: SuppliedRecord) -> record_model.ConstructionResult {
   case problems {
     [] -> {
       let assert Ok(built_identity) = identity_result
+        as "reached only when accumulated problems == [], so every group's Checked is Ok"
       let assert Ok(built_participants) = participants_result
+        as "reached only when accumulated problems == [], so every group's Checked is Ok"
       Ok(record_model.build_project(
         rules: NonEmpty(an_rule, [pn_rule, ti_rule, ps_rule, pt_rule, sf_rule]),
         identity: built_identity,
@@ -1399,6 +1397,7 @@ fn problems_of(checked: Checked(a)) -> List(ConstructionProblem) {
 // Safe only in the all-Ok branch, where every checked value is known Ok.
 fn value_of(checked: Checked(a)) -> a {
   let assert Ok(value) = checked
+    as "value_of is called only where the Checked is known Ok (the all-Ok branch)"
   value
 }
 

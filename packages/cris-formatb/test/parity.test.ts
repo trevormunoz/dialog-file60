@@ -1,8 +1,13 @@
-// The strict byte-parity gate (design spec §5.1): for every record the
-// Gleam facade reads, JSON.stringify(gleam) === JSON.stringify(ts oracle)
-// for both scanRecords and parseRecord, over both profiles. The oracle
-// (src-ts/record.ts + src-ts/offsets.ts) always wins a mismatch — see the
-// module docs on src/facade.gleam for what's been ported to match it.
+// The parity gate (design spec §5.1): for every record the Gleam facade reads,
+// its output matches the TS oracle (src-ts/record.ts + src-ts/offsets.ts) for
+// both scanRecords and parseRecord, over both profiles. scanRecords is
+// whole-object byte-equal (JSON.stringify). parseRecord is field-level
+// parity-EXCEPT the sourced 0xAC single-value correction (assertFieldLevelParity
+// below): multi/unsourced tags match the oracle exactly, a single-value tag
+// either matches exactly or diverges in exactly the corrected shape. The oracle
+// wins every mismatch outside that one correction — see the module docs on
+// src/facade.gleam for the quirks ported to match it and the correction that
+// departs from it.
 //
 // Fixtures (committed, always run) prove the wiring on a clean checkout.
 // The full corpus (data/*.txt, gitignored) is the real gate per the design
