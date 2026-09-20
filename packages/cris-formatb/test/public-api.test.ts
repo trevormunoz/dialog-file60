@@ -33,6 +33,23 @@ test("scanRecords returns arrays + plain structure (runtime representation)", ()
   expect(typeof r.structure).toBe("object");
 });
 
+test("parseRecord rejects a span whose length is not a multiple of 82", () => {
+  // A caller-built span, not one scanRecords produced: its length (83) is not a
+  // whole number of 82-byte lines. The buffer is large enough that the existing
+  // out-of-buffer check passes, so this reaches the parse path. A misaligned
+  // span is a category-D structural impossibility (README "Failure handling"),
+  // the same class scanRecords rejects for a misaligned buffer — it must throw a
+  // clear boundary error, never crash the Gleam engine with a misleading assert.
+  const line = (s: string) => {
+    const b = new Uint8Array(82).fill(0x20);
+    for (let i = 0; i < s.length && i < 80; i++) b[i] = s.charCodeAt(i);
+    b[80] = 0x0d; b[81] = 0x0a; return b;
+  };
+  const bytes = new Uint8Array([...line("$$"), ...line("AN 900")]); // 164 bytes
+  const span: RecordSpan = { firstLine: 1, lastLine: 1, offset: 0, length: 83, an: "" };
+  expect(() => parseRecord(bytes, span, "synthetic", "fy1991plus", 1)).toThrow(/multiple of 82/);
+});
+
 test("parseRecord yields arrays and undefined (not null/wrapper) for absent fields", () => {
   // 82-byte record: "$$" separator then an "AN" line.
   const line = (s: string) => {

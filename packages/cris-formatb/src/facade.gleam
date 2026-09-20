@@ -181,12 +181,14 @@ pub fn parse_record(
   // (record.ts:58) exactly, and never rejects — a tag carrying a non-ASCII byte
   // reads as an ordinary (odd-tagged) field, same as the oracle, no panic.
   // `assemble`'s only remaining error is `LineUnreadable` (a line too short to
-  // read columns), which is unreachable on a scanned record whose lines are
-  // 82-byte-aligned by construction — so this `let assert` never fires on real
-  // data. Whether a tag IS ASCII is now a validator judgment (construct.gleam's
-  // `TagNotAscii` ConstructionProblem), not a reader concern.
+  // read columns), which cannot arise from an 82-byte-aligned record. The sole
+  // caller of this engine, wrapper.ts:parseRecord, rejects a `span.length` that
+  // is not a multiple of 82 before reaching here (the category-D guard beside its
+  // out-of-buffer throw), so `record_bytes` is always a whole number of lines and
+  // this `let assert` never fires. Whether a tag IS ASCII is a validator judgment
+  // (construct.gleam's `TagNotAscii` ConstructionProblem), not a reader concern.
   let assert Ok(supplied) = assembly.assemble(record_bytes, base, marker_byte)
-    as "a scanned record's own bytes assemble cleanly (lines are 82-byte-aligned by construction)"
+    as "record_bytes is 82-byte-aligned: wrapper.ts guards span.length % 82 before calling"
   let percent_in_block = case profile {
     Fy1988 -> True
     Fy1991plus -> False

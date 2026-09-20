@@ -162,6 +162,19 @@ export function parseRecord(
         `buffer starts at line ${base} and is ${bytes.length} bytes`,
     );
   }
+  // A span whose length is not a whole number of 82-byte lines is a category-D
+  // structural impossibility (README "Failure handling"), the same class
+  // scanRecords rejects for a misaligned buffer above. record.ts does not guard
+  // it — its clamped subarray reads absorb a fractional line — but the Gleam
+  // engine's assemble requires 82-alignment, so without this guard a caller-built
+  // misaligned span reaches it and fails a `let assert` deep in the engine with a
+  // misleading message. Reject it here, at the boundary, with a clear one.
+  if (span.length % LINE_BYTES !== 0) {
+    throw new Error(
+      `parseRecord: span lines ${span.firstLine}-${span.lastLine} (an ${span.an || "?"}) ` +
+        `is ${span.length} bytes, not a multiple of ${LINE_BYTES}`,
+    );
+  }
   const gSpan = makeSpan(
     span.firstLine,
     span.lastLine,
