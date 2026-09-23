@@ -1,11 +1,36 @@
-# Format B: first whole-record reading
+# `@barcstory/cris-formatb`: the Format B reader and a checked reading
 
-## Purpose and status
+This package reads CRIS Format B, the tape layout in which each project record
+is a sequence of 80-column lines and each field begins with a two-letter tag.
+It does two separate jobs.
 
-Agreed purpose: a humanistic second reading through a different discipline
-of articulation. Does Gleam's pressure to name and follow through distinctions
-illuminate Format B, or primarily reflect Gleam? New evidence-grounded questions
-can count as success without replacing the TypeScript parser.
+**The reader the app uses.** `src-ts/index.ts` is the package's public surface:
+`scanRecords` finds record boundaries in a Format B file, and `parseRecord`
+returns a record's fields with the line number and byte offset of every value,
+so any value the app prints can be traced to its bytes in the archival file.
+These two functions run on the Gleam code in `src/` through `src-ts/wrapper.ts`;
+`test/parity.test.ts` checks them against the earlier TypeScript
+implementation. The reader keeps what the file contains and does not decide
+whether a record is correct. The [top-level README](../../README.md) describes
+the app, and [Development](../../docs/development.md) shows how other workspace
+projects call the reader's CLI.
+
+**A checked reading of the records.** The rest of this README describes a
+second use of the same bytes. `src/construct.gleam` tests each record against
+the rules its documentation states: the 367_1DP data element dictionary, its
+handwritten amendments, the NARA validation addendum, and the Manual of
+Classification. Each rule carries its evidence grade: which of those documents
+it rests on. A record that does not meet a rule is reported, with the rule and
+the lines examined; it is never repaired. These grades describe sources for
+rules about the data. They are separate from the evidence registry's
+`documented` / `inferred` / `chosen`, which describe the app's behavior.
+
+The checked reading began as a question: does Gleam's requirement to name
+every distinction and handle every case say something about Format B, or
+mostly about Gleam? New questions grounded in the evidence count as a result.
+The reading was not meant to replace the reader, although the reader now runs
+on its lower layers. [MODELING-LOG.md](./MODELING-LOG.md) records how the rules
+were derived and tested against the FY88, FY89 and FY94 files.
 
 ## Agreed design
 

@@ -78,6 +78,7 @@ That record begins at byte 6,810,182 of the archival file. The acceptance run, i
 * [Hosting](docs/hosting.md) — the R2 bucket, its layout, CORS, and the deploy-time fixity check against the live copy.
 * [What is not implemented](docs/not-implemented.md) — what version 1 leaves out of the documented protocol and what the reconstruction does instead.
 * [Development](docs/development.md) — the file map, acceptance session, recordings, failure handling, archival tests, typechecking, and use of the reader package.
+* [The Format B reader](packages/cris-formatb/README.md) — the package that reads the archival file, and a separate reading that checks each record against its documented rules.
 
 ## Failure handling
 
