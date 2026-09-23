@@ -15,12 +15,12 @@ import gleeunit/should
 import simplifile
 
 import record_model.{
-  type RuleRef, Disagreement, FieldNotYetModeled, FormatDisagreement, Heading,
-  Identity, InvalidAccession, InvalidFieldValue, Narratives,
-  NonRepeatingFieldRepeated, Participants, PrintedDictionary, Provisional,
-  RelatedFieldsDisagree, RepetitionLimitExceeded, RequiredFieldNotLocated,
-  RpaCodeNotAttested, RuleRef, Subcommodity, Supplied, Supported, TagNotAscii,
-  UndocumentedField,
+  type RuleRef, ClassificationSource, Disagreement, FieldNotYetModeled,
+  FormatDisagreement, Heading, Identity, InvalidAccession, InvalidFieldValue,
+  Narratives, NonRepeatingFieldRepeated, Participants, PrintedDictionary,
+  Provisional, RelatedFieldsDisagree, RepetitionLimitExceeded,
+  RequiredFieldNotLocated, RpaCodeNotAttested, RuleRef, Subcommodity, Supplied,
+  Supported, TagNotAscii, UndocumentedField,
 }
 import source_record.{NonEmpty}
 
@@ -956,11 +956,20 @@ pub fn project_with_sn_certifies_carrying_undocumented_field_test() {
 
 // --- project_with_vintage: opt-in RPA attestation, project() unchanged ------
 
-// full_record_pairs() carries no RP pair, so this appends one rather than
-// replacing an existing entry (the classification columns are independently
-// optional, so the appended RP does not disturb the other groups).
+// full_record_pairs() carries no primary classification, so this appends a
+// complete aligned primary line (AC/CM/FS/CT + the given RP, CT=100%). The Rev IV
+// rules require the four series on the same line, so RP cannot stand alone; a lone
+// RP would itself be an alignment divergence and mask the attestation under test.
 fn full_record_with_rp(code: String) -> source_record.SuppliedRecord {
-  record(list.append(full_record_pairs(), [#("RP", code)]))
+  record(
+    list.append(full_record_pairs(), [
+      #("AC", "A4900"),
+      #("CM", "C1000"),
+      #("FS", "F0513"),
+      #("CT", "100%"),
+      #("RP", code),
+    ]),
+  )
 }
 
 fn has_rpa_not_attested(
@@ -1084,8 +1093,11 @@ pub fn descriptors_keyword_exactly_60_bytes_is_accepted_test() {
 
 // --- classifications: composing the whole block -----------------------------
 
-// A record with BT, one AC, one SC builds a Classifications with those fields
-// populated. Uses record_bytes because SC carries the non-UTF-8 separator.
+// A record with BT, a complete one-line primary classification (AC/CM/FS/RP/CT),
+// and one SC builds a Classifications with those fields populated. A full aligned
+// primary line is required now that the Rev IV alignment/sum rules are enforced;
+// the single CT is "100%". Uses record_bytes because SC carries the non-UTF-8
+// separator.
 pub fn classifications_happy_path_test() {
   let sc = <<
     "XFRS":utf8, 0x20, 0x20, 0xA0, 0x02, "Forestry Related":utf8, 0xA0, 0x02,
@@ -1095,6 +1107,10 @@ pub fn classifications_happy_path_test() {
     record_bytes([
       #("BT", <<"1000":utf8>>),
       #("AC", <<"12345":utf8>>),
+      #("CM", <<"54321":utf8>>),
+      #("FS", <<"F0513":utf8>>),
+      #("RP", <<"R304":utf8>>),
+      #("CT", <<"100%":utf8>>),
       #("SC", sc),
     ])
   let assert Ok(c) = construct.classifications(supplied)
@@ -1160,14 +1176,15 @@ pub fn classifications_sn_pairs_with_sc_by_position_test() {
   second |> should.equal(<<"060%":utf8>>)
 }
 
-// B (regularity guard): the census-observed classification alignment, pinned on
-// committed real bytes. The fixture record (FY94 9049442) carries four
-// classification lines; `classification_rows` zips them position-for-position and
-// the CT percents sum to 100 — the regularity the full-corpus census found in
-// 100% of FY88/FY89/FY94 records. This alignment is NOT enforced in construction
-// (it has no documentary warrant — the source documents columnar DISPLAY only;
-// see rules/field-rule-inventory.md classification census 2026-09-14). The test
-// guards the observed regularity against silent regression on real data.
+// B (regularity + enforcement guard): pinned on committed real bytes. The fixture
+// record (FY94 9049442) carries four aligned classification lines; the FY94 record
+// is conforming — the primary columns align and the CT percents sum to 100 — so
+// `construct.classifications` still returns Ok (neither the Rev IV alignment nor
+// the CT-sum check fires), and `classification_rows` zips them
+// position-for-position. Both regularities (equal counts, CT sum 100) hold in 100%
+// of FY88/FY89/FY94 records per rules/field-rule-inventory.md classification census
+// 2026-09-14; for AC/CM/FS/RP/CT they are now enforced (Manual of Classification,
+// Rev IV 1982). This guards against a regression that would misfire on real data.
 pub fn classification_rows_fixture_zips_four_aligned_lines_test() {
   let assert Ok(bytes) = simplifile.read_bits("fixtures/fy94-9049442.bin")
   let assert Ok(supplied) =
@@ -1194,6 +1211,69 @@ pub fn classification_rows_fixture_zips_four_aligned_lines_test() {
       acc + n
     })
   total |> should.equal(100)
+}
+
+// Primary-classification alignment is a documented, enforced rule (Manual of
+// Classification, Rev IV 1982): the five primary columns must have equal value
+// counts. Two AC values but one each of CM/FS/RP/CT is a RelatedFieldsDisagree
+// divergence at ClassificationSource grade, naming RP against AC/CM/FS/CT.
+pub fn classifications_primary_columns_misaligned_reports_disagreement_test() {
+  let supplied =
+    record([
+      #("AC", "12345"),
+      #("AC", "67890"),
+      #("CM", "54321"),
+      #("FS", "F0513"),
+      #("RP", "R304"),
+      #("CT", "100%"),
+    ])
+  let assert Error(NonEmpty(first, rest)) = construct.classifications(supplied)
+  let assert True =
+    list.any([first, ..rest], fn(problem) {
+      case problem {
+        Disagreement(FormatDisagreement(
+          RelatedFieldsDisagree(NonEmpty("RP", ["AC", "CM", "FS", "CT"]), _),
+          rule,
+          _,
+          _,
+        )) -> rule.evidence == ClassificationSource
+        _ -> False
+      }
+    })
+}
+
+// CT product percentages must sum to 100 (Manual of Classification, Rev IV 1982,
+// column 8). Two aligned lines whose CT is 040% + 040% = 80 is a
+// RelatedFieldsDisagree divergence on CT — the ~25 FY88 under-allocations surface
+// here rather than being tolerated. All five columns carry two values, so the
+// alignment check passes and only the sum check fires.
+pub fn classifications_ct_not_summing_to_100_reports_disagreement_test() {
+  let supplied =
+    record([
+      #("AC", "12345"),
+      #("AC", "67890"),
+      #("CM", "54321"),
+      #("CM", "54322"),
+      #("FS", "F0513"),
+      #("FS", "F0514"),
+      #("RP", "R304"),
+      #("RP", "R305"),
+      #("CT", "040%"),
+      #("CT", "040%"),
+    ])
+  let assert Error(NonEmpty(first, rest)) = construct.classifications(supplied)
+  let assert True =
+    list.any([first, ..rest], fn(problem) {
+      case problem {
+        Disagreement(FormatDisagreement(
+          RelatedFieldsDisagree(NonEmpty("CT", []), _),
+          rule,
+          _,
+          _,
+        )) -> rule.evidence == ClassificationSource && rule.pdf_page == 9
+        _ -> False
+      }
+    })
 }
 
 // An AC value below the documented MIN 5 is a divergence, not silently

@@ -48,7 +48,9 @@ fn spaces(n: Int) -> BitArray {
 }
 
 // A record that certifies (every required group present), carrying the given
-// RP value. All values fit one line (<= 69 bytes).
+// RP value. All values fit one line (<= 69 bytes). Carries a complete aligned
+// primary classification line (AC/CM/FS/RP/CT, CT=100%) so the Rev IV
+// alignment/sum rules are satisfied.
 fn certifying_record(rp: String) -> source_record.SuppliedRecord {
   let lines = [
     line("$$", ""),
@@ -65,6 +67,10 @@ fn certifying_record(rp: String) -> source_record.SuppliedRecord {
     line("OB", "Improve poultry yields"),
     line("DE", "POULTRY FORESTRY"),
     line("SF", "CRIS"),
+    line("AC", "A4900"),
+    line("CM", "C1000"),
+    line("FS", "F0513"),
+    line("CT", "100%"),
     line("RP", rp),
   ]
   let bytes = bit_array.concat(lines)

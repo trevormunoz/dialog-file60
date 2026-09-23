@@ -649,6 +649,18 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
     Ok(scs) -> sn_sc_bond(scs, subcommodity_percentages)
     Error(_) -> []
   }
+  // Manual-of-Classification (Rev IV 1982) primary-classification rules: the five
+  // primary columns align per line, and CT sums to 100. Gated on the columns
+  // having parsed, mirroring sn_sc_pairing.
+  let alignment = case activity, commodity, science, problem, product_percent {
+    Ok(ac), Ok(cm), Ok(fs), Ok(rp), Ok(ct) ->
+      primary_alignment(ac, cm, fs, rp, ct)
+    _, _, _, _, _ -> []
+  }
+  let ct_sum = case product_percent {
+    Ok(cts) -> ct_sum_to_100(cts)
+    Error(_) -> []
+  }
   let problems =
     list.flatten([
       problems_of(basic),
@@ -663,6 +675,8 @@ pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
       problems_of(joint_council),
       problems_of(subcommodities),
       sn_sc_pairing,
+      alignment,
+      ct_sum,
       problems_of(primary_headings),
       problems_of(general_headings),
     ])
@@ -725,17 +739,19 @@ fn sn_sc_bond(
 ) -> List(ConstructionProblem) {
   case percentages {
     [] -> []
-    [first, ..] ->
-      case list.length(percentages) == list.length(subcommodities) {
+    [first, ..] -> {
+      let sn = list.length(percentages)
+      let sc = list.length(subcommodities)
+      case sn == sc {
         True -> []
         False -> [
           disagreement(
             RelatedFieldsDisagree(
               NonEmpty("SN", ["SC"]),
               "SN carries "
-                <> int.to_string(list.length(percentages))
+                <> int.to_string(sn)
                 <> " percentage(s) but SC carries "
-                <> int.to_string(list.length(subcommodities))
+                <> int.to_string(sc)
                 <> " value(s); the documented one-to-one SN<->SC pairing requires equal counts",
             ),
             sn_sc_bond_rule,
@@ -744,6 +760,7 @@ fn sn_sc_bond(
           ),
         ]
       }
+    }
   }
 }
 
@@ -755,6 +772,160 @@ const sn_sc_bond_rule: RuleRef = RuleRef(
   interpretation: "SN is an ordered parallel field bound position-for-position to SC: percentage i is subcommodity i's percentage, so a present SN must carry exactly one value per SC value. Documented pairing (not inferred); the percentage values themselves are source-undocumented and kept unchecked. Confirmed value-for-value across FY94 (34,090/34,090 records).",
   stage: Supplied,
   evidence: ValidationAddendum,
+)
+
+/// The primary-classification alignment bond (Manual of Classification, Rev IV
+/// 1982): the four primary series (Activity, Commodity, Field of Science, RPA) are
+/// coded on the SAME line, and CT is that line's product percentage — so their
+/// per-record value counts must be equal. Scope: AC/CM/FS/RP/CT only; PA
+/// (program_area) and JC (joint_council) are outside the 1982 four-part primary
+/// classification and stay census-observed, excluded here.
+fn primary_alignment(
+  activity: List(Supported(String)),
+  commodity: List(Supported(String)),
+  science: List(Supported(String)),
+  problem: List(Supported(String)),
+  product_percent: List(Supported(String)),
+) -> List(ConstructionProblem) {
+  let ac = list.length(activity)
+  let cm = list.length(commodity)
+  let fs = list.length(science)
+  let rp = list.length(problem)
+  let ct = list.length(product_percent)
+  case ac == cm && cm == fs && fs == rp && rp == ct {
+    True -> []
+    False ->
+      case
+        first_column_locations([
+          activity,
+          commodity,
+          science,
+          problem,
+          product_percent,
+        ])
+      {
+        // Unequal counts imply at least one non-empty column, so Error is
+        // unreachable; return [] rather than fabricate a location.
+        Error(Nil) -> []
+        Ok(where) -> [
+          disagreement(
+            RelatedFieldsDisagree(
+              NonEmpty("RP", ["AC", "CM", "FS", "CT"]),
+              "primary classification columns disagree in count — AC "
+                <> int.to_string(ac)
+                <> ", CM "
+                <> int.to_string(cm)
+                <> ", FS "
+                <> int.to_string(fs)
+                <> ", RP "
+                <> int.to_string(rp)
+                <> ", CT "
+                <> int.to_string(ct)
+                <> "; each RPA line requires a corresponding Activity, Commodity, and Field of Science (and one CT product percentage), so the counts must be equal",
+            ),
+            primary_alignment_rule,
+            where,
+            "equal value counts across AC/CM/FS/RP/CT",
+          ),
+        ]
+      }
+  }
+}
+
+// The first column carrying a value, for a source-linked examined span: the
+// first Supported value's locations across the columns, in order.
+fn first_column_locations(
+  columns: List(List(Supported(String))),
+) -> Result(source_record.NonEmpty(Location), Nil) {
+  list.find_map(columns, fn(column) {
+    case column {
+      [first, ..] -> Ok(first.locations)
+      [] -> Error(Nil)
+    }
+  })
+}
+
+const primary_alignment_rule: RuleRef = RuleRef(
+  document: "Manual of Classification of Agricultural and Forestry Research, Revision IV (February 1982)",
+  pdf_page: 8,
+  element: "Primary Classification, Fields 36-47 (Form AD-417): Multidimensional Classification",
+  assertion: "For each RPA coded in column 7 there must be corresponding codes for Activity (col 1), Commodity (col 3), and Field of Science (col 5) on the same line of primary classification.",
+  interpretation: "Format B columns AC/CM/FS/RP are aligned per line, so their per-record value counts must be equal; CT (the col-8 product percentage) is one per line, so it aligns too. Scope: primary classification only — program_area (PA) and joint_council (JC) are outside this passage and remain census-observed, excluded from this check.",
+  stage: Supplied,
+  evidence: ClassificationSource,
+)
+
+/// The CT product-percentage sum (Manual of Classification, Rev IV 1982): each
+/// line's product percentage (cols 2x4x6 -> col 8) must sum to 100 across the
+/// record. A value that does not parse as a whole-number percentage is surfaced
+/// loudly rather than skipped; the ~25 FY88 under-allocations are documented-rule
+/// violations, not tolerated. The divergence reuses `RelatedFieldsDisagree` with
+/// the single tag CT — the CT values are mutually constrained (they must total
+/// 100) — rather than adding a new `DisagreementKind`, as the SN<->SC bond reuses
+/// it for a cross-field count.
+fn ct_sum_to_100(
+  product_percent: List(Supported(String)),
+) -> List(ConstructionProblem) {
+  case product_percent {
+    [] -> []
+    [first, ..] ->
+      case list.try_map(product_percent, parse_percent) {
+        Error(bad) -> [
+          disagreement(
+            RelatedFieldsDisagree(
+              NonEmpty("CT", []),
+              "CT value \"" <> bad <> "\" is not a whole-number percentage",
+            ),
+            ct_sum_rule,
+            first.locations,
+            "sum of CT product percentages",
+          ),
+        ]
+        Ok(values) -> {
+          let total = int.sum(values)
+          case total == 100 {
+            True -> []
+            False -> [
+              disagreement(
+                RelatedFieldsDisagree(
+                  NonEmpty("CT", []),
+                  "CT product percentages sum to "
+                    <> int.to_string(total)
+                    <> ", not 100",
+                ),
+                ct_sum_rule,
+                first.locations,
+                "sum of CT product percentages",
+              ),
+            ]
+          }
+        }
+      }
+  }
+}
+
+// Parse a CT value as a whole number, optionally with a single trailing "%".
+// Returns the raw string on failure so the divergence can name it.
+fn parse_percent(supported: Supported(String)) -> Result(Int, String) {
+  let raw = supported.value
+  let digits = case string.ends_with(raw, "%") {
+    True -> string.drop_end(raw, 1)
+    False -> raw
+  }
+  case int.parse(digits) {
+    Ok(value) -> Ok(value)
+    Error(Nil) -> Error(raw)
+  }
+}
+
+const ct_sum_rule: RuleRef = RuleRef(
+  document: "Manual of Classification of Agricultural and Forestry Research, Revision IV (February 1982)",
+  pdf_page: 9,
+  element: "Primary Classification, Fields 36-47 (Form AD-417): Classification Percentages (product percentage, column 8)",
+  assertion: "Each line is assigned a product percentage (cols 2x4x6 -> col 8); the sum of all product percentages in column 8 must equal 100.",
+  interpretation: "CT is the col-8 product percentage; its per-record whole-number values must sum to 100. Records whose CT does not sum to 100 (e.g. the ~25 FY88 under-allocations) are documented-rule violations surfaced as divergences, not tolerated.",
+  stage: Supplied,
+  evidence: ClassificationSource,
 )
 
 // PH/GH: a multi-value classification-heading field. Each 0xAC-marked value

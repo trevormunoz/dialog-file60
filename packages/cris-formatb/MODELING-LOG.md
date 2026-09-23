@@ -389,3 +389,57 @@ CT summing to 100) plus three projection unit tests; `gleam test` **162 passed**
 `gleam check` and `gleam format --check` clean. The warrant to revisit is
 explicit: a 1982-Manual passage documenting per-line percentage allocation would
 supply the missing proof and justify promoting the view to an enforced row model.
+
+## Classification alignment: the warrant is located (Manual of Classification, Rev IV 1982)
+
+The warrant named just above is met. The passage is in the project's own
+`cris-manual/manual-rev-iv-1982.glm.md` (GLM-OCR of Revision IV, February 1982),
+Introduction / Primary Classification, PDF pp. 8-11:
+
+- **Multidimensional Classification** (GLM line 154, PDF p.8): the four series
+  (Activity, Commodity, Field of Science, RPA) are "entered in the SAME field or
+  line of primary classification. Specifically, for each RPA coded in column 7 ...
+  there must be corresponding codes for Activity in column 1, Commodity in column
+  3, and Field of Science in column 5."
+- **Classification Percentages** (GLM line 172, PDF p.9): "each line of
+  classification must be assigned a percentage ... to each Activity x Commodity x
+  Field of Science x RPA combination ... The product of columns 2x4x6 is entered
+  in column 8. When the individual percentages are correctly assigned, the sum of
+  all product percentages in column 8 will equal 100."
+- **Assignment of Percentages** (GLM lines 202-214, PDF p.11): "THE SUM OF ALL
+  PERCENTAGES IN COLUMN 8 MUST EQUAL 100 PERCENT"; partially completed lines are
+  filled (line 212) "by duplicating codes and percentages assigned to preceding
+  lines."
+
+So per-line alignment and a per-line percentage summing to 100 are **documented**,
+not merely census-observed. This is a `ClassificationSource`-grade rule (the
+`EvidenceGrade` already defined for Manual-of-Classification warrants), citing a
+different document from the 367_1DP layout dictionary.
+
+**AD-417 matrix -> Format B mapping, and the scope of the claim.** col 1 Activity
+= AC, col 3 Commodity = CM, col 5 Field of Science = FS, col 7 RPA = RP, col 8
+product percentage = CT. The alignment of **AC/CM/FS/RP** and **CT as the col-8
+product percentage (Sigma = 100 per record)** is what the passage documents —
+**five of the seven columns**. `program_area` (PA) and `joint_council` (JC) are
+outside the 1982 four-part primary classification (JC = the post-1977 Joint
+Council); they align in the census but stay observed-only until their own source
+is found. A seven-column forced alignment would over-reach this warrant.
+
+Two earlier notes are corrected by the passage:
+- The repeated classification codes are the matrix being filled by duplication
+  (line 212) — documentary backing for the existing no-dedup, keep-ordered store.
+- The 25 FY88 records where CT != 100 violate a documented "MUST EQUAL 100" rule:
+  source under-allocations (dirty data), not evidence against the rule. "Strong
+  tendency, not a rule" is superseded — it was a rule; those 25 break it.
+
+**Cross-check, Rev V (1993):** the procedural section was **not found** in the
+held Rev V PDF (`pdftotext` + keyword search) — Rev V is scoped to code tables +
+RPA descriptions and drops the how-to-classify preamble. Scoped statement of
+absence, not a contradiction: the rule stands on Rev IV; the taxonomy it
+classifies (RPA 101-908, GOAL structure) is continuous IV->V, covering the
+FY88-94 window that sits between the editions.
+
+**Status: warrant met for the five-column subset; not yet enforced.** Promoting
+`classification_rows` from a derived projection to a checked rule (and whether to
+enforce the CT Sigma=100 sum, surfacing the ~25 FY88 violations as construction
+problems) is a pending decision, recorded here as ready but deliberately unbuilt.

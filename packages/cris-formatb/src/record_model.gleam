@@ -235,8 +235,11 @@ pub type Chronology {
 }
 
 /// Seven ordered classification columns. Keep positions and duplicates.
-/// Whether the columns form aligned allocation tuples remains a
-/// source-reading question, not an enforced rule.
+/// The five primary columns (AC/CM/FS/RP/CT) align per line by documentary rule
+/// — Manual of Classification, Rev IV (1982) — enforced in
+/// `construct.classifications` at `ClassificationSource` grade. program_area (PA)
+/// and joint_council (JC) are outside that passage and align only as a
+/// census-observed regularity. The store stays seven source-faithful lists.
 pub type ClassificationColumns {
   ClassificationColumns(
     activity: List(Supported(String)),
@@ -252,10 +255,12 @@ pub type ClassificationColumns {
 /// One classification allocation line: the position-aligned tuple across the
 /// seven columns, with CT as the line's `percent` (field order RP, AC, CM, FS,
 /// CT, PA, JC — the PC-heading order). This is a DERIVED VIEW, produced by
-/// `classification_rows`, never a stored or certified structure: the source
-/// documents only "columnar display", so the one-to-one alignment is a
-/// census-observed regularity (equal counts in 100% of FY88/FY89/FY94 records —
-/// rules/field-rule-inventory.md classification census 2026-09-14), NOT a
+/// `classification_rows`, never a stored or certified structure. The five primary
+/// columns (AC/CM/FS/RP/CT) align per line by documentary rule — Manual of
+/// Classification, Rev IV (1982), enforced in `construct.classifications` — while
+/// program_area (PA) and joint_council (JC) align only as a census-observed
+/// regularity (equal counts in 100% of FY88/FY89/FY94 records —
+/// rules/field-rule-inventory.md classification census 2026-09-14), not by a
 /// documented rule. The stored `ClassificationColumns` (seven independent lists)
 /// remains the source-faithful representation.
 pub type ClassificationRow {
@@ -273,9 +278,12 @@ pub type ClassificationRow {
 /// Project the seven classification columns into position-aligned rows: value i
 /// of every column forms row i. Returns `Error(Nil)` when the columns are not all
 /// the same length — i.e. the undocumented alignment does not hold for this
-/// record — rather than silently truncating or padding. This OFFERS the observed
-/// alignment to a caller that wants rows; it makes no claim the alignment always
-/// holds, and it enforces nothing at construction. See `ClassificationRow`.
+/// record — rather than silently truncating or padding. The five-column primary
+/// alignment (AC/CM/FS/RP/CT) is a documented rule enforced in
+/// `construct.classifications` (Manual of Classification, Rev IV 1982); PA/JC
+/// align only by census observation. This projection itself enforces nothing — it
+/// OFFERS rows to a caller and reports a length mismatch rather than deciding
+/// conformance. See `ClassificationRow`.
 pub fn classification_rows(
   columns: ClassificationColumns,
 ) -> Result(List(ClassificationRow), Nil) {
