@@ -6,12 +6,15 @@ change has to pass.
 ## File map
 
 ```
-packages/cris-formatb/src/   the shared Format B reader (own package, @barcstory/cris-formatb)
-  index.ts                     LINE_BYTES/DATA_START/DATA_END, the shared latin1() byte map, re-exports
-  offsets.ts                   line <-> offset arithmetic, scanRecords (record boundary scan)
-  record.ts                    LogicalRecord/SourceField/SourceValue types, parseRecord
+packages/cris-formatb/src-ts/  the shared Format B reader (own package, @barcstory/cris-formatb)
+  index.ts                     the public surface: re-exports only
+  wrapper.ts                   scanRecords/parseRecord, run on the compiled Gleam reader (src/*.gleam)
+  bytes.ts                     LINE_BYTES/DATA_START/DATA_END, the shared latin1() byte map
+  offsets.ts                   line <-> offset arithmetic; RecordSpan/FileStructure/ScanResult types
+  record.ts                    LogicalRecord/SourceField/SourceValue types, field()/fields()
   profiles.ts                  encoding profiles fy1988 / fy1991plus
   cli.ts                       runCli() (pure) + the `cris-formatb scan|record` entry point
+packages/cris-formatb/src/     the Gleam reader and the checked research model; see the package README
 registry/evidence.json       the evidence registry
 src/registry/                index.ts: typed loader + get(); words.ts: reader-facing vocabulary
 src/loader/                  corpus-format.ts: browser-safe types + PHRASE_FIELDS + indexUrls
@@ -173,8 +176,8 @@ projects should call its CLI rather than writing their own line splitter
 (paths are resolved from the package's own directory):
 
 ```
-pnpm --filter @barcstory/cris-formatb exec tsx src/cli.ts scan <path to>/data/RG164.CRIS.FY94.txt
-pnpm --filter @barcstory/cris-formatb exec tsx src/cli.ts record fixtures/fy94-9049442.bin 83052 --base-line 83052 --profile fy1991plus
+pnpm --filter @barcstory/cris-formatb exec tsx src-ts/cli.ts scan <path to>/data/RG164.CRIS.FY94.txt
+pnpm --filter @barcstory/cris-formatb exec tsx src-ts/cli.ts record fixtures/fy94-9049442.bin 83052 --base-line 83052 --profile fy1991plus
 ```
 
 `--base-line` (default 1) states the absolute corpus line number of the

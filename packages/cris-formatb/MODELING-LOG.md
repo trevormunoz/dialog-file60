@@ -443,3 +443,10 @@ FY88-94 window that sits between the editions.
 `classification_rows` from a derived projection to a checked rule (and whether to
 enforce the CT Sigma=100 sum, surfacing the ~25 FY88 violations as construction
 problems) is a pending decision, recorded here as ready but deliberately unbuilt.
+
+**Update, 2026-09-23: enforced** (`2338d2a`). The decision was taken the other
+way: `construct.classifications` now checks `primary_alignment` (equal value
+counts across AC/CM/FS/RP/CT) and `ct_sum_to_100` at `ClassificationSource`
+grade, and the ~25 FY88 under-allocated records now fail construction as
+documented-rule violations. `classification_rows` stays a derived seven-column
+projection that enforces nothing; PA/JC stay observed-only.

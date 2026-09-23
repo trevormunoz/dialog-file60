@@ -521,9 +521,11 @@ fn optional_year_2_or_4(
 /// The classifications block (rules/field-rule-inventory.md batch 3). BT/AT/DT
 /// are optional Exact-4 codes; the seven ClassificationColumns fields are
 /// bounded-repeating (max 15 codes each); SC/PH/GH are repeating headings
-/// (code+literal split on the documented 0xA0 0x02 separator); SN has no
-/// dictionary row at all, so any SN occurrence is FieldNotYetModeled rather
-/// than silently accepted or guessed at.
+/// (code+literal split on the documented 0xA0 0x02 separator). The primary
+/// columns AC/CM/FS/RP/CT must align and CT must sum to 100 (Rev IV; see
+/// `primary_alignment`, `ct_sum_to_100`). SN has no dictionary row, so its
+/// values are kept unchecked as `UndocumentedField`s; only its documented
+/// count bond to SC is enforced (`sn_sc_bond`).
 pub fn classifications(record: SuppliedRecord) -> Checked(Classifications) {
   let basic =
     optional(
