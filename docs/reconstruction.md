@@ -28,7 +28,7 @@ CRIS internal  ->  COBOL export in Format B  ->  EBCDIC tape to NARA (annual)
                         |  same design; whether the same program or the same
                         |  records went to DIALOG is not documented (inferred)
                         +-> tape to DIALOG (monthly)  ->  DIALOG load  ->  File 60 online
-                                                        (lost software)   (what searchers saw)
+                                                                          (what searchers saw)
 
 EBCDIC tape (2 reels, 9-track, 6250 bpi, blocked 15,440)
    ->  NARA 3480 cartridge copy (EBCDIC, blocked 5,040, OS labels)

@@ -126,6 +126,18 @@ page at once. A browser print of the page, in any display mode, yields the
 same sheet: this is a consequence of the layout paper mode already applies,
 not a separate feature.
 
+## Reconstruction failure handling
+
+The reconstruction distinguishes malformed archival material that can still be read from failures of the reconstruction itself.
+
+Malformed archival data that the Format B reader can continue past is category C. Examples include an orphan continuation line, a bad or missing CRLF, or a field mismatch. These conditions are accumulated in the loader's `report.json` diagnostics rather than silently skipped; the report includes `badLines`, `orphanContinuations`, and the `*Mismatches` counts.
+
+A structural impossibility is category D and stops the relevant operation. Examples include a Format B buffer whose byte length is not a whole number of physical records or a calculated record span outside the supplied buffer. These checks live in `packages/cris-formatb/src-ts/record.ts` and `packages/cris-formatb/src-ts/offsets.ts`.
+
+The same distinction continues at runtime. A failed, invalid, or empty required artifact, a failed byte-range read, or index/manifest drift is a reconstruction failure, not a simulated DIALOG error. The application therefore reports it through the modern out-of-stream `capability.reconstruction_error` notice channel. It never turns such a failure into a `?` line in the reconstructed character stream.
+
+This separation is intentional: a reader should be able to distinguish evidence about how DIALOG behaved from evidence that the modern reconstruction itself has failed.
+
 ## Archival tests and the corpus file
 
 `data/RG164.CRIS.FY94.txt` is gitignored (`scripts/extract-corpus.py` produces it from the
