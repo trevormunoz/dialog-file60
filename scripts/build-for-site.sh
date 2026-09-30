@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Builds the emulator for its home on the BARC story site.
 #
-# APP_BASE            the path the app is served from. The site's Astro base is
-#                     /site-barcstory (set in the site's Astro config) and Astro copies
-#                     the site's public/ directory verbatim, so a build placed at
-#                     public/file60/ is served at /site-barcstory/file60/.
+# APP_BASE            the path the app is served from. The site is served at the root of
+#                     https://barcstory.org (no Astro base) and Astro copies the site's
+#                     public/ directory verbatim, so a build placed at public/file60/ is
+#                     served at /file60/.
 # VITE_CORPUS_BASE_URL  the R2 prefix. GitHub blocks any file over 100 MB, so the
 #                     277,539,004-byte corpus cannot live where the app lives. The R2 bucket
 #                     is provisioned outside this script, so this variable stays configurable
@@ -20,7 +20,7 @@ cd "$(dirname "$0")/.."
 SITE="${SITE_REPO:?set SITE_REPO to the site checkout}"
 DEST="${SITE}/apps/web/public/file60"
 
-APP_BASE="/site-barcstory/file60/" pnpm build
+APP_BASE="/file60/" pnpm build
 
 if [ -e dist/corpus ]; then
   echo "dist/corpus exists; publicDir was not disabled. Refusing to copy." >&2

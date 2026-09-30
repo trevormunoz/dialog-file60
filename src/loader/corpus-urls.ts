@@ -3,7 +3,7 @@
  * build supplies:
  *
  *   BASE_URL              where the app itself is served (Vite's `base`; "/" locally,
- *                         "/site-barcstory/file60/" on the BARC story site).
+ *                         "/file60/" on the BARC story site).
  *   VITE_CORPUS_BASE_URL  where the corpus and its derived index files are served. Unset
  *                         locally, so the corpus resolves under the app's own base and
  *                         `pnpm dev` keeps serving public/corpus/ exactly as before. Set to
