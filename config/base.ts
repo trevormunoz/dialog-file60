@@ -1,8 +1,7 @@
 /**
  * Read by vite.config.ts only. The app is served at "/" locally
- * (`pnpm dev`, `pnpm build`) and at "/site-barcstory/file60/" on the BARC story site, whose
- * Astro base is "/site-barcstory" (set in the site's Astro config) and which serves
- * its public/file60/ directory verbatim. Kept in config/ beside define.ts because vite.config.ts
+ * (`pnpm dev`, `pnpm build`) and at "/file60/" on the BARC story site, which is served at
+ * the root of https://barcstory.org and serves its public/file60/ directory verbatim. Kept in config/ beside define.ts because vite.config.ts
  * and its test both import it, exactly as they both import appDefine.
  */
 export function appBase(env: Record<string, string | undefined> = process.env): string {

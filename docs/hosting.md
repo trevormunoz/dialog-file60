@@ -67,7 +67,7 @@ single `put` call.
 {
   "rules": [{
     "allowed": {
-      "origins": ["https://trevormunoz.github.io", "http://localhost:5173", "http://localhost:4173"],
+      "origins": ["https://barcstory.org", "https://www.barcstory.org", "https://trevormunoz.github.io", "http://localhost:5173", "http://localhost:4173"],
       "methods": ["GET", "HEAD"],
       "headers": ["Range", "If-Range", "If-None-Match"]
     },
